@@ -1,9 +1,18 @@
+export interface MiscExpense {
+  id: string;
+  date: string;
+  amount: number;
+  category: string;
+  notes: string;
+}
+
 export interface Project {
   id: string;
   name: string;
   location: string;
   type: 'residential' | 'commercial' | 'renovation';
-  budget: number;
+  budget: number;        // construction budget
+  masterBudget: number;  // total overall budget
   startDate: string;
   endDate: string;
 }
@@ -28,13 +37,31 @@ export interface Labour {
   attendance: { [date: string]: 'present' | 'absent' | 'half' };
 }
 
+export interface ThekaPayment {
+  id: string;
+  date: string;
+  amount: number;
+  note: string;
+}
+
 export interface Theka {
   id: string;
-  type: 'lump-sum' | 'sqft' | 'unit';
-  description: string;
+  name: string;
+  workType: 'Civil' | 'Electrical' | 'Plumbing' | 'Painting' | 'Flooring' | 'Other';
   totalAmount: number;
-  advancePaid: number;
-  completionPercentage: number;
+  payments: ThekaPayment[];
+  startDate: string;
+  notes: string;
+}
+
+export interface DemolitionTheka {
+  id: string;
+  name: string;
+  workType: 'Tod-Phod' | 'Malwa Hatao' | 'Cutting' | 'Other';
+  totalAmount: number;
+  payments: ThekaPayment[];
+  startDate: string;
+  notes: string;
 }
 
 export interface Expense {
@@ -81,11 +108,39 @@ export interface MalwaEntry {
 
 export interface ScrapEntry {
   id: string;
+  date: string;
   type: string;
   quantity: number;
   unit: string;
   dealer: string;
   rate: number;
+}
+
+export interface RentPayment {
+  id: string;
+  date: string;
+  amount: number;
+  month: string; // e.g. "2026-03"
+  note: string;
+}
+
+export interface RentalProperty {
+  id: string;
+  name: string;
+  type: 'Basement' | '1BHK' | '2BHK' | 'Shop' | 'Other';
+  monthlyRent: number;
+  deposit: number;
+  // 'pending'   = deposit dena baaki hai mujhe
+  // 'paid'      = maine de diya, wapas milega jab khaali karunga
+  // 'refunded'  = makan malik ne wapas kar diya
+  // 'forfeited' = deposit kaat liya gaya
+  depositStatus: 'pending' | 'paid' | 'refunded' | 'forfeited';
+  ownerName: string;
+  ownerPhone: string;
+  startDate: string;
+  agreementEndDate: string;
+  agreementNote: string;
+  payments: RentPayment[];
 }
 
 export interface AppState {
@@ -99,4 +154,7 @@ export interface AppState {
   brickRecovery: BrickRecovery[];
   malwa: MalwaEntry[];
   scrap: ScrapEntry[];
+  demolitionThekas: DemolitionTheka[];
+  rentals: RentalProperty[];
+  miscExpenses: MiscExpense[];
 }

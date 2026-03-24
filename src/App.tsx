@@ -15,7 +15,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Calendar,
-  Download
+  Download,
+  Pencil,
+  Home
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -33,8 +35,9 @@ import { format, startOfToday } from 'date-fns';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-import { AppState, Project, Material, Labour, Theka, Expense, Milestone, DemolitionProject, BrickRecovery, MalwaEntry, ScrapEntry } from './types';
+import { AppState, Project, Material, Labour, Theka, ThekaPayment, DemolitionTheka, RentalProperty, RentPayment, MiscExpense, Expense, Milestone, DemolitionProject, BrickRecovery, MalwaEntry, ScrapEntry } from './types';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useDragScroll } from './hooks/useDragScroll';
 import { formatCurrency, formatNumber, getStatusColor } from './utils/formatters';
 
 function cn(...inputs: ClassValue[]) {
@@ -60,6 +63,9 @@ const INITIAL_STATE: AppState = {
   brickRecovery: [],
   malwa: [],
   scrap: [],
+  demolitionThekas: [],
+  rentals: [],
+  miscExpenses: [],
 };
 
 const MATERIAL_TYPES = [
@@ -74,11 +80,15 @@ const LABOUR_TYPES = [
 
 export default function App() {
   const [state, setState] = useLocalStorage<AppState>('nirman_hisaab_data', INITIAL_STATE);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'construction' | 'demolition' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'construction' | 'demolition' | 'kiraya' | 'settings'>('dashboard');
   const [subTab, setSubTab] = useState<string>('overview');
+
+  const constructionTabsDrag = useDragScroll();
+  const demolitionTabsDrag = useDragScroll();
 
   const totalSpent = useMemo(() => state.expenses.reduce((acc, curr) => acc + curr.amount, 0), [state.expenses]);
   const budget = state.project?.budget || 0;
+  const masterBudget = state.project?.masterBudget || 0;
   const remainingBudget = budget - totalSpent;
   const burnRate = budget > 0 ? (totalSpent / budget) * 100 : 0;
 
@@ -87,6 +97,47 @@ export default function App() {
   const totalRecovery = scrapIncome + brickRecoveryValue;
   
   const malwaCost = useMemo(() => state.malwa.reduce((acc, curr) => acc + (curr.disposed * curr.costPerTrip), 0), [state.malwa]);
+  const demolitionThekaCost = useMemo(() => (state.demolitionThekas || []).reduce((acc, t) => acc + t.payments.reduce((a, p) => a + p.amount, 0), 0), [state.demolitionThekas]);
+  const demolitionThekaPending = useMemo(() => (state.demolitionThekas || []).reduce((acc, t) => acc + (t.totalAmount - t.payments.reduce((a, p) => a + p.amount, 0)), 0), [state.demolitionThekas]);
+
+  const totalRentPaid = useMemo(() => (state.rentals || []).reduce((a, r) => a + r.payments.reduce((s, p) => s + p.amount, 0), 0), [state.rentals]);
+  const totalDeposit = useMemo(() => (state.rentals || []).reduce((a, r) => a + (r.deposit || 0), 0), [state.rentals]);
+
+  // helper: get effective depositStatus, handles old data that had depositPaid boolean
+  const getDepositStatus = (r: any): 'pending' | 'paid' | 'refunded' | 'forfeited' => {
+    if (r.depositStatus) return r.depositStatus;
+    if (r.depositPaid === true) return 'paid';
+    return 'pending';
+  };
+
+  // depositPaid = money actually gone from pocket (paid to owner, not yet refunded)
+  const depositPaid = useMemo(() => (state.rentals || [])
+    .filter(r => { const s = getDepositStatus(r); return s === 'paid' || s === 'forfeited'; })
+    .reduce((a, r) => a + (r.deposit || 0), 0), [state.rentals]);
+  const depositPending = useMemo(() => (state.rentals || [])
+    .filter(r => getDepositStatus(r) === 'pending')
+    .reduce((a, r) => a + (r.deposit || 0), 0), [state.rentals]);
+  // depositWapas = money paid but recoverable
+  const depositWapas = useMemo(() => (state.rentals || [])
+    .filter(r => getDepositStatus(r) === 'paid')
+    .reduce((a, r) => a + (r.deposit || 0), 0), [state.rentals]);
+  const currentMonthRent = useMemo(() => {
+    const m = format(new Date(), 'yyyy-MM');
+    return (state.rentals || []).reduce((a, r) => {
+      const paid = r.payments.filter(p => p.month === m).reduce((s, p) => s + p.amount, 0);
+      return a + (r.monthlyRent - paid);
+    }, 0);
+  }, [state.rentals]);
+
+  const totalMisc = useMemo(() => (state.miscExpenses || []).reduce((a, e) => a + e.amount, 0), [state.miscExpenses]);
+
+  // Master total kharcha = construction + demolition theka + malwa + rent paid + deposit paid + misc
+  const totalKharcha = useMemo(() =>
+    totalSpent + demolitionThekaCost + malwaCost + totalRentPaid + depositPaid + totalMisc,
+    [totalSpent, demolitionThekaCost, malwaCost, totalRentPaid, depositPaid, totalMisc]
+  );
+  const masterRemaining = masterBudget > 0 ? masterBudget - totalKharcha : 0;
+  const masterBurnRate = masterBudget > 0 ? (totalKharcha / masterBudget) * 100 : 0;
 
   const exportToCSV = () => {
     const expensesCsv = state.expenses.map(e => `${e.date},${e.category},${e.amount},"${e.notes}"`).join('\n');
@@ -124,32 +175,69 @@ export default function App() {
           </button>
         </header>
 
-        {/* Budget Card */}
-        <div className={cn("p-6 rounded-3xl border shadow-sm", getStatusColor(totalSpent, budget))}>
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-sm font-medium opacity-80 uppercase tracking-wider">Total Budget</p>
-              <h2 className="text-3xl font-bold">{formatCurrency(budget)}</h2>
+        {/* Master Budget Card */}
+        {masterBudget > 0 ? (
+          <div className={cn("p-5 rounded-3xl border shadow-sm", masterBurnRate > 90 ? "bg-red-50 border-red-200" : masterBurnRate > 70 ? "bg-yellow-50 border-yellow-200" : "bg-green-50 border-green-200")}>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Master Budget</p>
+            <div className="flex justify-between items-end mb-3">
+              <div>
+                <p className="text-xs text-slate-400 uppercase font-bold">Total Budget</p>
+                <p className="text-3xl font-bold text-slate-900">{formatCurrency(masterBudget)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-400 uppercase font-bold">Total Kharcha</p>
+                <p className="text-3xl font-bold text-red-600">{formatCurrency(totalKharcha)}</p>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm font-medium opacity-80 uppercase tracking-wider">Spent So Far</p>
-              <h2 className="text-3xl font-bold">{formatCurrency(totalSpent)}</h2>
+            <div className="w-full bg-black/10 h-3 rounded-full overflow-hidden mb-2">
+              <div
+                className={cn("h-full transition-all duration-500 rounded-full", masterBurnRate > 90 ? 'bg-red-500' : masterBurnRate > 70 ? 'bg-yellow-500' : 'bg-green-500')}
+                style={{ width: `${Math.min(100, masterBurnRate)}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs font-bold uppercase">
+              <span className="text-slate-600">{masterBurnRate.toFixed(1)}% Used</span>
+              <span className={masterRemaining < 0 ? "text-red-600" : "text-green-600"}>{formatCurrency(masterRemaining)} Left</span>
             </div>
           </div>
-          
-          <div className="w-full bg-black/10 h-3 rounded-full overflow-hidden mb-2">
-            <div 
-              className={cn("h-full transition-all duration-500", totalSpent > budget ? 'bg-red-500' : 'bg-current')} 
-              style={{ width: `${Math.min(100, burnRate)}%` }}
-            />
+        ) : (
+          <div className="bg-slate-100 border-2 border-dashed border-slate-200 p-5 rounded-3xl text-center">
+            <p className="text-slate-500 text-sm font-bold">Master budget set nahi hai</p>
+            <button onClick={() => setActiveTab('settings')} className="mt-2 text-xs text-indigo-600 font-bold underline">Settings mein set karo</button>
           </div>
-          <div className="flex justify-between text-xs font-bold uppercase">
-            <span>{burnRate.toFixed(1)}% Used</span>
-            <span>{formatCurrency(remainingBudget)} Left</span>
+        )}
+
+        {/* Category-wise Kharcha Breakdown */}
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+          <h3 className="font-bold text-slate-900">Kharcha Breakdown</h3>
+          {[
+            { label: 'Construction (Samaan + Mazdoor)', value: totalSpent, color: 'bg-indigo-500' },
+            { label: 'Tod-Phod Theka', value: demolitionThekaCost, color: 'bg-orange-500' },
+            { label: 'Malwa Disposal', value: malwaCost, color: 'bg-amber-500' },
+            { label: 'Kiraya (Rent Paid)', value: totalRentPaid, color: 'bg-violet-500' },
+            { label: 'Deposit Diya (Wapas Milega)', value: depositPaid, color: 'bg-blue-400' },
+            { label: 'Miscellaneous', value: totalMisc, color: 'bg-slate-400' },
+          ].filter(r => r.value > 0).map(row => (
+            <div key={row.label}>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs text-slate-500 font-medium">{row.label}</span>
+                <span className="text-xs font-bold text-slate-900">{formatCurrency(row.value)}</span>
+              </div>
+              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                <div
+                  className={cn("h-full rounded-full transition-all", row.color)}
+                  style={{ width: masterBudget > 0 ? `${Math.min(100, (row.value / masterBudget) * 100)}%` : '0%' }}
+                />
+              </div>
+            </div>
+          ))}
+          <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
+            <span className="text-xs font-bold text-slate-500 uppercase">Total</span>
+            <span className="font-bold text-slate-900">{formatCurrency(totalKharcha)}</span>
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Quick stats */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
             <div className="flex items-center gap-2 text-slate-500 mb-1">
@@ -169,48 +257,114 @@ export default function App() {
               {state.milestones.filter(m => m.status === 'in-progress').length}
             </p>
           </div>
+          {currentMonthRent > 0 && (
+            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 shadow-sm col-span-2">
+              <div className="flex items-center gap-2 text-orange-500 mb-1">
+                <Home size={16} />
+                <span className="text-xs font-bold uppercase">Is Mahine Rent Baaki</span>
+              </div>
+              <p className="text-xl font-bold text-orange-600">{formatCurrency(currentMonthRent)}</p>
+            </div>
+          )}
+          {depositPending > 0 && (
+            <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 shadow-sm col-span-2">
+              <div className="flex items-center gap-2 text-purple-500 mb-1">
+                <Home size={16} />
+                <span className="text-xs font-bold uppercase">Deposit Dena Baaki (Maine Nahi Diya)</span>
+              </div>
+              <p className="text-xl font-bold text-purple-600">{formatCurrency(depositPending)}</p>
+            </div>
+          )}
         </div>
 
-        {/* Demolition Summary */}
-        <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-lg">
+        {/* Tod-Phod Net */}
+        <div className="bg-slate-900 text-white p-5 rounded-3xl shadow-lg">
           <div className="flex items-center gap-2 mb-4">
-            <Hammer size={20} className="text-orange-400" />
-            <h3 className="font-bold text-lg">Tod-Phod Summary</h3>
+            <Hammer size={18} className="text-orange-400" />
+            <h3 className="font-bold">Tod-Phod Net Bachat</h3>
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-slate-400 text-xs uppercase font-bold mb-1">Scrap Income</p>
-              <p className="text-xl font-bold text-green-400">+{formatCurrency(scrapIncome)}</p>
+              <p className="text-slate-400 text-[10px] uppercase font-bold mb-0.5">Scrap + Bricks</p>
+              <p className="text-lg font-bold text-green-400">+{formatCurrency(totalRecovery)}</p>
             </div>
             <div>
-              <p className="text-slate-400 text-xs uppercase font-bold mb-1">Malwa Cost</p>
-              <p className="text-xl font-bold text-red-400">-{formatCurrency(malwaCost)}</p>
+              <p className="text-slate-400 text-[10px] uppercase font-bold mb-0.5">Malwa + Theka</p>
+              <p className="text-lg font-bold text-red-400">-{formatCurrency(malwaCost + demolitionThekaCost)}</p>
             </div>
-            <div>
-              <p className="text-slate-400 text-xs uppercase font-bold mb-1">Brick Recovery</p>
-              <p className="text-xl font-bold text-blue-400">+{formatNumber(state.brickRecovery.reduce((a, b) => a + b.recovered, 0))} Pcs</p>
-            </div>
-            <div>
-              <p className="text-slate-400 text-xs uppercase font-bold mb-1">Net Recovery</p>
-              <p className="text-xl font-bold">{formatCurrency(totalRecovery - malwaCost)}</p>
-            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center">
+            <span className="text-slate-400 text-xs font-bold uppercase">Net</span>
+            <span className={cn("text-xl font-bold", totalRecovery - malwaCost - demolitionThekaCost >= 0 ? "text-green-400" : "text-red-400")}>
+              {formatCurrency(totalRecovery - malwaCost - demolitionThekaCost)}
+            </span>
           </div>
         </div>
 
-        {/* Charts Section */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <h3 className="font-bold text-slate-900 mb-4">Kharcha Breakup</h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-                <YAxis hide />
-                <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Bar dataKey="value" fill="#6366f1" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Misc Expenses quick add */}
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-bold text-slate-900">Miscellaneous Kharcha</h3>
+            <button
+              onClick={() => {
+                const amount = Number(prompt('Amount (₹)?'));
+                if (!amount) return;
+                const category = prompt('Category? (e.g. Bijli, Paani, Transport, Tools)') || 'Misc';
+                const notes = prompt('Notes?') || '';
+                const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                setState(prev => ({
+                  ...prev,
+                  miscExpenses: [...(prev.miscExpenses || []), {
+                    id: Math.random().toString(36).substr(2, 9),
+                    date: new Date(dateStr).toISOString(),
+                    amount, category, notes
+                  }]
+                }));
+              }}
+              className="p-2 bg-slate-600 text-white rounded-full"
+            >
+              <Plus size={18} />
+            </button>
           </div>
+          {(state.miscExpenses || []).length === 0 ? (
+            <p className="text-slate-400 text-sm text-center py-2">Koi misc kharcha nahi</p>
+          ) : (
+            <div className="space-y-2">
+              {[...(state.miscExpenses || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5).map(e => (
+                <div key={e.id} className="flex justify-between items-center text-sm">
+                  <div>
+                    <p className="font-bold text-slate-800">{e.category}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold">{format(new Date(e.date), 'dd MMM yyyy')}{e.notes ? ` • ${e.notes}` : ''}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-slate-900">{formatCurrency(e.amount)}</p>
+                    <button
+                      onClick={() => {
+                        const amount = Number(prompt('Amount?', String(e.amount)));
+                        if (!amount) return;
+                        const category = prompt('Category?', e.category) || e.category;
+                        const notes = prompt('Notes?', e.notes) || '';
+                        const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(e.date), 'yyyy-MM-dd')) || format(new Date(e.date), 'yyyy-MM-dd');
+                        setState(prev => ({
+                          ...prev,
+                          miscExpenses: (prev.miscExpenses || []).map(x => x.id === e.id ? { ...x, amount, category, notes, date: new Date(dateStr).toISOString() } : x)
+                        }));
+                      }}
+                      className="p-1 text-slate-300 hover:text-slate-500"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button onClick={() => setState(prev => ({ ...prev, miscExpenses: (prev.miscExpenses || []).filter(x => x.id !== e.id) }))} className="p-1 text-red-300 hover:text-red-500">
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {(state.miscExpenses || []).length > 5 && (
+                <p className="text-xs text-slate-400 text-center">+{(state.miscExpenses || []).length - 5} more</p>
+              )}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -221,6 +375,7 @@ export default function App() {
       { id: 'overview', label: 'Overview', icon: LayoutDashboard },
       { id: 'materials', label: 'Samaan', icon: Package },
       { id: 'labour', label: 'Mazdoor', icon: Users },
+      { id: 'theka', label: 'Theka', icon: ChevronRight },
       { id: 'expenses', label: 'Kharcha', icon: IndianRupee },
       { id: 'timeline', label: 'Raftaar', icon: Clock },
     ];
@@ -232,13 +387,20 @@ export default function App() {
           <p className="text-slate-500 text-sm">Construction Tracker</p>
         </header>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <div
+          ref={constructionTabsDrag.ref}
+          onMouseDown={constructionTabsDrag.onMouseDown}
+          onMouseMove={constructionTabsDrag.onMouseMove}
+          onMouseUp={constructionTabsDrag.onMouseUp}
+          onMouseLeave={constructionTabsDrag.onMouseLeave}
+          className="-mx-4 flex gap-2 overflow-x-auto pb-2 px-4 no-scrollbar cursor-grab"
+        >
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setSubTab(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all",
+                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shrink-0",
                 subTab === tab.id 
                   ? "bg-indigo-600 text-white shadow-md shadow-indigo-100" 
                   : "bg-white text-slate-600 border border-slate-100"
@@ -248,6 +410,7 @@ export default function App() {
               {tab.label}
             </button>
           ))}
+          <span className="shrink-0 w-4" />
         </div>
 
         {subTab === 'overview' && (
@@ -338,20 +501,24 @@ export default function App() {
               </button>
             </div>
 
-            {state.materials.map(material => {
+            {[...state.materials].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(material => {
               const stock = material.purchased - material.used;
               const isLow = stock <= material.minStock;
               return (
-                <div key={material.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold text-slate-900">{material.name}</h4>
-                    <p className="text-xs text-slate-500">{material.purchased} {material.unit} Purchased</p>
-                  </div>
-                  <div className="text-right">
-                    <div className={cn("text-lg font-bold", isLow ? "text-red-500" : "text-green-600")}>
-                      {stock} {material.unit}
+                <div key={material.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-bold text-slate-900">{material.name}</h4>
+                      <p className="text-xs text-slate-500">{material.purchased} {material.unit} Purchased • ₹{material.rate}/{material.unit}</p>
                     </div>
-                    <button 
+                    <div className="flex items-center gap-2">
+                      <div className={cn("text-lg font-bold", isLow ? "text-red-500" : "text-green-600")}>
+                        {stock} {material.unit}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button
                       onClick={() => {
                         const used = Number(prompt(`How many ${material.unit} used?`));
                         if (isNaN(used)) return;
@@ -360,9 +527,34 @@ export default function App() {
                           materials: prev.materials.map(m => m.id === material.id ? { ...m, used: m.used + used } : m)
                         }));
                       }}
-                      className="text-[10px] font-bold uppercase text-indigo-600 underline"
+                      className="flex-1 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
                     >
                       Update Usage
+                    </button>
+                    <button
+                      onClick={() => {
+                        const name = prompt('Material Name?', material.name);
+                        if (!name) return;
+                        const purchased = Number(prompt('Quantity Purchased?', String(material.purchased)));
+                        const rate = Number(prompt('Rate per unit?', String(material.rate)));
+                        const minStock = Number(prompt('Low Stock Alert at?', String(material.minStock)));
+                        setState(prev => ({
+                          ...prev,
+                          materials: prev.materials.map(m => m.id === material.id ? { ...m, name, purchased, rate, minStock } : m)
+                        }));
+                      }}
+                      className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!confirm(`Delete ${material.name}?`)) return;
+                        setState(prev => ({ ...prev, materials: prev.materials.filter(m => m.id !== material.id) }));
+                      }}
+                      className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                    >
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -403,18 +595,44 @@ export default function App() {
               <div key={labour.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="font-bold text-slate-900">{labour.type}</h4>
-                  <p className="text-sm font-bold text-slate-600">{formatCurrency(labour.dailyWage)}/day</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-slate-600">{formatCurrency(labour.dailyWage)}/day</p>
+                    <button
+                      onClick={() => {
+                        const type = prompt('Labour Type?', labour.type);
+                        if (!type) return;
+                        const wage = Number(prompt('Daily Wage?', String(labour.dailyWage)));
+                        setState(prev => ({
+                          ...prev,
+                          labours: prev.labours.map(l => l.id === labour.id ? { ...l, type, dailyWage: wage } : l)
+                        }));
+                      }}
+                      className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!confirm(`Delete ${labour.type}?`)) return;
+                        setState(prev => ({ ...prev, labours: prev.labours.filter(l => l.id !== labour.id) }));
+                      }}
+                      className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button 
                     onClick={() => {
-                      const date = format(new Date(), 'yyyy-MM-dd');
+                      const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                      const date = dateStr;
                       setState(prev => ({
                         ...prev,
                         labours: prev.labours.map(l => l.id === labour.id ? { ...l, attendance: { ...l.attendance, [date]: 'present' } } : l),
                         expenses: [...prev.expenses, {
                           id: Math.random().toString(36).substr(2, 9),
-                          date: new Date().toISOString(),
+                          date: new Date(dateStr).toISOString(),
                           amount: labour.dailyWage,
                           category: 'Labour',
                           notes: `Daily wage for ${labour.type}`
@@ -427,13 +645,14 @@ export default function App() {
                   </button>
                   <button 
                     onClick={() => {
-                      const date = format(new Date(), 'yyyy-MM-dd');
+                      const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                      const date = dateStr;
                       setState(prev => ({
                         ...prev,
                         labours: prev.labours.map(l => l.id === labour.id ? { ...l, attendance: { ...l.attendance, [date]: 'half' } } : l),
                         expenses: [...prev.expenses, {
                           id: Math.random().toString(36).substr(2, 9),
-                          date: new Date().toISOString(),
+                          date: new Date(dateStr).toISOString(),
                           amount: labour.dailyWage / 2,
                           category: 'Labour',
                           notes: `Half day wage for ${labour.type}`
@@ -450,6 +669,179 @@ export default function App() {
           </div>
         )}
 
+        {subTab === 'theka' && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-slate-900">Thekedar Hisaab</h3>
+              <button
+                onClick={() => {
+                  const name = prompt('Thekedar ka naam?');
+                  if (!name) return;
+                  const workType = prompt('Kaam ka type? (Civil/Electrical/Plumbing/Painting/Flooring/Other)') as Theka['workType'];
+                  const totalAmount = Number(prompt('Total theka amount (₹)?'));
+                  const startDate = prompt('Start date (YYYY-MM-DD)?', new Date().toISOString().slice(0, 10));
+                  const notes = prompt('Notes?') || '';
+                  const newTheka: Theka = {
+                    id: Math.random().toString(36).substr(2, 9),
+                    name,
+                    workType: workType || 'Civil',
+                    totalAmount,
+                    payments: [],
+                    startDate: startDate || new Date().toISOString(),
+                    notes,
+                  };
+                  setState(prev => ({ ...prev, thekas: [...prev.thekas, newTheka] }));
+                }}
+                className="p-2 bg-indigo-600 text-white rounded-full"
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+
+            {state.thekas.map(theka => {
+              const totalPaid = theka.payments.reduce((a, p) => a + p.amount, 0);
+              const remaining = theka.totalAmount - totalPaid;
+              const pct = theka.totalAmount > 0 ? (totalPaid / theka.totalAmount) * 100 : 0;
+              return (
+                <div key={theka.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  {/* Header */}
+                  <div className="p-4 flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-900">{theka.name}</h4>
+                      <span className="text-xs font-bold px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full">{theka.workType}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <p className="text-xs text-slate-400 font-bold uppercase">Total</p>
+                        <p className="font-bold text-slate-900">{formatCurrency(theka.totalAmount)}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const name = prompt('Thekedar naam?', theka.name);
+                          if (!name) return;
+                          const totalAmount = Number(prompt('Total amount?', String(theka.totalAmount)));
+                          const notes = prompt('Notes?', theka.notes) || '';
+                          setState(prev => ({
+                            ...prev,
+                            thekas: prev.thekas.map(t => t.id === theka.id ? { ...t, name, totalAmount, notes } : t)
+                          }));
+                        }}
+                        className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!confirm(`Delete theka for ${theka.name}?`)) return;
+                          setState(prev => ({ ...prev, thekas: prev.thekas.filter(t => t.id !== theka.id) }));
+                        }}
+                        className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div className="px-4 pb-3">
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-1">
+                      <div className="h-full bg-indigo-500 transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
+                    </div>
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-green-600">Diya: {formatCurrency(totalPaid)}</span>
+                      <span className="text-red-500">Baaki: {formatCurrency(remaining)}</span>
+                    </div>
+                  </div>
+
+                  {/* Payment history */}
+                  {theka.payments.length > 0 && (
+                    <div className="border-t border-slate-50 px-4 py-2 space-y-2">
+                      {[...theka.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
+                        <div key={payment.id} className="flex justify-between items-center text-sm">
+                          <div>
+                            <p className="font-bold text-slate-700">{formatCurrency(payment.amount)}</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">{format(new Date(payment.date), 'dd MMM yyyy')} {payment.note && `• ${payment.note}`}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                const amount = Number(prompt('Amount?', String(payment.amount)));
+                                if (!amount) return;
+                                const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(payment.date), 'yyyy-MM-dd')) || format(new Date(payment.date), 'yyyy-MM-dd');
+                                const note = prompt('Note?', payment.note) || '';
+                                setState(prev => ({
+                                  ...prev,
+                                  thekas: prev.thekas.map(t => t.id === theka.id
+                                    ? { ...t, payments: t.payments.map(p => p.id === payment.id ? { ...p, amount, date: new Date(dateStr).toISOString(), note } : p) }
+                                    : t),
+                                  expenses: prev.expenses.map(e => e.id === payment.id ? { ...e, amount, date: new Date(dateStr).toISOString(), notes: `${theka.name} (${theka.workType}) - ${note}` } : e)
+                                }));
+                              }}
+                              className="p-1 text-slate-400 hover:text-indigo-500"
+                            >
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (!confirm('Delete this payment?')) return;
+                                setState(prev => ({
+                                  ...prev,
+                                  thekas: prev.thekas.map(t => t.id === theka.id
+                                    ? { ...t, payments: t.payments.filter(p => p.id !== payment.id) }
+                                    : t),
+                                  expenses: prev.expenses.filter(e => e.id !== payment.id)
+                                }));
+                              }}
+                              className="p-1 text-red-300 hover:text-red-500"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add payment */}
+                  <div className="border-t border-slate-50 p-3">
+                    <button
+                      onClick={() => {
+                        const amount = Number(prompt(`${theka.name} ko kitna diya?`));
+                        if (!amount) return;
+                        const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                        const note = prompt('Note (optional)?') || '';
+                        const paymentId = Math.random().toString(36).substr(2, 9);
+                        setState(prev => ({
+                          ...prev,
+                          thekas: prev.thekas.map(t => t.id === theka.id
+                            ? { ...t, payments: [...t.payments, { id: paymentId, date: new Date(dateStr).toISOString(), amount, note }] }
+                            : t),
+                          expenses: [...prev.expenses, {
+                            id: paymentId,
+                            date: new Date(dateStr).toISOString(),
+                            amount,
+                            category: 'Theka',
+                            notes: `${theka.name} (${theka.workType}) - ${note}`
+                          }]
+                        }));
+                      }}
+                      className="w-full py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
+                    >
+                      + Payment Add Karo
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {state.thekas.length === 0 && (
+              <div className="bg-white p-8 rounded-3xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-sm">
+                Koi theka nahi mila. Upar + se add karo.
+              </div>
+            )}
+          </div>
+        )}
+
         {subTab === 'expenses' && (
           <div className="space-y-4">
             <div className="flex justify-between items-center">
@@ -460,12 +852,13 @@ export default function App() {
                   if (!amount) return;
                   const category = prompt('Category (Material/Labour/Theka/Equipment/Transport/Misc)?') as any;
                   const notes = prompt('Notes?');
+                  const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
                   
                   setState(prev => ({
                     ...prev,
                     expenses: [{
                       id: Math.random().toString(36).substr(2, 9),
-                      date: new Date().toISOString(),
+                      date: new Date(dateStr).toISOString(),
                       amount,
                       category: category || 'Misc',
                       notes: notes || ''
@@ -479,7 +872,7 @@ export default function App() {
             </div>
 
             <div className="space-y-2">
-              {state.expenses.slice(0, 20).map(expense => (
+              {[...state.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 20).map(expense => (
                 <div key={expense.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
@@ -490,9 +883,35 @@ export default function App() {
                       <p className="text-[10px] text-slate-400 uppercase font-bold">{format(new Date(expense.date), 'dd MMM, HH:mm')}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-slate-900">{formatCurrency(expense.amount)}</p>
-                    <p className="text-[10px] text-slate-500 truncate max-w-[100px]">{expense.notes}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <p className="font-bold text-slate-900">{formatCurrency(expense.amount)}</p>
+                      <p className="text-[10px] text-slate-500 truncate max-w-[80px]">{expense.notes}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const amount = Number(prompt('Amount?', String(expense.amount)));
+                        if (!amount) return;
+                        const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(expense.date), 'yyyy-MM-dd')) || format(new Date(expense.date), 'yyyy-MM-dd');
+                        const notes = prompt('Notes?', expense.notes);
+                        setState(prev => ({
+                          ...prev,
+                          expenses: prev.expenses.map(e => e.id === expense.id ? { ...e, amount, date: new Date(dateStr).toISOString(), notes: notes || '' } : e)
+                        }));
+                      }}
+                      className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!confirm('Delete this expense?')) return;
+                        setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }));
+                      }}
+                      className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -545,6 +964,7 @@ export default function App() {
       { id: 'bricks', label: 'Eent Bachao', icon: TrendingUp },
       { id: 'malwa', label: 'Malwa', icon: Trash2 },
       { id: 'scrap', label: 'Kabaad', icon: Package },
+      { id: 'theka', label: 'Theka', icon: ChevronRight },
     ];
 
     return (
@@ -554,13 +974,20 @@ export default function App() {
           <p className="text-slate-500 text-sm">Demolition Tracker</p>
         </header>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <div
+          ref={demolitionTabsDrag.ref}
+          onMouseDown={demolitionTabsDrag.onMouseDown}
+          onMouseMove={demolitionTabsDrag.onMouseMove}
+          onMouseUp={demolitionTabsDrag.onMouseUp}
+          onMouseLeave={demolitionTabsDrag.onMouseLeave}
+          className="-mx-4 flex gap-2 overflow-x-auto pb-2 px-4 no-scrollbar cursor-grab"
+        >
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setSubTab(tab.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all",
+                "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shrink-0",
                 subTab === tab.id 
                   ? "bg-orange-600 text-white shadow-md shadow-orange-100" 
                   : "bg-white text-slate-600 border border-slate-100"
@@ -570,31 +997,104 @@ export default function App() {
               {tab.label}
             </button>
           ))}
+          <span className="shrink-0 w-4" />
         </div>
 
         {subTab === 'overview' && (
           <div className="space-y-4">
-            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
-              <h3 className="font-bold text-slate-900">P&L Summary</h3>
-              <div className="space-y-4">
+            {/* Cost Breakdown */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+              <h3 className="font-bold text-slate-900">Kharcha (Cost)</h3>
+              <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-medium">Total Cost (Malwa)</span>
+                  <span className="text-slate-500 text-sm">Malwa Disposal</span>
                   <span className="font-bold text-red-500">-{formatCurrency(malwaCost)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-medium">Scrap Income</span>
-                  <span className="font-bold text-green-600">+{formatCurrency(scrapIncome)}</span>
+                  <span className="text-slate-500 text-sm">Theka Diya (Paid)</span>
+                  <span className="font-bold text-red-500">-{formatCurrency(demolitionThekaCost)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-sm font-medium">Brick Value</span>
-                  <span className="font-bold text-green-600">+{formatCurrency(brickRecoveryValue)}</span>
+                  <span className="text-slate-500 text-sm">Theka Baaki (Pending)</span>
+                  <span className="font-bold text-orange-500">-{formatCurrency(demolitionThekaPending)}</span>
                 </div>
-                <div className="pt-4 border-t border-slate-50 flex justify-between items-center">
-                  <span className="font-bold text-slate-900">Net Savings</span>
-                  <span className="text-xl font-bold text-indigo-600">{formatCurrency(totalRecovery - malwaCost)}</span>
+                <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+                  <span className="font-bold text-slate-700 text-sm">Total Kharcha</span>
+                  <span className="font-bold text-red-600">{formatCurrency(malwaCost + demolitionThekaCost)}</span>
                 </div>
               </div>
             </div>
+
+            {/* Income Breakdown */}
+            <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
+              <h3 className="font-bold text-slate-900">Kamai (Income)</h3>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 text-sm">Scrap Income</span>
+                  <span className="font-bold text-green-600">+{formatCurrency(scrapIncome)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 text-sm">Brick Recovery Value</span>
+                  <span className="font-bold text-green-600">+{formatCurrency(brickRecoveryValue)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 text-sm">Bricks Recovered</span>
+                  <span className="font-bold text-blue-600">{formatNumber(state.brickRecovery.reduce((a, b) => a + b.recovered, 0))} pcs</span>
+                </div>
+                <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
+                  <span className="font-bold text-slate-700 text-sm">Total Kamai</span>
+                  <span className="font-bold text-green-600">{formatCurrency(totalRecovery)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Net */}
+            <div className={cn(
+              "p-6 rounded-3xl border shadow-sm",
+              totalRecovery - malwaCost - demolitionThekaCost >= 0 ? "bg-green-50 border-green-100" : "bg-red-50 border-red-100"
+            )}>
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm font-bold uppercase text-slate-500">Net Bachat</p>
+                  <p className="text-xs text-slate-400">Kamai − Kharcha (paid)</p>
+                </div>
+                <span className={cn(
+                  "text-2xl font-bold",
+                  totalRecovery - malwaCost - demolitionThekaCost >= 0 ? "text-green-600" : "text-red-600"
+                )}>
+                  {formatCurrency(totalRecovery - malwaCost - demolitionThekaCost)}
+                </span>
+              </div>
+            </div>
+
+            {/* Theka summary cards */}
+            {(state.demolitionThekas || []).length > 0 && (
+              <div className="space-y-2">
+                <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wide">Thekedar Status</h3>
+                {(state.demolitionThekas || []).map(t => {
+                  const paid = t.payments.reduce((a, p) => a + p.amount, 0);
+                  const pct = t.totalAmount > 0 ? (paid / t.totalAmount) * 100 : 0;
+                  return (
+                    <div key={t.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                      <div className="flex justify-between items-center mb-2">
+                        <div>
+                          <p className="font-bold text-slate-900 text-sm">{t.name}</p>
+                          <span className="text-[10px] font-bold px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full">{t.workType}</span>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-slate-400">Baaki</p>
+                          <p className="font-bold text-red-500">{formatCurrency(t.totalAmount - paid)}</p>
+                        </div>
+                      </div>
+                      <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div className="h-full bg-orange-500 transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-1 text-right">{pct.toFixed(0)}% paid</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -607,12 +1107,13 @@ export default function App() {
                   const recovered = Number(prompt('Bricks Recovered today?'));
                   const broken = Number(prompt('Bricks Broken?'));
                   const rate = Number(prompt('Rate per brick (₹)?'));
+                  const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
                   
                   setState(prev => ({
                     ...prev,
                     brickRecovery: [...prev.brickRecovery, {
                       id: Math.random().toString(36).substr(2, 9),
-                      date: new Date().toISOString(),
+                      date: new Date(dateStr).toISOString(),
                       estimated: recovered + broken,
                       recovered,
                       broken,
@@ -626,14 +1127,40 @@ export default function App() {
               </button>
             </div>
 
-            {state.brickRecovery.map(entry => (
+            {[...state.brickRecovery].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(entry => (
               <div key={entry.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                 <div className="flex justify-between items-start mb-2">
                   <div>
                     <h4 className="font-bold text-slate-900">{format(new Date(entry.date), 'dd MMM yyyy')}</h4>
                     <p className="text-xs text-slate-500">Recovery Rate: {((entry.recovered / (entry.recovered + entry.broken)) * 100).toFixed(1)}%</p>
                   </div>
-                  <p className="font-bold text-green-600">+{formatCurrency(entry.recovered * entry.ratePerBrick)}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-green-600">+{formatCurrency(entry.recovered * entry.ratePerBrick)}</p>
+                    <button
+                      onClick={() => {
+                        const recovered = Number(prompt('Bricks Recovered?', String(entry.recovered)));
+                        const broken = Number(prompt('Bricks Broken?', String(entry.broken)));
+                        const rate = Number(prompt('Rate per brick (₹)?', String(entry.ratePerBrick)));
+                        const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(entry.date), 'yyyy-MM-dd')) || format(new Date(entry.date), 'yyyy-MM-dd');
+                        setState(prev => ({
+                          ...prev,
+                          brickRecovery: prev.brickRecovery.map(b => b.id === entry.id ? { ...b, recovered, broken, estimated: recovered + broken, ratePerBrick: rate, date: new Date(dateStr).toISOString() } : b)
+                        }));
+                      }}
+                      className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!confirm('Delete this entry?')) return;
+                        setState(prev => ({ ...prev, brickRecovery: prev.brickRecovery.filter(b => b.id !== entry.id) }));
+                      }}
+                      className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
                 <div className="flex gap-4 text-sm">
                   <div className="flex-1 bg-green-50 p-2 rounded-xl text-center">
@@ -659,12 +1186,13 @@ export default function App() {
                   const trips = Number(prompt('Trolley/Trips disposed?'));
                   const cost = Number(prompt('Cost per trip?'));
                   const vendor = prompt('Vendor Name?');
+                  const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
                   
                   setState(prev => ({
                     ...prev,
                     malwa: [...prev.malwa, {
                       id: Math.random().toString(36).substr(2, 9),
-                      date: new Date().toISOString(),
+                      date: new Date(dateStr).toISOString(),
                       generated: trips,
                       disposed: trips,
                       costPerTrip: cost,
@@ -672,7 +1200,7 @@ export default function App() {
                     }],
                     expenses: [...prev.expenses, {
                       id: Math.random().toString(36).substr(2, 9),
-                      date: new Date().toISOString(),
+                      date: new Date(dateStr).toISOString(),
                       amount: trips * cost,
                       category: 'Transport',
                       notes: `Malwa disposal: ${trips} trips`
@@ -685,13 +1213,39 @@ export default function App() {
               </button>
             </div>
 
-            {state.malwa.map(entry => (
+            {[...state.malwa].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(entry => (
               <div key={entry.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
                 <div>
                   <h4 className="font-bold text-slate-900">{entry.disposed} Trolleys</h4>
                   <p className="text-xs text-slate-500">{format(new Date(entry.date), 'dd MMM yyyy')} • {entry.vendor}</p>
                 </div>
-                <p className="font-bold text-red-500">-{formatCurrency(entry.disposed * entry.costPerTrip)}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-red-500">-{formatCurrency(entry.disposed * entry.costPerTrip)}</p>
+                  <button
+                    onClick={() => {
+                      const trips = Number(prompt('Trolleys disposed?', String(entry.disposed)));
+                      const cost = Number(prompt('Cost per trip?', String(entry.costPerTrip)));
+                      const vendor = prompt('Vendor Name?', entry.vendor);
+                      const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(entry.date), 'yyyy-MM-dd')) || format(new Date(entry.date), 'yyyy-MM-dd');
+                      setState(prev => ({
+                        ...prev,
+                        malwa: prev.malwa.map(m => m.id === entry.id ? { ...m, disposed: trips, generated: trips, costPerTrip: cost, vendor: vendor || '', date: new Date(dateStr).toISOString() } : m)
+                      }));
+                    }}
+                    className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!confirm('Delete this entry?')) return;
+                      setState(prev => ({ ...prev, malwa: prev.malwa.filter(m => m.id !== entry.id) }));
+                    }}
+                    className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
@@ -707,11 +1261,13 @@ export default function App() {
                   const qty = Number(prompt('Quantity?'));
                   const unit = prompt('Unit (kg/pcs)?');
                   const rate = Number(prompt('Rate per unit?'));
+                  const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
                   
                   setState(prev => ({
                     ...prev,
                     scrap: [...prev.scrap, {
                       id: Math.random().toString(36).substr(2, 9),
+                      date: new Date(dateStr).toISOString(),
                       type: type || 'Misc',
                       quantity: qty,
                       unit: unit || 'kg',
@@ -726,15 +1282,482 @@ export default function App() {
               </button>
             </div>
 
-            {state.scrap.map(entry => (
+            {[...state.scrap].sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()).map(entry => (
               <div key={entry.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
                 <div>
                   <h4 className="font-bold text-slate-900">{entry.type}</h4>
                   <p className="text-xs text-slate-500">{entry.quantity} {entry.unit} @ {formatCurrency(entry.rate)}</p>
+                  {entry.date && <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{format(new Date(entry.date), 'dd MMM yyyy')}</p>}
                 </div>
-                <p className="font-bold text-green-600">+{formatCurrency(entry.quantity * entry.rate)}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-green-600">+{formatCurrency(entry.quantity * entry.rate)}</p>
+                  <button
+                    onClick={() => {
+                      const type = prompt('Scrap Type?', entry.type);
+                      if (!type) return;
+                      const qty = Number(prompt('Quantity?', String(entry.quantity)));
+                      const rate = Number(prompt('Rate per unit?', String(entry.rate)));
+                      const dateStr = prompt('Date (YYYY-MM-DD)?', entry.date ? format(new Date(entry.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                      setState(prev => ({
+                        ...prev,
+                        scrap: prev.scrap.map(s => s.id === entry.id ? { ...s, type, quantity: qty, rate, date: new Date(dateStr).toISOString() } : s)
+                      }));
+                    }}
+                    className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!confirm('Delete this entry?')) return;
+                      setState(prev => ({ ...prev, scrap: prev.scrap.filter(s => s.id !== entry.id) }));
+                    }}
+                    className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {subTab === 'theka' && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-slate-900">Tod-Phod Theka</h3>
+              <button
+                onClick={() => {
+                  const name = prompt('Thekedar ka naam?');
+                  if (!name) return;
+                  const workType = prompt('Kaam ka type? (Tod-Phod/Malwa Hatao/Cutting/Other)') as DemolitionTheka['workType'];
+                  const totalAmount = Number(prompt('Total theka amount (₹)?'));
+                  const startDate = prompt('Start date (YYYY-MM-DD)?', new Date().toISOString().slice(0, 10));
+                  const notes = prompt('Notes?') || '';
+                  setState(prev => ({
+                    ...prev,
+                    demolitionThekas: [...(prev.demolitionThekas || []), {
+                      id: Math.random().toString(36).substr(2, 9),
+                      name,
+                      workType: workType || 'Tod-Phod',
+                      totalAmount,
+                      payments: [],
+                      startDate: startDate || new Date().toISOString(),
+                      notes,
+                    }]
+                  }));
+                }}
+                className="p-2 bg-orange-600 text-white rounded-full"
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+
+            {(state.demolitionThekas || []).map(theka => {
+              const totalPaid = theka.payments.reduce((a, p) => a + p.amount, 0);
+              const remaining = theka.totalAmount - totalPaid;
+              const pct = theka.totalAmount > 0 ? (totalPaid / theka.totalAmount) * 100 : 0;
+              return (
+                <div key={theka.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                  <div className="p-4 flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-900">{theka.name}</h4>
+                      <span className="text-xs font-bold px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full">{theka.workType}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <p className="text-xs text-slate-400 font-bold uppercase">Total</p>
+                        <p className="font-bold text-slate-900">{formatCurrency(theka.totalAmount)}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const name = prompt('Thekedar naam?', theka.name);
+                          if (!name) return;
+                          const totalAmount = Number(prompt('Total amount?', String(theka.totalAmount)));
+                          const notes = prompt('Notes?', theka.notes) || '';
+                          setState(prev => ({
+                            ...prev,
+                            demolitionThekas: (prev.demolitionThekas || []).map(t => t.id === theka.id ? { ...t, name, totalAmount, notes } : t)
+                          }));
+                        }}
+                        className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!confirm(`Delete theka for ${theka.name}?`)) return;
+                          setState(prev => ({ ...prev, demolitionThekas: (prev.demolitionThekas || []).filter(t => t.id !== theka.id) }));
+                        }}
+                        className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="px-4 pb-3">
+                    <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-1">
+                      <div className="h-full bg-orange-500 transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
+                    </div>
+                    <div className="flex justify-between text-xs font-bold">
+                      <span className="text-green-600">Diya: {formatCurrency(totalPaid)}</span>
+                      <span className="text-red-500">Baaki: {formatCurrency(remaining)}</span>
+                    </div>
+                  </div>
+
+                  {theka.payments.length > 0 && (
+                    <div className="border-t border-slate-50 px-4 py-2 space-y-2">
+                      {[...theka.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
+                        <div key={payment.id} className="flex justify-between items-center text-sm">
+                          <div>
+                            <p className="font-bold text-slate-700">{formatCurrency(payment.amount)}</p>
+                            <p className="text-[10px] text-slate-400 uppercase font-bold">{format(new Date(payment.date), 'dd MMM yyyy')}{payment.note && ` • ${payment.note}`}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => {
+                                const amount = Number(prompt('Amount?', String(payment.amount)));
+                                if (!amount) return;
+                                const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(payment.date), 'yyyy-MM-dd')) || format(new Date(payment.date), 'yyyy-MM-dd');
+                                const note = prompt('Note?', payment.note) || '';
+                                setState(prev => ({
+                                  ...prev,
+                                  demolitionThekas: (prev.demolitionThekas || []).map(t => t.id === theka.id
+                                    ? { ...t, payments: t.payments.map(p => p.id === payment.id ? { ...p, amount, date: new Date(dateStr).toISOString(), note } : p) }
+                                    : t),
+                                }));
+                              }}
+                              className="p-1 text-slate-400 hover:text-orange-500"
+                            >
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                if (!confirm('Delete this payment?')) return;
+                                setState(prev => ({
+                                  ...prev,
+                                  demolitionThekas: (prev.demolitionThekas || []).map(t => t.id === theka.id
+                                    ? { ...t, payments: t.payments.filter(p => p.id !== payment.id) }
+                                    : t),
+                                }));
+                              }}
+                              className="p-1 text-red-300 hover:text-red-500"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="border-t border-slate-50 p-3">
+                    <button
+                      onClick={() => {
+                        const amount = Number(prompt(`${theka.name} ko kitna diya?`));
+                        if (!amount) return;
+                        const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                        const note = prompt('Note (optional)?') || '';
+                        const paymentId = Math.random().toString(36).substr(2, 9);
+                        setState(prev => ({
+                          ...prev,
+                          demolitionThekas: (prev.demolitionThekas || []).map(t => t.id === theka.id
+                            ? { ...t, payments: [...t.payments, { id: paymentId, date: new Date(dateStr).toISOString(), amount, note }] }
+                            : t),
+                        }));
+                      }}
+                      className="w-full py-2 bg-orange-50 text-orange-600 rounded-xl text-xs font-bold border border-orange-100"
+                    >
+                      + Payment Add Karo
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+
+            {(state.demolitionThekas || []).length === 0 && (
+              <div className="bg-white p-8 rounded-3xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-sm">
+                Koi theka nahi mila. Upar + se add karo.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderKiraya = () => {
+    const totalMonthlyRent = (state.rentals || []).reduce((a, r) => a + r.monthlyRent, 0);
+    const totalPaidRent = (state.rentals || []).reduce((a, r) => a + r.payments.reduce((s, p) => s + p.amount, 0), 0);
+
+    return (
+      <div className="space-y-6 pb-20">
+        <header className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Kiraya Hisaab</h1>
+            <p className="text-slate-500 text-sm">Rent Tracker</p>
+          </div>
+          <button
+            onClick={() => {
+              const name = prompt('Property ka naam? (e.g. Basement, 1BHK)');
+              if (!name) return;
+              const type = prompt('Type? (Basement/1BHK/2BHK/Shop/Other)') as RentalProperty['type'];
+              const monthlyRent = Number(prompt('Monthly rent (₹)?'));
+              const deposit = Number(prompt('Security deposit (₹)? (0 if none)') || '0');
+              const depositStatus: RentalProperty['depositStatus'] = deposit > 0
+                ? (prompt('Deposit status?\n1. pending - dena baaki hai\n2. paid - de diya, wapas milega\nType: pending ya paid') === 'paid' ? 'paid' : 'pending')
+                : 'pending';
+              const ownerName = prompt('Makan malik ka naam?') || '';
+              const ownerPhone = prompt('Makan malik ka phone?') || '';
+              const startDate = prompt('Rent start date (YYYY-MM-DD)?', new Date().toISOString().slice(0, 10)) || new Date().toISOString();
+              const agreementEndDate = prompt('Agreement end date (YYYY-MM-DD)?', '') || '';
+              const agreementNote = prompt('Agreement notes? (e.g. 11 month, notice period)') || '';
+              setState(prev => ({
+                ...prev,
+                rentals: [...(prev.rentals || []), {
+                  id: Math.random().toString(36).substr(2, 9),
+                  name,
+                  type: type || 'Other',
+                  monthlyRent,
+                  deposit,
+                  depositStatus,
+                  ownerName,
+                  ownerPhone,
+                  startDate,
+                  agreementEndDate,
+                  agreementNote,
+                  payments: [],
+                }]
+              }));
+            }}
+            className="p-2 bg-violet-600 text-white rounded-full"
+          >
+            <Plus size={20} />
+          </button>
+        </header>
+
+        {/* Summary */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-violet-600 text-white p-4 rounded-2xl shadow-sm">
+            <p className="text-xs font-bold uppercase opacity-80 mb-1">Monthly Rent</p>
+            <p className="text-xl font-bold">{formatCurrency(totalMonthlyRent)}</p>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <p className="text-xs font-bold uppercase text-slate-400 mb-1">Rent Diya</p>
+            <p className="text-xl font-bold text-slate-900">{formatCurrency(totalPaidRent)}</p>
+          </div>
+          {depositPaid > 0 && (
+            <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 shadow-sm">
+              <p className="text-xs font-bold uppercase text-blue-500 mb-0.5">Deposit Diya ✓</p>
+              <p className="text-lg font-bold text-blue-700">{formatCurrency(depositPaid)}</p>
+              <p className="text-[10px] text-blue-400 font-bold mt-0.5">Paisa gaya • ghar khaali karne pe wapas milega</p>
+            </div>
+          )}
+          {depositPending > 0 && (
+            <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 shadow-sm">
+              <p className="text-xs font-bold uppercase text-orange-500 mb-0.5">Deposit Dena Baaki ⏳</p>
+              <p className="text-lg font-bold text-orange-600">{formatCurrency(depositPending)}</p>
+              <p className="text-[10px] text-orange-400 font-bold mt-0.5">Maine abhi nahi diya</p>
+            </div>
+          )}
+          {depositWapas > 0 && (
+            <div className="bg-green-50 p-4 rounded-2xl border border-green-100 shadow-sm">
+              <p className="text-xs font-bold uppercase text-green-500 mb-0.5">Deposit Wapas Milega 🔄</p>
+              <p className="text-lg font-bold text-green-700">{formatCurrency(depositWapas)}</p>
+              <p className="text-[10px] text-green-400 font-bold mt-0.5">Jab ghar khaali karunga</p>
+            </div>
+          )}
+        </div>
+
+        {/* Property cards */}
+        {(state.rentals || []).map(rental => {
+          const totalPaid = rental.payments.reduce((a, p) => a + p.amount, 0);
+          const currentMonth = format(new Date(), 'yyyy-MM');
+          const paidThisMonth = rental.payments.filter(p => p.month === currentMonth).reduce((a, p) => a + p.amount, 0);
+          const thisMonthDone = paidThisMonth >= rental.monthlyRent;
+
+          return (
+            <div key={rental.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              {/* Header */}
+              <div className="p-4 flex justify-between items-start">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Home size={16} className="text-violet-500" />
+                    <h4 className="font-bold text-slate-900">{rental.name}</h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 bg-violet-50 text-violet-600 rounded-full">{rental.type}</span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">{rental.ownerName}{rental.ownerPhone ? ` • ${rental.ownerPhone}` : ''}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const name = prompt('Property naam?', rental.name);
+                      if (!name) return;
+                      const monthlyRent = Number(prompt('Monthly rent?', String(rental.monthlyRent)));
+                      const deposit = Number(prompt('Security deposit?', String(rental.deposit || 0)));
+                      const depositStatus: RentalProperty['depositStatus'] = deposit > 0
+                        ? ((prompt('Deposit status? (pending/paid/refunded/forfeited)', rental.depositStatus || 'pending') || 'pending') as RentalProperty['depositStatus'])
+                        : 'pending';
+                      const ownerName = prompt('Makan malik?', rental.ownerName) || '';
+                      const ownerPhone = prompt('Phone?', rental.ownerPhone || '') || '';
+                      const agreementEndDate = prompt('Agreement end date (YYYY-MM-DD)?', rental.agreementEndDate || '') || '';
+                      const agreementNote = prompt('Agreement notes?', rental.agreementNote || '') || '';
+                      setState(prev => ({
+                        ...prev,
+                        rentals: (prev.rentals || []).map(r => r.id === rental.id
+                          ? { ...r, name, monthlyRent, deposit, depositStatus, ownerName, ownerPhone, agreementEndDate, agreementNote }
+                          : r)
+                      }));
+                    }}
+                    className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (!confirm(`Delete ${rental.name}?`)) return;
+                      setState(prev => ({ ...prev, rentals: (prev.rentals || []).filter(r => r.id !== rental.id) }));
+                    }}
+                    className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Rent + Deposit info */}
+              <div className="px-4 pb-3 grid grid-cols-2 gap-3">
+                <div className="bg-slate-50 p-3 rounded-xl">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">Monthly Rent</p>
+                  <p className="font-bold text-slate-900">{formatCurrency(rental.monthlyRent)}</p>
+                </div>
+                <div className={cn("p-3 rounded-xl", rental.deposit > 0 ? (
+                  (() => {
+                    const s = getDepositStatus(rental);
+                    return s === 'paid' ? "bg-blue-50" : s === 'refunded' ? "bg-green-50" : s === 'forfeited' ? "bg-red-50" : "bg-orange-50";
+                  })()
+                ) : "bg-slate-50")}>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">Security Deposit</p>
+                  {rental.deposit > 0 ? (
+                    <div>
+                      <p className="font-bold text-slate-900">{formatCurrency(rental.deposit)}</p>
+                      <p className={cn("text-[10px] font-bold mt-0.5", (() => {
+                        const s = getDepositStatus(rental);
+                        return s === 'paid' ? "text-blue-600" : s === 'refunded' ? "text-green-600" : s === 'forfeited' ? "text-red-600" : "text-orange-600";
+                      })())}>
+                        {(() => {
+                          const s = getDepositStatus(rental);
+                          if (s === 'pending') return '⏳ Dena Baaki';
+                          if (s === 'paid') return '✓ Diya • Wapas Milega';
+                          if (s === 'refunded') return '✓ Wapas Mil Gaya';
+                          if (s === 'forfeited') return '✗ Kaat Liya Gaya';
+                        })()}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="font-bold text-slate-400">—</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Agreement info */}
+              {(rental.agreementEndDate || rental.agreementNote) && (
+                <div className="mx-4 mb-3 px-3 py-2 bg-blue-50 rounded-xl text-xs text-blue-700 space-y-0.5">
+                  {rental.agreementEndDate && (
+                    <p className="font-bold">Agreement ends: {format(new Date(rental.agreementEndDate), 'dd MMM yyyy')}</p>
+                  )}
+                  {rental.agreementNote && <p className="opacity-80">{rental.agreementNote}</p>}
+                </div>
+              )}
+
+              {/* This month status */}
+              <div className={cn("mx-4 mb-3 px-3 py-2 rounded-xl text-xs font-bold flex justify-between items-center",
+                thisMonthDone ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"
+              )}>
+                <span>{format(new Date(), 'MMMM yyyy')}</span>
+                <span>{thisMonthDone ? `✓ Paid ${formatCurrency(paidThisMonth)}` : `Baaki: ${formatCurrency(rental.monthlyRent - paidThisMonth)}`}</span>
+              </div>
+
+              {/* Payment history */}
+              {rental.payments.length > 0 && (
+                <div className="border-t border-slate-50 px-4 py-2 space-y-2 max-h-40 overflow-y-auto">
+                  {[...rental.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
+                    <div key={payment.id} className="flex justify-between items-center text-sm">
+                      <div>
+                        <p className="font-bold text-slate-700">{formatCurrency(payment.amount)}</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">
+                          {format(new Date(payment.date), 'dd MMM yyyy')} • {payment.month}
+                          {payment.note && ` • ${payment.note}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => {
+                            const amount = Number(prompt('Amount?', String(payment.amount)));
+                            if (!amount) return;
+                            const month = prompt('Mahina (YYYY-MM)?', payment.month) || payment.month;
+                            const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(payment.date), 'yyyy-MM-dd')) || format(new Date(payment.date), 'yyyy-MM-dd');
+                            const note = prompt('Note?', payment.note) || '';
+                            setState(prev => ({
+                              ...prev,
+                              rentals: (prev.rentals || []).map(r => r.id === rental.id
+                                ? { ...r, payments: r.payments.map(p => p.id === payment.id ? { ...p, amount, month, date: new Date(dateStr).toISOString(), note } : p) }
+                                : r)
+                            }));
+                          }}
+                          className="p-1 text-slate-400 hover:text-violet-500"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (!confirm('Delete this payment?')) return;
+                            setState(prev => ({
+                              ...prev,
+                              rentals: (prev.rentals || []).map(r => r.id === rental.id
+                                ? { ...r, payments: r.payments.filter(p => p.id !== payment.id) }
+                                : r)
+                            }));
+                          }}
+                          className="p-1 text-red-300 hover:text-red-500"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Add payment */}
+              <div className="border-t border-slate-50 p-3">
+                <button
+                  onClick={() => {
+                    const amount = Number(prompt(`${rental.name} ka rent kitna diya?`, String(rental.monthlyRent)));
+                    if (!amount) return;
+                    const month = prompt('Kis mahine ka? (YYYY-MM)', format(new Date(), 'yyyy-MM')) || format(new Date(), 'yyyy-MM');
+                    const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                    const note = prompt('Note (optional)?') || '';
+                    setState(prev => ({
+                      ...prev,
+                      rentals: (prev.rentals || []).map(r => r.id === rental.id
+                        ? { ...r, payments: [...r.payments, { id: Math.random().toString(36).substr(2, 9), date: new Date(dateStr).toISOString(), amount, month, note }] }
+                        : r)
+                    }));
+                  }}
+                  className="w-full py-2 bg-violet-50 text-violet-600 rounded-xl text-xs font-bold border border-violet-100"
+                >
+                  + Rent Payment Add Karo
+                </button>
+              </div>
+            </div>
+          );
+        })}
+
+        {(state.rentals || []).length === 0 && (
+          <div className="bg-white p-8 rounded-3xl border-2 border-dashed border-slate-200 text-center text-slate-400 text-sm">
+            Koi property nahi mili. Upar + se add karo.
           </div>
         )}
       </div>
@@ -773,7 +1796,17 @@ export default function App() {
               />
             </div>
             <div>
-              <label className="text-xs font-bold text-slate-400 uppercase">Total Budget (₹)</label>
+              <label className="text-xs font-bold text-slate-400 uppercase">Master Budget — Sab Milake (₹)</label>
+              <input
+                type="number"
+                value={state.project?.masterBudget || ''}
+                onChange={(e) => setState(prev => ({ ...prev, project: { ...(prev.project || {} as Project), masterBudget: Number(e.target.value) } }))}
+                className="w-full mt-1 p-3 bg-indigo-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500"
+                placeholder="e.g. 8000000 (construction + rent + misc sab)"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-400 uppercase">Construction Budget (₹)</label>
               <input 
                 type="number" 
                 value={state.project?.budget || ''} 
@@ -825,38 +1858,46 @@ export default function App() {
         {activeTab === 'dashboard' && renderDashboard()}
         {activeTab === 'construction' && renderConstruction()}
         {activeTab === 'demolition' && renderDemolition()}
+        {activeTab === 'kiraya' && renderKiraya()}
         {activeTab === 'settings' && renderSettings()}
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-6 py-3 flex justify-between items-center z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-4 py-3 flex justify-between items-center z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <button 
           onClick={() => { setActiveTab('dashboard'); setSubTab('overview'); }}
           className={cn("flex flex-col items-center gap-1 transition-colors", activeTab === 'dashboard' ? "text-indigo-600" : "text-slate-400")}
         >
-          <LayoutDashboard size={24} />
-          <span className="text-[10px] font-bold uppercase">Hisaab</span>
+          <LayoutDashboard size={22} />
+          <span className="text-[9px] font-bold uppercase">Hisaab</span>
         </button>
         <button 
           onClick={() => { setActiveTab('construction'); setSubTab('overview'); }}
           className={cn("flex flex-col items-center gap-1 transition-colors", activeTab === 'construction' ? "text-indigo-600" : "text-slate-400")}
         >
-          <Construction size={24} />
-          <span className="text-[10px] font-bold uppercase">Naya Kaam</span>
+          <Construction size={22} />
+          <span className="text-[9px] font-bold uppercase">Naya Kaam</span>
         </button>
         <button 
           onClick={() => { setActiveTab('demolition'); setSubTab('overview'); }}
-          className={cn("flex flex-col items-center gap-1 transition-colors", activeTab === 'demolition' ? "text-indigo-600" : "text-slate-400")}
+          className={cn("flex flex-col items-center gap-1 transition-colors", activeTab === 'demolition' ? "text-orange-600" : "text-slate-400")}
         >
-          <Hammer size={24} />
-          <span className="text-[10px] font-bold uppercase">Tod-Phod</span>
+          <Hammer size={22} />
+          <span className="text-[9px] font-bold uppercase">Tod-Phod</span>
+        </button>
+        <button 
+          onClick={() => { setActiveTab('kiraya'); setSubTab('overview'); }}
+          className={cn("flex flex-col items-center gap-1 transition-colors", activeTab === 'kiraya' ? "text-violet-600" : "text-slate-400")}
+        >
+          <Home size={22} />
+          <span className="text-[9px] font-bold uppercase">Kiraya</span>
         </button>
         <button 
           onClick={() => { setActiveTab('settings'); setSubTab('overview'); }}
           className={cn("flex flex-col items-center gap-1 transition-colors", activeTab === 'settings' ? "text-indigo-600" : "text-slate-400")}
         >
-          <Settings size={24} />
-          <span className="text-[10px] font-bold uppercase">Taiyari</span>
+          <Settings size={22} />
+          <span className="text-[9px] font-bold uppercase">Taiyari</span>
         </button>
       </nav>
     </div>
