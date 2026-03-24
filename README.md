@@ -1,20 +1,68 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Nirman Hisaab 🏗️
 
-# Run and deploy your AI Studio app
+A Hindi/Hinglish construction project tracker PWA built with React + TypeScript + Vite. Manage your entire building project — from demolition to construction to rent — all in one place, with offline-first localStorage storage.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/19e629f4-a829-42b8-8c4c-103dc1e2d296
+### Dashboard (Hisaab)
+- Master budget progress with category-wise breakdown
+- Total kharcha across all categories with visual bars
+- Tod-Phod net bachat card
+- Miscellaneous expense quick-add with edit/delete
+- Low stock and active phase alerts
+- Current month rent due alert
+- CSV export
+
+### Naya Kaam (Construction)
+- **Samaan** — Material stock tracking: purchased, used, low-stock alerts, edit/delete
+- **Mazdoor** — Labour attendance with Present / Half Day (custom date), daily wage auto-added to expenses
+- **Theka** — Contractor tracking: work type (Civil/Electrical/Plumbing/Painting/Flooring), total amount, payment history with progress bar, edit/delete payments
+- **Kharcha** — Manual expense entries with category, date, edit/delete
+- **Raftaar** — Project milestone timeline (Foundation → Finishing)
+
+### Tod-Phod (Demolition)
+- **Overview** — Cost vs income summary, net bachat, thekedar status cards
+- **Eent Bachao** — Brick recovery counter with recovery rate and value
+- **Malwa** — Debris disposal tracking (trips × cost per trip)
+- **Kabaad** — Scrap income tracking (type, quantity, rate)
+- **Theka** — Demolition contractor payments (separate from construction, no double-counting)
+
+### Kiraya (Rent)
+- Multiple properties (Basement, 1BHK, 2BHK, Shop, Other)
+- Monthly rent payment tracking with month tagging
+- Security deposit with 4 statuses: `pending` / `paid` / `refunded` / `forfeited`
+- Agreement end date and notes
+- Owner name + phone
+- Current month paid/baaki status badge
+- Edit/delete payments
+
+### Settings
+- Project name, location, start/end dates
+- Master budget (all-in) + Construction budget (separate)
+- Reset all data
+
+## Data Entry
+All entries support:
+- **Custom date** — enter retroactively, not just today
+- **Edit** — pencil icon on every card and payment row
+- **Delete** — trash icon everywhere
+- **Date-sorted lists** — latest entries always shown first
+
+## Tech Stack
+- React 18 + TypeScript
+- Vite
+- Tailwind CSS
+- Recharts
+- date-fns
+- localStorage (no backend, works offline)
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+**Prerequisites:** Node.js
 
+```bash
+npm install
+npm run dev
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+App runs on `http://localhost:3000` (or next available port).
