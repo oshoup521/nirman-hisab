@@ -678,7 +678,20 @@ export default function App() {
                   const name = prompt('Thekedar ka naam?');
                   if (!name) return;
                   const workType = prompt('Kaam ka type? (Civil/Electrical/Plumbing/Painting/Flooring/Other)') as Theka['workType'];
-                  const totalAmount = Number(prompt('Total theka amount (₹)?'));
+                  let totalAmount = 0;
+                  let ratePerSqFt = 0;
+                  let areaSqFt = 0;
+                  
+                  const useSqFt = confirm('Kya aap Theka per Square Feet (₹/sq.ft) ke hisaab se lagana chahte hain?');
+                  if (useSqFt) {
+                    ratePerSqFt = Number(prompt('Darr (Rate) bataiye (e.g., 168 ₹/sq.ft)?'));
+                    const defaultArea = state.project?.totalArea || 0;
+                    areaSqFt = Number(prompt('Total Area (Sq.Ft) bataiye?', String(defaultArea)));
+                    totalAmount = ratePerSqFt * areaSqFt;
+                  } else {
+                    totalAmount = Number(prompt('Total lumpsum theka amount (₹)?'));
+                  }
+                  
                   const startDate = prompt('Start date (YYYY-MM-DD)?', new Date().toISOString().slice(0, 10));
                   const notes = prompt('Notes?') || '';
                   const newTheka: Theka = {
@@ -689,6 +702,8 @@ export default function App() {
                     payments: [],
                     startDate: startDate || new Date().toISOString(),
                     notes,
+                    ratePerSqFt: ratePerSqFt || undefined,
+                    areaSqFt: areaSqFt || undefined,
                   };
                   setState(prev => ({ ...prev, thekas: [...prev.thekas, newTheka] }));
                 }}
@@ -712,8 +727,12 @@ export default function App() {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-right">
-                        <p className="text-xs text-slate-400 font-bold uppercase">Total</p>
-                        <p className="font-bold text-slate-900">{formatCurrency(theka.totalAmount)}</p>
+                        {theka.ratePerSqFt && theka.areaSqFt ? (
+                          <p className="text-[10px] text-slate-400 font-bold mb-0.5 leading-none">{theka.areaSqFt} sq.ft × ₹{theka.ratePerSqFt}</p>
+                        ) : (
+                          <p className="text-xs text-slate-400 font-bold uppercase mb-0.5 leading-none">Total</p>
+                        )}
+                        <p className="font-bold text-slate-900 leading-none">{formatCurrency(theka.totalAmount)}</p>
                       </div>
                       <button
                         onClick={() => {
@@ -1815,6 +1834,26 @@ export default function App() {
                 placeholder="e.g. 5000000"
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase">Plot Size (e.g. 20x80)</label>
+                <div className="flex gap-2 mt-1">
+                  <input type="number" placeholder="W (ft)" value={state.project?.plotWidth || ''} onChange={(e) => setState(prev => { const w = Number(e.target.value); const l = prev.project?.plotLength || 0; const f = prev.project?.floors || 1; return { ...prev, project: { ...(prev.project || {} as Project), plotWidth: w, totalArea: w * l * f } }; })} className="w-full p-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm" />
+                  <span className="self-center text-slate-400">×</span>
+                  <input type="number" placeholder="L (ft)" value={state.project?.plotLength || ''} onChange={(e) => setState(prev => { const l = Number(e.target.value); const w = prev.project?.plotWidth || 0; const f = prev.project?.floors || 1; return { ...prev, project: { ...(prev.project || {} as Project), plotLength: l, totalArea: w * l * f } }; })} className="w-full p-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase">Kitne Floor Banenge?</label>
+                <input type="number" value={state.project?.floors || ''} onChange={(e) => setState(prev => { const f = Number(e.target.value); const w = prev.project?.plotWidth || 0; const l = prev.project?.plotLength || 0; return { ...prev, project: { ...(prev.project || {} as Project), floors: f, totalArea: w * l * f } }; })} className="w-full mt-1 p-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="e.g. 2" />
+              </div>
+            </div>
+            {state.project?.totalArea ? (
+              <div className="bg-indigo-50 rounded-2xl p-3 text-center">
+                <p className="text-xs text-indigo-600 font-bold uppercase">Estimated Total Area</p>
+                <p className="text-xl font-bold text-indigo-900">{state.project.totalArea} Sq.Ft</p>
+              </div>
+            ) : null}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs font-bold text-slate-400 uppercase">Start Date</label>

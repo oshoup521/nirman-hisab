@@ -15,6 +15,10 @@ export interface Project {
   masterBudget: number;  // total overall budget
   startDate: string;
   endDate: string;
+  plotLength?: number;
+  plotWidth?: number;
+  floors?: number;
+  totalArea?: number;
 }
 
 export interface Material {
@@ -52,6 +56,8 @@ export interface Theka {
   payments: ThekaPayment[];
   startDate: string;
   notes: string;
+  ratePerSqFt?: number;
+  areaSqFt?: number;
 }
 
 export interface DemolitionTheka {
