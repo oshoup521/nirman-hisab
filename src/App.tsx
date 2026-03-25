@@ -164,7 +164,7 @@ export default function App() {
     ].filter(d => d.value > 0);
 
     return (
-      <div className="space-y-6 pb-20">
+      <div className="space-y-6 pb-28">
         <header className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Hisaab-Kitaab</h1>
@@ -177,16 +177,16 @@ export default function App() {
 
         {/* Master Budget Card */}
         {masterBudget > 0 ? (
-          <div className={cn("p-5 rounded-3xl border shadow-sm", masterBurnRate > 90 ? "bg-red-50 border-red-200" : masterBurnRate > 70 ? "bg-yellow-50 border-yellow-200" : "bg-green-50 border-green-200")}>
+          <div className={cn("p-4 rounded-3xl border shadow-sm", masterBurnRate > 90 ? "bg-red-50 border-red-200" : masterBurnRate > 70 ? "bg-yellow-50 border-yellow-200" : "bg-green-50 border-green-200")}>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Master Budget</p>
-            <div className="flex justify-between items-end mb-3">
-              <div>
-                <p className="text-xs text-slate-400 uppercase font-bold">Total Budget</p>
-                <p className="text-3xl font-bold text-slate-900">{formatCurrency(masterBudget)}</p>
+            <div className="flex flex-col gap-2 mb-3">
+              <div className="bg-white/60 rounded-2xl p-3 flex justify-between items-center">
+                <p className="text-[11px] text-slate-500 uppercase font-bold">Total Budget</p>
+                <p className="text-xl font-bold text-slate-900">{formatCurrency(masterBudget)}</p>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-slate-400 uppercase font-bold">Total Kharcha</p>
-                <p className="text-3xl font-bold text-red-600">{formatCurrency(totalKharcha)}</p>
+              <div className="bg-white/60 rounded-2xl p-3 flex justify-between items-center">
+                <p className="text-[11px] text-slate-500 uppercase font-bold">Total Kharcha</p>
+                <p className="text-xl font-bold text-red-600">{formatCurrency(totalKharcha)}</p>
               </div>
             </div>
             <div className="w-full bg-black/10 h-3 rounded-full overflow-hidden mb-2">
@@ -283,13 +283,13 @@ export default function App() {
             <Hammer size={18} className="text-orange-400" />
             <h3 className="font-bold">Tod-Phod Net Bachat</h3>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <p className="text-slate-400 text-[10px] uppercase font-bold mb-0.5">Scrap + Bricks</p>
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center bg-white/5 rounded-2xl p-3">
+              <p className="text-slate-400 text-[11px] uppercase font-bold">Scrap + Bricks</p>
               <p className="text-lg font-bold text-green-400">+{formatCurrency(totalRecovery)}</p>
             </div>
-            <div>
-              <p className="text-slate-400 text-[10px] uppercase font-bold mb-0.5">Malwa + Theka</p>
+            <div className="flex justify-between items-center bg-white/5 rounded-2xl p-3">
+              <p className="text-slate-400 text-[11px] uppercase font-bold">Malwa + Theka</p>
               <p className="text-lg font-bold text-red-400">-{formatCurrency(malwaCost + demolitionThekaCost)}</p>
             </div>
           </div>
@@ -381,7 +381,7 @@ export default function App() {
     ];
 
     return (
-      <div className="space-y-6 pb-20">
+      <div className="space-y-6 pb-28">
         <header>
           <h1 className="text-2xl font-bold text-slate-900">Naya Kaam</h1>
           <p className="text-slate-500 text-sm">Construction Tracker</p>
@@ -968,7 +968,7 @@ export default function App() {
     ];
 
     return (
-      <div className="space-y-6 pb-20">
+      <div className="space-y-6 pb-28">
         <header>
           <h1 className="text-2xl font-bold text-slate-900">Tod-Phod</h1>
           <p className="text-slate-500 text-sm">Demolition Tracker</p>
@@ -1492,7 +1492,7 @@ export default function App() {
     const totalPaidRent = (state.rentals || []).reduce((a, r) => a + r.payments.reduce((s, p) => s + p.amount, 0), 0);
 
     return (
-      <div className="space-y-6 pb-20">
+      <div className="space-y-6 pb-28">
         <header className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Kiraya Hisaab</h1>
@@ -1766,7 +1766,7 @@ export default function App() {
 
   const renderSettings = () => {
     return (
-      <div className="space-y-6 pb-20">
+      <div className="space-y-6 pb-28">
         <header>
           <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
           <p className="text-slate-500 text-sm">Project Taiyari</p>
@@ -1854,7 +1854,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
-      <div className="max-w-md mx-auto px-4 pt-6">
+      <div className="max-w-md mx-auto px-4 pt-[max(env(safe-area-inset-top),24px)]">
         {activeTab === 'dashboard' && renderDashboard()}
         {activeTab === 'construction' && renderConstruction()}
         {activeTab === 'demolition' && renderDemolition()}
@@ -1863,7 +1863,7 @@ export default function App() {
       </div>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-4 py-3 flex justify-between items-center z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-4 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] flex justify-between items-center z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <button 
           onClick={() => { setActiveTab('dashboard'); setSubTab('overview'); }}
           className={cn("flex flex-col items-center gap-1 transition-colors", activeTab === 'dashboard' ? "text-indigo-600" : "text-slate-400")}
