@@ -66,6 +66,7 @@ const INITIAL_STATE: AppState = {
   demolitionThekas: [],
   rentals: [],
   miscExpenses: [],
+  vendors: [],
 };
 
 const MATERIAL_TYPES = [
@@ -150,6 +151,21 @@ export default function App() {
     a.click();
   };
 
+  const shareOnWhatsApp = () => {
+    const thekaPendingAmt = state.thekas.reduce((acc, t) => acc + (t.totalAmount - t.payments.reduce((a, p) => a + p.amount, 0)), 0);
+    const lowStockCount = state.materials.filter(m => m.purchased - m.used <= m.minStock).length;
+    
+    const text = `🏗️ *${state.project?.name || 'Nirman'} Hisaab*\n\n` +
+      `💰 *Total Budget:* ₹${formatCurrency(masterBudget)}\n` +
+      `🔥 *Total Kharcha:* ₹${formatCurrency(totalKharcha)}\n` +
+      `✨ *Bacha Hua:* ₹${formatCurrency(masterRemaining)}\n\n` +
+      `👷 *Theka Pending Dena Hai:* ₹${formatCurrency(thekaPendingAmt)}\n` +
+      `🛒 *Low Stock Items:* ${lowStockCount}\n\n` +
+      `- Shared via Nirman Hisaab App`;
+      
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+  };
+
   const renderDashboard = () => {
     const chartData = [
       { name: 'Spent', value: totalSpent, fill: '#ef4444' },
@@ -170,9 +186,14 @@ export default function App() {
             <h1 className="text-2xl font-bold text-slate-900">Hisaab-Kitaab</h1>
             <p className="text-slate-500 text-sm">Project Overview</p>
           </div>
-          <button onClick={exportToCSV} className="p-2 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 transition-colors">
-            <Download size={20} />
-          </button>
+          <div className="flex gap-2">
+            <button onClick={shareOnWhatsApp} className="p-2 bg-green-50 rounded-full text-green-600 hover:bg-green-100 transition-colors" title="Share on WhatsApp">
+              <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </button>
+            <button onClick={exportToCSV} className="p-2 bg-slate-100 rounded-full text-slate-600 hover:bg-slate-200 transition-colors" title="Export CSV">
+              <Download size={20} />
+            </button>
+          </div>
         </header>
 
         {/* Master Budget Card */}
@@ -374,6 +395,7 @@ export default function App() {
     const tabs = [
       { id: 'overview', label: 'Overview', icon: LayoutDashboard },
       { id: 'materials', label: 'Samaan', icon: Package },
+      { id: 'vendors', label: 'Udhaar', icon: Users },
       { id: 'labour', label: 'Mazdoor', icon: Users },
       { id: 'theka', label: 'Theka', icon: ChevronRight },
       { id: 'expenses', label: 'Kharcha', icon: IndianRupee },
@@ -554,6 +576,106 @@ export default function App() {
                       }}
                       className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                     >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {subTab === 'vendors' && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h3 className="font-bold text-slate-900">Dukandar Khata (Udhaar)</h3>
+              <button 
+                onClick={() => {
+                  const name = prompt('Dukandar ka naam? (e.g. Gupta Cement)');
+                  if (!name) return;
+                  const type = prompt('Samaan ka type? (e.g. Cement/Rodi/Hardware)');
+                  const totalBilled = Number(prompt('Ab tak ka total bill (₹)?', '0'));
+                  
+                  setState(prev => ({
+                    ...prev,
+                    vendors: [...(prev.vendors || []), {
+                      id: Math.random().toString(36).substr(2, 9),
+                      name, type: type || 'General', phone: '',
+                      totalBilled, payments: []
+                    }]
+                  }));
+                }}
+                className="p-2 bg-indigo-600 text-white rounded-full"
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+
+            {(state.vendors || []).map(vendor => {
+              const totalPaid = vendor.payments.reduce((a, p) => a + p.amount, 0);
+              const balance = vendor.totalBilled - totalPaid;
+              return (
+                <div key={vendor.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-bold text-slate-900">{vendor.name}</h4>
+                      <p className="text-xs text-slate-500 font-bold">{vendor.type}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">Total Bill</p>
+                      <p className="font-bold text-slate-900">₹{formatNumber(vendor.totalBilled)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between text-xs font-bold border-y border-slate-50 py-2">
+                    <div>
+                      <span className="text-slate-400">JAMA KIYA: </span>
+                      <span className="text-green-600">₹{formatNumber(totalPaid)}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400">DENA BAAKI: </span>
+                      <span className={balance > 0 ? "text-red-500" : "text-green-500"}>
+                        {balance > 0 ? `₹${formatNumber(balance)}` : `Advance ₹${formatNumber(Math.abs(balance))}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button onClick={() => {
+                      const amount = Number(prompt('Kitna payment (jama) de rahe hain?'));
+                      if (!amount) return;
+                      const dateStr = prompt('Date (YYYY-MM-DD)?', new Date().toISOString().slice(0, 10));
+                      const note = prompt('Notes? (e.g. Cash/UPI)') || '';
+                      
+                      setState(prev => ({
+                        ...prev,
+                        vendors: prev.vendors.map(v => v.id === vendor.id ? {
+                          ...v, payments: [...v.payments, { id: Math.random().toString(36).substr(2, 9), date: dateStr || '', amount, type: 'payment', note }]
+                        } : v),
+                        expenses: [...prev.expenses, {
+                          id: Math.random().toString(36).substr(2, 9),
+                          date: new Date(dateStr || '').toISOString(),
+                          amount, category: 'Material', notes: `Paid to ${vendor.name} - ${note}`
+                        }]
+                      }));
+                    }} className="flex-1 py-1.5 bg-green-50 text-green-600 rounded-xl text-xs font-bold border border-green-100">
+                      Paise Jama
+                    </button>
+                    <button onClick={() => {
+                      const amount = Number(prompt('Naya bill kitne ka aaya (₹)?'));
+                      if (!amount) return;
+                      setState(prev => ({
+                        ...prev,
+                        vendors: prev.vendors.map(v => v.id === vendor.id ? { ...v, totalBilled: v.totalBilled + amount } : v)
+                      }));
+                    }} className="flex-1 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100">
+                      Bill Badao
+                    </button>
+                    <button onClick={() => {
+                      if(confirm(`Delete ${vendor.name}?`)) {
+                        setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }));
+                      }
+                    }} className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100">
                       <Trash2 size={14} />
                     </button>
                   </div>

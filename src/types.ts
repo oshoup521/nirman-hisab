@@ -149,6 +149,23 @@ export interface RentalProperty {
   payments: RentPayment[];
 }
 
+export interface VendorPayment {
+  id: string;
+  date: string;
+  amount: number;
+  type: 'advance' | 'payment';
+  note: string;
+}
+
+export interface Vendor {
+  id: string;
+  name: string;
+  type: string;
+  phone: string;
+  totalBilled: number;
+  payments: VendorPayment[];
+}
+
 export interface AppState {
   project: Project | null;
   materials: Material[];
@@ -163,4 +180,5 @@ export interface AppState {
   demolitionThekas: DemolitionTheka[];
   rentals: RentalProperty[];
   miscExpenses: MiscExpense[];
+  vendors: Vendor[];
 }
