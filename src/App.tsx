@@ -36,7 +36,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 import { AppState, Project, Material, Labour, Theka, ThekaPayment, DemolitionTheka, RentalProperty, RentPayment, MiscExpense, Expense, Milestone, DemolitionProject, BrickRecovery, MalwaEntry, ScrapEntry } from './types';
-import { useLocalStorage } from './hooks/useLocalStorage';
+import { useCloudSync } from './hooks/useCloudSync';
 import { useDragScroll } from './hooks/useDragScroll';
 import { formatCurrency, formatNumber, getStatusColor } from './utils/formatters';
 
@@ -80,24 +80,26 @@ const LABOUR_TYPES = [
 ];
 
 export default function App() {
-  const [state, setState] = useLocalStorage<AppState>('nirman_hisaab_data', INITIAL_STATE);
+  const [state, setState, loading] = useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'construction' | 'demolition' | 'kiraya' | 'settings'>('dashboard');
   const [subTab, setSubTab] = useState<string>('overview');
+
+
 
   const constructionTabsDrag = useDragScroll();
   const demolitionTabsDrag = useDragScroll();
 
-  const totalSpent = useMemo(() => state.expenses.reduce((acc, curr) => acc + curr.amount, 0), [state.expenses]);
+  const totalSpent = useMemo(() => (state.expenses || []).reduce((acc, curr) => acc + curr.amount, 0), [state.expenses]);
   const budget = state.project?.budget || 0;
   const masterBudget = state.project?.masterBudget || 0;
   const remainingBudget = budget - totalSpent;
   const burnRate = budget > 0 ? (totalSpent / budget) * 100 : 0;
 
-  const scrapIncome = useMemo(() => state.scrap.reduce((acc, curr) => acc + (curr.quantity * curr.rate), 0), [state.scrap]);
-  const brickRecoveryValue = useMemo(() => state.brickRecovery.reduce((acc, curr) => acc + (curr.recovered * curr.ratePerBrick), 0), [state.brickRecovery]);
+  const scrapIncome = useMemo(() => (state.scrap || []).reduce((acc, curr) => acc + (curr.quantity * curr.rate), 0), [state.scrap]);
+  const brickRecoveryValue = useMemo(() => (state.brickRecovery || []).reduce((acc, curr) => acc + (curr.recovered * curr.ratePerBrick), 0), [state.brickRecovery]);
   const totalRecovery = scrapIncome + brickRecoveryValue;
   
-  const malwaCost = useMemo(() => state.malwa.reduce((acc, curr) => acc + (curr.disposed * curr.costPerTrip), 0), [state.malwa]);
+  const malwaCost = useMemo(() => (state.malwa || []).reduce((acc, curr) => acc + (curr.disposed * curr.costPerTrip), 0), [state.malwa]);
   const demolitionThekaCost = useMemo(() => (state.demolitionThekas || []).reduce((acc, t) => acc + t.payments.reduce((a, p) => a + p.amount, 0), 0), [state.demolitionThekas]);
   const demolitionThekaPending = useMemo(() => (state.demolitionThekas || []).reduce((acc, t) => acc + (t.totalAmount - t.payments.reduce((a, p) => a + p.amount, 0)), 0), [state.demolitionThekas]);
 
@@ -2012,6 +2014,15 @@ export default function App() {
       </div>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-bold text-slate-500">
+        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+        <p>Cloud se aapka hisaab laa rahe hain...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
