@@ -3,10 +3,63 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>Nirman Hisaab</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%234f46e5'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='system-ui,sans-serif'>🏗️</text></svg>" />
+
+    <!-- Primary SEO -->
+    <title>Nirman Hisaab — Construction & Demolition Tracker</title>
+    <meta name="description" content="Nirman Hisaab is a free Indian construction & demolition expense tracker. Manage materials, labour, debris recovery and daily hisaab in Hinglish — offline-first PWA." />
+    <meta name="keywords" content="construction tracker, nirman hisaab, demolition tracker, material management, labour management, site expense, hinglish, India, PWA" />
+    <meta name="author" content="Nirman Hisaab" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://nirman.oshoupadhyay.in/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nirman.oshoupadhyay.in/" />
+    <meta property="og:title" content="Nirman Hisaab — Construction & Demolition Tracker" />
+    <meta property="og:description" content="Free Indian construction & demolition expense tracker. Manage materials, labour, debris recovery and daily hisaab — offline-first PWA." />
+    <meta property="og:image" content="https://nirman.oshoupadhyay.in/pwa-512x512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:site_name" content="Nirman Hisaab" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:url" content="https://nirman.oshoupadhyay.in/" />
+    <meta name="twitter:title" content="Nirman Hisaab — Construction & Demolition Tracker" />
+    <meta name="twitter:description" content="Free Indian construction & demolition expense tracker. Manage materials, labour, debris recovery and daily hisaab — offline-first PWA." />
+    <meta name="twitter:image" content="https://nirman.oshoupadhyay.in/pwa-512x512.png" />
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#4f46e5" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="NirmanHisaab" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
   </head>
   <body>
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Nirman Hisaab",
+      "url": "https://nirman.oshoupadhyay.in/",
+      "description": "Free Indian construction and demolition expense tracker with Hinglish labels, material tracking, labour management, and debris recovery. Offline-first PWA.",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "inLanguage": ["en", "hi"],
+      "image": "https://nirman.oshoupadhyay.in/pwa-512x512.png"
+    }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nirman.oshoupadhyay.in/sitemap.xml
