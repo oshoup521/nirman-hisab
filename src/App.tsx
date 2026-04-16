@@ -175,55 +175,60 @@ export default function App() {
 
   const exportToCSV = () => {
     const esc = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+    const safeDate = (d: any) => {
+      if (!d) return '';
+      const dt = new Date(d);
+      return isNaN(dt.getTime()) ? '' : format(dt, 'yyyy-MM-dd');
+    };
     const rows: string[] = [];
     rows.push(['Date', 'Section', 'Type/Category', 'Description', 'Amount', 'Notes'].join(','));
 
     // Construction Expenses
     (state.expenses || []).forEach((e: Expense) => {
-      rows.push([format(new Date(e.date), 'yyyy-MM-dd'), 'Construction', esc(e.category), esc(e.category), e.amount, esc(e.notes)].join(','));
+      rows.push([safeDate(e.date), 'Construction', esc(e.category), esc(e.category), e.amount, esc(e.notes)].join(','));
     });
 
     // Construction Theka Payments
     (state.thekas || []).forEach((t: Theka) => {
       (t.payments || []).forEach((p: ThekaPayment) => {
-        rows.push([format(new Date(p.date), 'yyyy-MM-dd'), 'Construction Theka', esc(t.name), esc(`Theka: ${t.name}`), p.amount, esc(p.note || '')].join(','));
+        rows.push([safeDate(p.date), 'Construction Theka', esc(t.name), esc(`Theka: ${t.name}`), p.amount, esc(p.note || '')].join(','));
       });
     });
 
     // Misc Expenses
     (state.miscExpenses || []).forEach((e: MiscExpense) => {
-      rows.push([format(new Date(e.date), 'yyyy-MM-dd'), 'Misc', esc(e.category), esc(e.category), e.amount, esc(e.notes || '')].join(','));
+      rows.push([safeDate(e.date), 'Misc', esc(e.category), esc(e.category), e.amount, esc(e.notes || '')].join(','));
     });
 
     // Demolition Theka Payments
     (state.demolitionThekas || []).forEach((t: DemolitionTheka) => {
       (t.payments || []).forEach((p: ThekaPayment) => {
-        rows.push([format(new Date(p.date), 'yyyy-MM-dd'), 'Demolition Theka', esc(t.name), esc(`Theka: ${t.name}`), p.amount, esc(p.note || '')].join(','));
+        rows.push([safeDate(p.date), 'Demolition Theka', esc(t.name), esc(`Theka: ${t.name}`), p.amount, esc(p.note || '')].join(','));
       });
     });
 
     // Malwa (Demolition)
     (state.malwa || []).forEach((m: MalwaEntry) => {
       const amt = (m.disposed || 0) * (m.costPerTrip || 0);
-      rows.push([format(new Date(m.date), 'yyyy-MM-dd'), 'Demolition', 'Malwa Disposal', esc(`${m.disposed} trips @ ₹${m.costPerTrip} (${m.vendor})`), amt, ''].join(','));
+      rows.push([safeDate(m.date), 'Demolition', 'Malwa Disposal', esc(`${m.disposed} trips @ ₹${m.costPerTrip} (${m.vendor})`), amt, ''].join(','));
     });
 
     // Scrap Income (Demolition)
     (state.scrap || []).forEach((s: ScrapEntry) => {
       const amt = (s.quantity || 0) * (s.rate || 0);
-      rows.push([format(new Date(s.date), 'yyyy-MM-dd'), 'Demolition Income', 'Scrap Sale', esc(`${s.type}: ${s.quantity} ${s.unit} @ ₹${s.rate} (${s.dealer})`), amt, ''].join(','));
+      rows.push([safeDate(s.date), 'Demolition Income', 'Scrap Sale', esc(`${s.type}: ${s.quantity} ${s.unit} @ ₹${s.rate} (${s.dealer})`), amt, ''].join(','));
     });
 
     // Brick Recovery Income (Demolition)
     (state.brickRecovery || []).forEach((b: BrickRecovery) => {
       const amt = (b.recovered || 0) * (b.ratePerBrick || 0);
-      rows.push([format(new Date(b.date), 'yyyy-MM-dd'), 'Demolition Income', 'Brick Recovery', esc(`${b.recovered} bricks @ ₹${b.ratePerBrick}`), amt, ''].join(','));
+      rows.push([safeDate(b.date), 'Demolition Income', 'Brick Recovery', esc(`${b.recovered} bricks @ ₹${b.ratePerBrick}`), amt, ''].join(','));
     });
 
     // Rental Payments
     (state.rentals || []).forEach((r: RentalProperty) => {
       (r.payments || []).forEach((p: RentPayment) => {
-        rows.push([format(new Date(p.date), 'yyyy-MM-dd'), 'Kiraya', esc(r.name), esc(`Rent: ${r.name} (${p.month})`), p.amount, esc(p.note || '')].join(','));
+        rows.push([safeDate(p.date), 'Kiraya', esc(r.name), esc(`Rent: ${r.name} (${p.month})`), p.amount, esc(p.note || '')].join(','));
       });
     });
 
