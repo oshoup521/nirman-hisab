@@ -229,27 +229,14 @@ export default function App() {
 
     const csvContent = '\uFEFF' + rows.join('\n');
     const fileName = `NirmanHisaab_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    try {
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
-    } catch {
-      // fallback: data URI
-      const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
-      const a = document.createElement('a');
-      a.href = dataUri;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
+    const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+    const a = document.createElement('a');
+    a.setAttribute('href', dataUri);
+    a.setAttribute('download', fileName);
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   const shareOnWhatsApp = () => {
