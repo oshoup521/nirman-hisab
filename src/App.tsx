@@ -39,6 +39,8 @@ import { AppState, Project, Material, Labour, Theka, ThekaPayment, DemolitionThe
 import { useCloudSync } from './hooks/useCloudSync';
 import { useDragScroll } from './hooks/useDragScroll';
 import { formatCurrency, formatNumber, getStatusColor } from './utils/formatters';
+import ConfirmDialog from './components/ConfirmDialog';
+import { supabase } from './utils/supabaseClient';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -83,6 +85,35 @@ export default function App() {
   const [state, setState, loading] = useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'construction' | 'demolition' | 'kiraya' | 'settings'>('dashboard');
   const [subTab, setSubTab] = useState<string>('overview');
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title?: string; message: string; confirmText?: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => {} });
+  const [pwForm, setPwForm] = useState({ open: false, newPw: '', confirmPw: '', loading: false, error: '', success: '' });
+
+  const askConfirm = (message: string, onConfirm: () => void, title?: string, confirmText?: string) => {
+    setConfirmDialog({ open: true, title, message, confirmText, onConfirm });
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (pwForm.newPw !== pwForm.confirmPw) {
+      setPwForm(p => ({ ...p, error: 'Dono passwords match nahi kar rahe', success: '' }));
+      return;
+    }
+    if (pwForm.newPw.length < 6) {
+      setPwForm(p => ({ ...p, error: 'Password kam se kam 6 characters ka hona chahiye', success: '' }));
+      return;
+    }
+    setPwForm(p => ({ ...p, loading: true, error: '', success: '' }));
+    const { error } = await supabase.auth.updateUser({ password: pwForm.newPw });
+    if (error) {
+      setPwForm(p => ({ ...p, loading: false, error: error.message }));
+    } else {
+      setPwForm({ open: false, newPw: '', confirmPw: '', loading: false, error: '', success: '' });
+    }
+  };
 
 
 
@@ -143,28 +174,156 @@ export default function App() {
   const masterBurnRate = masterBudget > 0 ? (totalKharcha / masterBudget) * 100 : 0;
 
   const exportToCSV = () => {
-    const expensesCsv = state.expenses.map(e => `${e.date},${e.category},${e.amount},"${e.notes}"`).join('\n');
-    const header = "Date,Category,Amount,Notes\n";
-    const blob = new Blob([header + expensesCsv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `NirmaNHisaab_Expenses_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
+    const esc = (val: any) => `"${String(val ?? '').replace(/"/g, '""')}"`;
+    const rows: string[] = [];
+    rows.push(['Date', 'Section', 'Type/Category', 'Description', 'Amount', 'Notes'].join(','));
+
+    // Construction Expenses
+    (state.expenses || []).forEach((e: Expense) => {
+      rows.push([format(new Date(e.date), 'yyyy-MM-dd'), 'Construction', esc(e.category), esc(e.category), e.amount, esc(e.notes)].join(','));
+    });
+
+    // Construction Theka Payments
+    (state.thekas || []).forEach((t: Theka) => {
+      (t.payments || []).forEach((p: ThekaPayment) => {
+        rows.push([format(new Date(p.date), 'yyyy-MM-dd'), 'Construction Theka', esc(t.name), esc(`Theka: ${t.name}`), p.amount, esc(p.note || '')].join(','));
+      });
+    });
+
+    // Misc Expenses
+    (state.miscExpenses || []).forEach((e: MiscExpense) => {
+      rows.push([format(new Date(e.date), 'yyyy-MM-dd'), 'Misc', esc(e.category), esc(e.category), e.amount, esc(e.notes || '')].join(','));
+    });
+
+    // Demolition Theka Payments
+    (state.demolitionThekas || []).forEach((t: DemolitionTheka) => {
+      (t.payments || []).forEach((p: ThekaPayment) => {
+        rows.push([format(new Date(p.date), 'yyyy-MM-dd'), 'Demolition Theka', esc(t.name), esc(`Theka: ${t.name}`), p.amount, esc(p.note || '')].join(','));
+      });
+    });
+
+    // Malwa (Demolition)
+    (state.malwa || []).forEach((m: MalwaEntry) => {
+      const amt = (m.disposed || 0) * (m.costPerTrip || 0);
+      rows.push([format(new Date(m.date), 'yyyy-MM-dd'), 'Demolition', 'Malwa Disposal', esc(`${m.disposed} trips @ ₹${m.costPerTrip} (${m.vendor})`), amt, ''].join(','));
+    });
+
+    // Scrap Income (Demolition)
+    (state.scrap || []).forEach((s: ScrapEntry) => {
+      const amt = (s.quantity || 0) * (s.rate || 0);
+      rows.push([format(new Date(s.date), 'yyyy-MM-dd'), 'Demolition Income', 'Scrap Sale', esc(`${s.type}: ${s.quantity} ${s.unit} @ ₹${s.rate} (${s.dealer})`), amt, ''].join(','));
+    });
+
+    // Brick Recovery Income (Demolition)
+    (state.brickRecovery || []).forEach((b: BrickRecovery) => {
+      const amt = (b.recovered || 0) * (b.ratePerBrick || 0);
+      rows.push([format(new Date(b.date), 'yyyy-MM-dd'), 'Demolition Income', 'Brick Recovery', esc(`${b.recovered} bricks @ ₹${b.ratePerBrick}`), amt, ''].join(','));
+    });
+
+    // Rental Payments
+    (state.rentals || []).forEach((r: RentalProperty) => {
+      (r.payments || []).forEach((p: RentPayment) => {
+        rows.push([format(new Date(p.date), 'yyyy-MM-dd'), 'Kiraya', esc(r.name), esc(`Rent: ${r.name} (${p.month})`), p.amount, esc(p.note || '')].join(','));
+      });
+    });
+
+    const csvContent = '\uFEFF' + rows.join('\n');
+    const fileName = `NirmanHisaab_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    try {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => window.URL.revokeObjectURL(url), 2000);
+    } catch {
+      // fallback: data URI
+      const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent);
+      const a = document.createElement('a');
+      a.href = dataUri;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
   };
 
   const shareOnWhatsApp = () => {
-    const thekaPendingAmt = state.thekas.reduce((acc, t) => acc + (t.totalAmount - t.payments.reduce((a, p) => a + p.amount, 0)), 0);
-    const lowStockCount = state.materials.filter(m => m.purchased - m.used <= m.minStock).length;
-    
-    const text = `🏗️ *${state.project?.name || 'Nirman'} Hisaab*\n\n` +
-      `💰 *Total Budget:* ₹${formatCurrency(masterBudget)}\n` +
-      `🔥 *Total Kharcha:* ₹${formatCurrency(totalKharcha)}\n` +
-      `✨ *Bacha Hua:* ₹${formatCurrency(masterRemaining)}\n\n` +
-      `👷 *Theka Pending Dena Hai:* ₹${formatCurrency(thekaPendingAmt)}\n` +
-      `🛒 *Low Stock Items:* ${lowStockCount}\n\n` +
-      `- Shared via Nirman Hisaab App`;
-      
+    const projectName = state.project?.name || 'Nirman Project';
+    const location = state.project?.location ? ` — ${state.project.location}` : '';
+    const today = format(new Date(), 'dd MMM yyyy');
+
+    // Construction
+    const constructionThekaPaid = state.thekas.reduce((acc: number, t: Theka) => acc + t.payments.reduce((a: number, p: ThekaPayment) => a + p.amount, 0), 0);
+    const constructionThekaPending = state.thekas.reduce((acc: number, t: Theka) => acc + (t.totalAmount - t.payments.reduce((a: number, p: ThekaPayment) => a + p.amount, 0)), 0);
+    const burnPct = masterBudget > 0 ? Math.round((totalKharcha / masterBudget) * 100) : 0;
+
+    // Demolition
+    const demolitionThekaPaid = (state.demolitionThekas || []).reduce((acc: number, t: DemolitionTheka) => acc + t.payments.reduce((a: number, p: ThekaPayment) => a + p.amount, 0), 0);
+    const demolitionThekaPending = (state.demolitionThekas || []).reduce((acc: number, t: DemolitionTheka) => acc + (t.totalAmount - t.payments.reduce((a: number, p: ThekaPayment) => a + p.amount, 0)), 0);
+    const hasDemolition = (state.demolitionThekas || []).length > 0 || (state.malwa || []).length > 0;
+
+    // Kiraya
+    const totalRentIncome = (state.rentals || []).reduce((a: number, r: RentalProperty) => a + r.payments.reduce((s: number, p: RentPayment) => s + p.amount, 0), 0);
+    const hasKiraya = (state.rentals || []).length > 0;
+
+    // Alerts
+    const lowStockItems = state.materials.filter((m: Material) => m.purchased - m.used <= m.minStock).map((m: Material) => m.name);
+
+    let text = '';
+    text += `🏗️ *${projectName}${location}*\n`;
+    text += `📅 ${today} ka hisaab\n`;
+    text += `${'─'.repeat(28)}\n\n`;
+
+    // Budget Overview
+    text += `💼 *BUDGET OVERVIEW*\n`;
+    text += `Total Budget:  ₹${formatCurrency(masterBudget)}\n`;
+    text += `Total Kharcha: ₹${formatCurrency(totalKharcha)}\n`;
+    text += `Bacha Hua:     ₹${formatCurrency(masterRemaining)}\n`;
+    text += `Budget Used:   ${burnPct}%\n\n`;
+
+    // Construction
+    if (budget > 0 || totalSpent > 0) {
+      text += `🧱 *CONSTRUCTION*\n`;
+      text += `Budget:         ₹${formatCurrency(budget)}\n`;
+      text += `Kharcha:        ₹${formatCurrency(totalSpent)}\n`;
+      text += `Theka Diya:     ₹${formatCurrency(constructionThekaPaid)}\n`;
+      text += `Theka Baaki:    ₹${formatCurrency(constructionThekaPending)}\n\n`;
+    }
+
+    // Demolition
+    if (hasDemolition) {
+      text += `⛏️ *DEMOLITION*\n`;
+      text += `Theka Diya:  ₹${formatCurrency(demolitionThekaPaid)}\n`;
+      text += `Theka Baaki: ₹${formatCurrency(demolitionThekaPending)}\n`;
+      if (malwaCost > 0)       text += `Malwa Cost:  ₹${formatCurrency(malwaCost)}\n`;
+      if (totalRecovery > 0)   text += `Recovery:    ₹${formatCurrency(totalRecovery)}\n`;
+      text += '\n';
+    }
+
+    // Kiraya
+    if (hasKiraya) {
+      text += `🏠 *KIRAYA*\n`;
+      text += `Total Properties: ${(state.rentals || []).length}\n`;
+      text += `Rent Mila:        ₹${formatCurrency(totalRentIncome)}\n`;
+      if (currentMonthRent > 0) text += `Is Mahine Baaki:  ₹${formatCurrency(currentMonthRent)}\n`;
+      text += '\n';
+    }
+
+    // Alerts
+    if (lowStockItems.length > 0) {
+      text += `⚠️ *LOW STOCK ALERT*\n`;
+      lowStockItems.slice(0, 5).forEach((name: string) => { text += `• ${name}\n`; });
+      if (lowStockItems.length > 5) text += `• ...aur ${lowStockItems.length - 5} aur\n`;
+      text += '\n';
+    }
+
+    text += `_Shared via Nirman Hisaab App_`;
+
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
   };
 
@@ -184,9 +343,12 @@ export default function App() {
     return (
       <div className="space-y-6 pb-28">
         <header className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Hisaab-Kitaab</h1>
-            <p className="text-slate-500 text-sm">Project Overview</p>
+          <div className="flex items-center gap-3">
+            <img src="/pwa-64x64.png" alt="Nirman Hisaab" className="w-10 h-10 rounded-2xl" />
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Nirman Hisaab</h1>
+              <p className="text-slate-500 text-sm">Project Overview</p>
+            </div>
           </div>
           <div className="flex gap-2">
             <button onClick={shareOnWhatsApp} className="p-2 bg-green-50 rounded-full text-green-600 hover:bg-green-100 transition-colors" title="Share on WhatsApp">
@@ -377,7 +539,7 @@ export default function App() {
                     >
                       <Pencil size={12} />
                     </button>
-                    <button onClick={() => setState(prev => ({ ...prev, miscExpenses: (prev.miscExpenses || []).filter(x => x.id !== e.id) }))} className="p-1 text-red-300 hover:text-red-500">
+                    <button onClick={() => askConfirm('Is misc expense ko delete kar dein?', () => setState(prev => ({ ...prev, miscExpenses: (prev.miscExpenses || []).filter(x => x.id !== e.id) })))} className="p-1 text-red-300 hover:text-red-500">
                       <Trash2 size={12} />
                     </button>
                   </div>
@@ -572,10 +734,9 @@ export default function App() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => {
-                        if (!confirm(`Delete ${material.name}?`)) return;
+                      onClick={() => askConfirm(`"${material.name}" material ko delete kar dein?`, () => {
                         setState(prev => ({ ...prev, materials: prev.materials.filter(m => m.id !== material.id) }));
-                      }}
+                      })}
                       className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                     >
                       <Trash2 size={14} />
@@ -673,11 +834,9 @@ export default function App() {
                     }} className="flex-1 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100">
                       Bill Badao
                     </button>
-                    <button onClick={() => {
-                      if(confirm(`Delete ${vendor.name}?`)) {
-                        setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }));
-                      }
-                    }} className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100">
+                    <button onClick={() => askConfirm(`"${vendor.name}" vendor ko delete kar dein?`, () => {
+                      setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }));
+                    })} className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -736,10 +895,9 @@ export default function App() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => {
-                        if (!confirm(`Delete ${labour.type}?`)) return;
+                      onClick={() => askConfirm(`"${labour.type}" labour ko delete kar dein?`, () => {
                         setState(prev => ({ ...prev, labours: prev.labours.filter(l => l.id !== labour.id) }));
-                      }}
+                      })}
                       className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                     >
                       <Trash2 size={14} />
@@ -874,10 +1032,9 @@ export default function App() {
                         <Pencil size={14} />
                       </button>
                       <button
-                        onClick={() => {
-                          if (!confirm(`Delete theka for ${theka.name}?`)) return;
+                        onClick={() => askConfirm(`"${theka.name}" ka theka delete kar dein?`, () => {
                           setState(prev => ({ ...prev, thekas: prev.thekas.filter(t => t.id !== theka.id) }));
-                        }}
+                        })}
                         className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                       >
                         <Trash2 size={14} />
@@ -925,8 +1082,7 @@ export default function App() {
                               <Pencil size={12} />
                             </button>
                             <button
-                              onClick={() => {
-                                if (!confirm('Delete this payment?')) return;
+                              onClick={() => askConfirm('Is theka payment ko delete kar dein?', () => {
                                 setState(prev => ({
                                   ...prev,
                                   thekas: prev.thekas.map(t => t.id === theka.id
@@ -934,7 +1090,7 @@ export default function App() {
                                     : t),
                                   expenses: prev.expenses.filter(e => e.id !== payment.id)
                                 }));
-                              }}
+                              })}
                               className="p-1 text-red-300 hover:text-red-500"
                             >
                               <Trash2 size={12} />
@@ -1047,10 +1203,9 @@ export default function App() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => {
-                        if (!confirm('Delete this expense?')) return;
+                      onClick={() => askConfirm('Is kharche ko delete kar dein?', () => {
                         setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }));
-                      }}
+                      })}
                       className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                     >
                       <Trash2 size={14} />
@@ -1295,10 +1450,9 @@ export default function App() {
                       <Pencil size={14} />
                     </button>
                     <button
-                      onClick={() => {
-                        if (!confirm('Delete this entry?')) return;
+                      onClick={() => askConfirm('Is brick recovery entry ko delete kar dein?', () => {
                         setState(prev => ({ ...prev, brickRecovery: prev.brickRecovery.filter(b => b.id !== entry.id) }));
-                      }}
+                      })}
                       className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                     >
                       <Trash2 size={14} />
@@ -1380,10 +1534,9 @@ export default function App() {
                     <Pencil size={14} />
                   </button>
                   <button
-                    onClick={() => {
-                      if (!confirm('Delete this entry?')) return;
+                    onClick={() => askConfirm('Is malwa entry ko delete kar dein?', () => {
                       setState(prev => ({ ...prev, malwa: prev.malwa.filter(m => m.id !== entry.id) }));
-                    }}
+                    })}
                     className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                   >
                     <Trash2 size={14} />
@@ -1451,10 +1604,9 @@ export default function App() {
                     <Pencil size={14} />
                   </button>
                   <button
-                    onClick={() => {
-                      if (!confirm('Delete this entry?')) return;
+                    onClick={() => askConfirm('Is scrap entry ko delete kar dein?', () => {
                       setState(prev => ({ ...prev, scrap: prev.scrap.filter(s => s.id !== entry.id) }));
-                    }}
+                    })}
                     className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                   >
                     <Trash2 size={14} />
@@ -1528,10 +1680,9 @@ export default function App() {
                         <Pencil size={14} />
                       </button>
                       <button
-                        onClick={() => {
-                          if (!confirm(`Delete theka for ${theka.name}?`)) return;
+                        onClick={() => askConfirm(`"${theka.name}" ka demolition theka delete kar dein?`, () => {
                           setState(prev => ({ ...prev, demolitionThekas: (prev.demolitionThekas || []).filter(t => t.id !== theka.id) }));
-                        }}
+                        })}
                         className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                       >
                         <Trash2 size={14} />
@@ -1576,15 +1727,14 @@ export default function App() {
                               <Pencil size={12} />
                             </button>
                             <button
-                              onClick={() => {
-                                if (!confirm('Delete this payment?')) return;
+                              onClick={() => askConfirm('Is demolition theka payment ko delete kar dein?', () => {
                                 setState(prev => ({
                                   ...prev,
                                   demolitionThekas: (prev.demolitionThekas || []).map(t => t.id === theka.id
                                     ? { ...t, payments: t.payments.filter(p => p.id !== payment.id) }
                                     : t),
                                 }));
-                              }}
+                              })}
                               className="p-1 text-red-300 hover:text-red-500"
                             >
                               <Trash2 size={12} />
@@ -1758,10 +1908,9 @@ export default function App() {
                     <Pencil size={14} />
                   </button>
                   <button
-                    onClick={() => {
-                      if (!confirm(`Delete ${rental.name}?`)) return;
+                    onClick={() => askConfirm(`"${rental.name}" rental property ko delete kar dein?`, () => {
                       setState(prev => ({ ...prev, rentals: (prev.rentals || []).filter(r => r.id !== rental.id) }));
-                    }}
+                    })}
                     className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
                   >
                     <Trash2 size={14} />
@@ -1854,15 +2003,14 @@ export default function App() {
                           <Pencil size={12} />
                         </button>
                         <button
-                          onClick={() => {
-                            if (!confirm('Delete this payment?')) return;
+                          onClick={() => askConfirm('Is rent payment ko delete kar dein?', () => {
                             setState(prev => ({
                               ...prev,
                               rentals: (prev.rentals || []).map(r => r.id === rental.id
                                 ? { ...r, payments: r.payments.filter(p => p.id !== payment.id) }
                                 : r)
                             }));
-                          }}
+                          })}
                           className="p-1 text-red-300 hover:text-red-500"
                         >
                           <Trash2 size={12} />
@@ -2001,12 +2149,74 @@ export default function App() {
           </div>
         </div>
 
-        <button 
-          onClick={() => {
-            if (confirm('Are you sure you want to reset all data?')) {
-              setState(INITIAL_STATE);
-            }
-          }}
+        {/* Account Section */}
+        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+          <h3 className="font-bold text-slate-900">Account</h3>
+
+          {pwForm.open ? (
+            <form onSubmit={handleChangePassword} className="space-y-3">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase">Naya Password</label>
+                <input
+                  type="password"
+                  required
+                  value={pwForm.newPw}
+                  onChange={e => setPwForm(p => ({ ...p, newPw: e.target.value }))}
+                  className="w-full mt-1 p-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase">Password Confirm Karein</label>
+                <input
+                  type="password"
+                  required
+                  value={pwForm.confirmPw}
+                  onChange={e => setPwForm(p => ({ ...p, confirmPw: e.target.value }))}
+                  className="w-full mt-1 p-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500"
+                  placeholder="••••••••"
+                />
+              </div>
+              {pwForm.error && <p className="text-xs text-red-500 font-bold">{pwForm.error}</p>}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setPwForm({ open: false, newPw: '', confirmPw: '', loading: false, error: '', success: '' })}
+                  className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={pwForm.loading}
+                  className="flex-1 py-3 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-60"
+                >
+                  {pwForm.loading ? 'Save ho raha hai...' : 'Password Badlein'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => setPwForm(p => ({ ...p, open: true }))}
+                className="w-full py-3 bg-indigo-50 text-indigo-600 rounded-2xl font-bold text-sm border border-indigo-100"
+              >
+                Password Badlein
+              </button>
+              <button
+                onClick={() => askConfirm('Kya aap logout karna chahte hain?', handleLogout, 'Logout', 'Logout')}
+                className="w-full py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold text-sm"
+              >
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={() => askConfirm('Saara data delete ho jayega aur app reset ho jayega. Kya aap bilkul sure hain?', () => {
+            setState(INITIAL_STATE);
+          }, 'Reset All Data?', 'Reset Karein')}
           className="w-full py-4 bg-red-50 text-red-600 rounded-3xl font-bold border border-red-100"
         >
           Reset All Data
@@ -2072,6 +2282,15 @@ export default function App() {
           <span className="text-[9px] font-bold uppercase">Taiyari</span>
         </button>
       </nav>
+
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+      />
     </div>
   );
 }
