@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { 
   LayoutDashboard, 
   Construction, 
@@ -91,6 +91,56 @@ export default function App() {
   const askConfirm = (message: string, onConfirm: () => void, title?: string, confirmText?: string) => {
     setConfirmDialog({ open: true, title, message, confirmText, onConfirm });
   };
+
+  // Pull-to-refresh
+  const [pullY, setPullY] = useState(0);
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullToast, setPullToast] = useState<string | null>(null);
+  const touchStartY = useRef(0);
+  const PULL_THRESHOLD = 72;
+
+  const showPullToast = useCallback((msg: string) => {
+    setPullToast(msg);
+    setTimeout(() => setPullToast(null), 3000);
+  }, []);
+
+  useEffect(() => {
+    const onTouchStart = (e: TouchEvent) => {
+      if (window.scrollY === 0) touchStartY.current = e.touches[0].clientY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      if (window.scrollY > 0 || touchStartY.current === 0) return;
+      const dy = e.touches[0].clientY - touchStartY.current;
+      if (dy > 0) {
+        setIsPulling(true);
+        setPullY(Math.min(dy * 0.4, PULL_THRESHOLD + 16));
+      }
+    };
+    const onTouchEnd = async () => {
+      if (!isPulling) return;
+      if (pullY >= PULL_THRESHOLD) {
+        if (syncStatus === 'error') {
+          showPullToast('⚠ Unsaved data hai — pehle Settings me ↻ Sync karein');
+        } else if (syncStatus === 'syncing') {
+          showPullToast('Sync chal raha hai, thoda rukein...');
+        } else {
+          showPullToast('Cloud se sync ho raha hai...');
+          await syncNow();
+        }
+      }
+      setIsPulling(false);
+      setPullY(0);
+      touchStartY.current = 0;
+    };
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd);
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [isPulling, pullY, syncStatus, syncNow, showPullToast]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -2375,6 +2425,33 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+
+      {/* Pull-to-refresh indicator */}
+      {isPulling && (
+        <div
+          className="fixed top-0 left-0 right-0 flex justify-center items-center z-50 pointer-events-none transition-all"
+          style={{ height: `${pullY}px` }}
+        >
+          <div className={cn(
+            "flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shadow-md transition-all",
+            pullY >= PULL_THRESHOLD
+              ? syncStatus === 'error' ? "bg-orange-100 text-orange-600" : "bg-indigo-600 text-white"
+              : "bg-white text-slate-400 border border-slate-200"
+          )}>
+            {pullY >= PULL_THRESHOLD ? (
+              syncStatus === 'error' ? '⚠ Unsaved data — chord do' : '↑ Chord do to sync hoga'
+            ) : '↓ Neeche kheencho to sync hoga'}
+          </div>
+        </div>
+      )}
+
+      {/* Toast notification */}
+      {pullToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-2xl shadow-lg max-w-xs text-center">
+          {pullToast}
+        </div>
+      )}
+
       <div className="max-w-md mx-auto px-4 pt-[max(env(safe-area-inset-top),24px)]">
         {activeTab === 'dashboard' && renderDashboard()}
         {activeTab === 'construction' && renderConstruction()}
