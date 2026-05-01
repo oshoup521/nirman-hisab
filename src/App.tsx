@@ -17,7 +17,8 @@ import {
   Calendar,
   Download,
   Pencil,
-  Home
+  Home,
+  X
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -87,6 +88,7 @@ export default function App() {
   const [subTab, setSubTab] = useState<string>('overview');
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title?: string; message: string; confirmText?: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => {} });
   const [pwForm, setPwForm] = useState({ open: false, newPw: '', confirmPw: '', loading: false, error: '', success: '' });
+  const [showAllMisc, setShowAllMisc] = useState(false);
 
   const askConfirm = (message: string, onConfirm: () => void, title?: string, confirmText?: string) => {
     setConfirmDialog({ open: true, title, message, confirmText, onConfirm });
@@ -601,11 +603,66 @@ export default function App() {
                 </div>
               ))}
               {(state.miscExpenses || []).length > 5 && (
-                <p className="text-xs text-slate-400 text-center">+{(state.miscExpenses || []).length - 5} more</p>
+                <button
+                  onClick={() => setShowAllMisc(true)}
+                  className="w-full mt-1 text-xs font-bold text-indigo-600 text-center py-1"
+                >
+                  Sab Dekho ({(state.miscExpenses || []).length} entries)
+                </button>
               )}
             </div>
           )}
         </div>
+
+        {/* All Misc Expenses Bottom Sheet */}
+        {showAllMisc && (
+          <div className="fixed inset-0 z-50 flex flex-col justify-end">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowAllMisc(false)} />
+            <div className="relative bg-white rounded-t-3xl max-h-[80vh] flex flex-col">
+              <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-slate-100">
+                <div>
+                  <h3 className="font-bold text-slate-900">Miscellaneous Kharcha</h3>
+                  <p className="text-[11px] text-slate-400 font-bold uppercase">{(state.miscExpenses || []).length} entries • {formatCurrency(totalMisc)}</p>
+                </div>
+                <button onClick={() => setShowAllMisc(false)} className="p-2 bg-slate-100 rounded-full text-slate-500">
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="overflow-y-auto flex-1 px-5 py-3 space-y-3">
+                {[...(state.miscExpenses || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(e => (
+                  <div key={e.id} className="flex justify-between items-center text-sm py-1">
+                    <div>
+                      <p className="font-bold text-slate-800">{e.category}</p>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold">{format(new Date(e.date), 'dd MMM yyyy')}{e.notes ? ` • ${e.notes}` : ''}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-slate-900">{formatCurrency(e.amount)}</p>
+                      <button
+                        onClick={() => {
+                          const amount = Number(prompt('Amount?', String(e.amount)));
+                          if (!amount) return;
+                          const category = prompt('Category?', e.category) || e.category;
+                          const notes = prompt('Notes?', e.notes) || '';
+                          const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(e.date), 'yyyy-MM-dd')) || format(new Date(e.date), 'yyyy-MM-dd');
+                          setState(prev => ({
+                            ...prev,
+                            miscExpenses: (prev.miscExpenses || []).map(x => x.id === e.id ? { ...x, amount, category, notes, date: new Date(dateStr).toISOString() } : x)
+                          }));
+                        }}
+                        className="p-1 text-slate-300 hover:text-slate-500"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button onClick={() => askConfirm('Is misc expense ko delete kar dein?', () => setState(prev => ({ ...prev, miscExpenses: (prev.miscExpenses || []).filter(x => x.id !== e.id) })))} className="p-1 text-red-300 hover:text-red-500">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
