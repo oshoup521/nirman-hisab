@@ -1,45 +1,30 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import { 
-  LayoutDashboard, 
-  Construction, 
-  Hammer, 
-  Plus, 
-  Settings, 
-  TrendingUp, 
-  Users, 
-  Package, 
-  Clock, 
-  Trash2, 
+import {
+  LayoutDashboard,
+  Construction,
+  Hammer,
+  Plus,
+  Settings,
+  TrendingUp,
+  Users,
+  Package,
+  Clock,
+  Trash2,
   IndianRupee,
   ChevronRight,
-  AlertTriangle,
-  CheckCircle2,
-  Calendar,
   Download,
   Pencil,
   Home,
   X
 } from 'lucide-react';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
-  Cell,
-  PieChart,
-  Pie
-} from 'recharts';
-import { format, startOfToday } from 'date-fns';
+import { format } from 'date-fns';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-import { AppState, Project, Material, Labour, Theka, ThekaPayment, DemolitionTheka, RentalProperty, RentPayment, MiscExpense, Expense, Milestone, DemolitionProject, BrickRecovery, MalwaEntry, ScrapEntry } from './types';
+import { AppState, Project, Material, Labour, Theka, ThekaPayment, DemolitionTheka, RentalProperty, RentPayment, MiscExpense, Expense, BrickRecovery, MalwaEntry, ScrapEntry } from './types';
 import { useCloudSync } from './hooks/useCloudSync';
 import { useDragScroll } from './hooks/useDragScroll';
-import { formatCurrency, formatNumber, getStatusColor } from './utils/formatters';
+import { formatCurrency, formatNumber } from './utils/formatters';
 import ConfirmDialog from './components/ConfirmDialog';
 import { supabase } from './utils/supabaseClient';
 
@@ -72,15 +57,6 @@ const INITIAL_STATE: AppState = {
   vendors: [],
 };
 
-const MATERIAL_TYPES = [
-  'Cement bags', 'Bricks', 'Sand', 'Gravel/Gitti', 'Steel rods', 
-  'TMT bars', 'AAC blocks', 'Tiles', 'Paint', 'Wood', 'PVC pipes', 
-  'Wiring', 'Aggregates', 'Water-proofing'
-];
-
-const LABOUR_TYPES = [
-  'Mistri', 'Beldar', 'Thekedar', 'Electrician', 'Plumber', 'Painter', 'Fabricator'
-];
 
 export default function App() {
   const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt] = useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
@@ -183,9 +159,6 @@ export default function App() {
   const totalSpent = useMemo(() => (state.expenses || []).reduce((acc, curr) => acc + curr.amount, 0), [state.expenses]);
   const budget = state.project?.budget || 0;
   const masterBudget = state.project?.masterBudget || 0;
-  const remainingBudget = budget - totalSpent;
-  const burnRate = budget > 0 ? (totalSpent / budget) * 100 : 0;
-
   const scrapIncome = useMemo(() => (state.scrap || []).reduce((acc, curr) => acc + (curr.quantity * curr.rate), 0), [state.scrap]);
   const brickRecoveryValue = useMemo(() => (state.brickRecovery || []).reduce((acc, curr) => acc + (curr.recovered * curr.ratePerBrick), 0), [state.brickRecovery]);
   const totalRecovery = scrapIncome + brickRecoveryValue;
@@ -198,7 +171,6 @@ export default function App() {
   const totalRentPaid = useMemo(() => (state.rentals || []).reduce((a, r) => a + r.payments.reduce((s, p) => s + p.amount, 0), 0), [state.rentals]);
   // totalCashRentPaid = only cash/online payments (deposit-se wale exclude) — for kharcha calculation to avoid double counting
   const totalCashRentPaid = useMemo(() => (state.rentals || []).reduce((a, r) => a + r.payments.filter(p => !p.paidFromDeposit).reduce((s, p) => s + p.amount, 0), 0), [state.rentals]);
-  const totalDeposit = useMemo(() => (state.rentals || []).reduce((a, r) => a + (r.deposit || 0), 0), [state.rentals]);
 
   // helper: get effective depositStatus, handles old data that had depositPaid boolean
   const getDepositStatus = (r: any): 'pending' | 'paid' | 'refunded' | 'forfeited' => {
@@ -387,18 +359,6 @@ export default function App() {
   };
 
   const renderDashboard = () => {
-    const chartData = [
-      { name: 'Spent', value: totalSpent, fill: '#ef4444' },
-      { name: 'Remaining', value: Math.max(0, remainingBudget), fill: '#22c55e' }
-    ];
-
-    const categoryData = [
-      { name: 'Material', value: state.expenses.filter(e => e.category === 'Material').reduce((a, b) => a + b.amount, 0) },
-      { name: 'Labour', value: state.expenses.filter(e => e.category === 'Labour').reduce((a, b) => a + b.amount, 0) },
-      { name: 'Theka', value: state.expenses.filter(e => e.category === 'Theka').reduce((a, b) => a + b.amount, 0) },
-      { name: 'Other', value: state.expenses.filter(e => !['Material', 'Labour', 'Theka'].includes(e.category)).reduce((a, b) => a + b.amount, 0) },
-    ].filter(d => d.value > 0);
-
     return (
       <div className="space-y-6 pb-28">
         <header className="flex justify-between items-center">
@@ -565,7 +525,7 @@ export default function App() {
                 setState(prev => ({
                   ...prev,
                   miscExpenses: [...(prev.miscExpenses || []), {
-                    id: Math.random().toString(36).substr(2, 9),
+                    id: Math.random().toString(36).substring(2, 11),
                     date: new Date(dateStr).toISOString(),
                     amount, category, notes
                   }]
@@ -624,7 +584,7 @@ export default function App() {
 
         {/* All Misc Expenses Bottom Sheet */}
         {showAllMisc && (
-          <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          <div className="fixed inset-0 z-[60] flex flex-col justify-end">
             <div className="absolute inset-0 bg-black/40" onClick={() => setShowAllMisc(false)} />
             <div className="relative bg-white rounded-t-3xl max-h-[80vh] flex flex-col">
               <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-slate-100">
@@ -777,7 +737,7 @@ export default function App() {
                   const minStock = Number(prompt('Low Stock Alert at?'));
                   
                   const newMaterial: Material = {
-                    id: Math.random().toString(36).substr(2, 9),
+                    id: Math.random().toString(36).substring(2, 11),
                     name,
                     unit: unit || 'units',
                     purchased,
@@ -793,7 +753,7 @@ export default function App() {
                     ...prev,
                     materials: [...prev.materials, newMaterial],
                     expenses: [...prev.expenses, {
-                      id: Math.random().toString(36).substr(2, 9),
+                      id: Math.random().toString(36).substring(2, 11),
                       date: new Date().toISOString(),
                       amount: purchased * rate,
                       category: 'Material',
@@ -882,7 +842,7 @@ export default function App() {
                   setState(prev => ({
                     ...prev,
                     vendors: [...(prev.vendors || []), {
-                      id: Math.random().toString(36).substr(2, 9),
+                      id: Math.random().toString(36).substring(2, 11),
                       name, type: type || 'General', phone: '',
                       totalBilled, payments: []
                     }]
@@ -933,10 +893,10 @@ export default function App() {
                       setState(prev => ({
                         ...prev,
                         vendors: prev.vendors.map(v => v.id === vendor.id ? {
-                          ...v, payments: [...v.payments, { id: Math.random().toString(36).substr(2, 9), date: dateStr || '', amount, type: 'payment', note }]
+                          ...v, payments: [...v.payments, { id: Math.random().toString(36).substring(2, 11), date: dateStr || '', amount, type: 'payment', note }]
                         } : v),
                         expenses: [...prev.expenses, {
-                          id: Math.random().toString(36).substr(2, 9),
+                          id: Math.random().toString(36).substring(2, 11),
                           date: new Date(dateStr || '').toISOString(),
                           amount, category: 'Material', notes: `Paid to ${vendor.name} - ${note}`
                         }]
@@ -977,7 +937,7 @@ export default function App() {
                   const wage = Number(prompt('Daily Wage?'));
                   
                   const newLabour: Labour = {
-                    id: Math.random().toString(36).substr(2, 9),
+                    id: Math.random().toString(36).substring(2, 11),
                     type,
                     dailyWage: wage,
                     attendance: {}
@@ -1033,7 +993,7 @@ export default function App() {
                         ...prev,
                         labours: prev.labours.map(l => l.id === labour.id ? { ...l, attendance: { ...l.attendance, [date]: 'present' } } : l),
                         expenses: [...prev.expenses, {
-                          id: Math.random().toString(36).substr(2, 9),
+                          id: Math.random().toString(36).substring(2, 11),
                           date: new Date(dateStr).toISOString(),
                           amount: labour.dailyWage,
                           category: 'Labour',
@@ -1053,7 +1013,7 @@ export default function App() {
                         ...prev,
                         labours: prev.labours.map(l => l.id === labour.id ? { ...l, attendance: { ...l.attendance, [date]: 'half' } } : l),
                         expenses: [...prev.expenses, {
-                          id: Math.random().toString(36).substr(2, 9),
+                          id: Math.random().toString(36).substring(2, 11),
                           date: new Date(dateStr).toISOString(),
                           amount: labour.dailyWage / 2,
                           category: 'Labour',
@@ -1097,7 +1057,7 @@ export default function App() {
                   const startDate = prompt('Start date (YYYY-MM-DD)?', new Date().toISOString().slice(0, 10));
                   const notes = prompt('Notes?') || '';
                   const newTheka: Theka = {
-                    id: Math.random().toString(36).substr(2, 9),
+                    id: Math.random().toString(36).substring(2, 11),
                     name,
                     workType: workType || 'Civil',
                     totalAmount,
@@ -1229,7 +1189,7 @@ export default function App() {
                         if (!amount) return;
                         const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
                         const note = prompt('Note (optional)?') || '';
-                        const paymentId = Math.random().toString(36).substr(2, 9);
+                        const paymentId = Math.random().toString(36).substring(2, 11);
                         setState(prev => ({
                           ...prev,
                           thekas: prev.thekas.map(t => t.id === theka.id
@@ -1276,7 +1236,7 @@ export default function App() {
                   setState(prev => ({
                     ...prev,
                     expenses: [{
-                      id: Math.random().toString(36).substr(2, 9),
+                      id: Math.random().toString(36).substring(2, 11),
                       date: new Date(dateStr).toISOString(),
                       amount,
                       category: category || 'Misc',
@@ -1341,7 +1301,7 @@ export default function App() {
           <div className="space-y-4">
             <h3 className="font-bold text-slate-900">Kaam ki Raftaar</h3>
             <div className="relative pl-8 space-y-8 before:content-[''] before:absolute before:left-[15px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-              {state.milestones.map((milestone, idx) => (
+              {state.milestones.map((milestone, _idx) => (
                 <div key={milestone.id} className="relative">
                   <div className={cn(
                     "absolute -left-[25px] top-1 w-5 h-5 rounded-full border-4 border-white shadow-sm z-10",
@@ -1530,7 +1490,7 @@ export default function App() {
                   setState(prev => ({
                     ...prev,
                     brickRecovery: [...prev.brickRecovery, {
-                      id: Math.random().toString(36).substr(2, 9),
+                      id: Math.random().toString(36).substring(2, 11),
                       date: new Date(dateStr).toISOString(),
                       estimated: recovered + broken,
                       recovered,
@@ -1634,7 +1594,7 @@ export default function App() {
                   setState(prev => ({
                     ...prev,
                     malwa: [...prev.malwa, {
-                      id: Math.random().toString(36).substr(2, 9),
+                      id: Math.random().toString(36).substring(2, 11),
                       date: new Date(dateStr).toISOString(),
                       generated: trips,
                       disposed: trips,
@@ -1642,7 +1602,7 @@ export default function App() {
                       vendor: vendor || ''
                     }],
                     expenses: [...prev.expenses, {
-                      id: Math.random().toString(36).substr(2, 9),
+                      id: Math.random().toString(36).substring(2, 11),
                       date: new Date(dateStr).toISOString(),
                       amount: trips * cost,
                       category: 'Transport',
@@ -1708,7 +1668,7 @@ export default function App() {
                   setState(prev => ({
                     ...prev,
                     scrap: [...prev.scrap, {
-                      id: Math.random().toString(36).substr(2, 9),
+                      id: Math.random().toString(36).substring(2, 11),
                       date: new Date(dateStr).toISOString(),
                       type: type || 'Misc',
                       quantity: qty,
@@ -1778,7 +1738,7 @@ export default function App() {
                   setState(prev => ({
                     ...prev,
                     demolitionThekas: [...(prev.demolitionThekas || []), {
-                      id: Math.random().toString(36).substr(2, 9),
+                      id: Math.random().toString(36).substring(2, 11),
                       name,
                       workType: workType || 'Tod-Phod',
                       totalAmount,
@@ -1898,7 +1858,7 @@ export default function App() {
                         if (!amount) return;
                         const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
                         const note = prompt('Note (optional)?') || '';
-                        const paymentId = Math.random().toString(36).substr(2, 9);
+                        const paymentId = Math.random().toString(36).substring(2, 11);
                         setState(prev => ({
                           ...prev,
                           demolitionThekas: (prev.demolitionThekas || []).map(t => t.id === theka.id
@@ -1955,7 +1915,7 @@ export default function App() {
               setState(prev => ({
                 ...prev,
                 rentals: [...(prev.rentals || []), {
-                  id: Math.random().toString(36).substr(2, 9),
+                  id: Math.random().toString(36).substring(2, 11),
                   name,
                   type: type || 'Other',
                   monthlyRent,
@@ -2011,7 +1971,6 @@ export default function App() {
 
         {/* Property cards */}
         {(state.rentals || []).map(rental => {
-          const totalPaid = rental.payments.reduce((a, p) => a + p.amount, 0);
           const currentMonth = format(new Date(), 'yyyy-MM');
           const paidThisMonth = rental.payments.filter(p => p.month === currentMonth).reduce((a, p) => a + p.amount, 0);
           const thisMonthDone = paidThisMonth >= rental.monthlyRent;
@@ -2206,7 +2165,7 @@ export default function App() {
                       setState(prev => ({
                         ...prev,
                         rentals: (prev.rentals || []).map(r => r.id === rental.id
-                          ? { ...r, payments: [...r.payments, { id: Math.random().toString(36).substr(2, 9), date: new Date(dateStr).toISOString(), amount, month, note, paidFromDeposit: false }] }
+                          ? { ...r, payments: [...r.payments, { id: Math.random().toString(36).substring(2, 11), date: new Date(dateStr).toISOString(), amount, month, note, paidFromDeposit: false }] }
                           : r)
                       }));
                     }}
@@ -2226,7 +2185,7 @@ export default function App() {
                         setState(prev => ({
                           ...prev,
                           rentals: (prev.rentals || []).map(r => r.id === rental.id
-                            ? { ...r, payments: [...r.payments, { id: Math.random().toString(36).substr(2, 9), date: new Date(dateStr).toISOString(), amount, month, note, paidFromDeposit: true }] }
+                            ? { ...r, payments: [...r.payments, { id: Math.random().toString(36).substring(2, 11), date: new Date(dateStr).toISOString(), amount, month, note, paidFromDeposit: true }] }
                             : r)
                         }));
                       }}
