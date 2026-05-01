@@ -636,7 +636,7 @@ export default function App() {
                   <X size={18} />
                 </button>
               </div>
-              <div className="overflow-y-auto flex-1 px-5 py-3 space-y-3 overscroll-contain">
+              <div className="overflow-y-auto flex-1 min-h-0 px-5 py-3 space-y-3 overscroll-contain">
                 {[...(state.miscExpenses || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(e => (
                   <div key={e.id} className="flex justify-between items-center text-sm py-1">
                     <div>
