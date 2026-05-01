@@ -82,7 +82,7 @@ const LABOUR_TYPES = [
 ];
 
 export default function App() {
-  const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow] = useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
+  const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt] = useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'construction' | 'demolition' | 'kiraya' | 'settings'>('dashboard');
   const [subTab, setSubTab] = useState<string>('overview');
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title?: string; message: string; confirmText?: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => {} });
@@ -2226,9 +2226,12 @@ export default function App() {
                   {syncStatus === 'offline' && 'Offline — Login Karein'}
                   {syncStatus === 'loading' && 'Connect ho raha hai...'}
                 </p>
+                {userEmail && (
+                  <p className="text-[10px] text-slate-500 font-bold mt-0.5">{userEmail}</p>
+                )}
                 {lastSynced && (
                   <p className="text-[10px] text-slate-400 font-bold mt-0.5">
-                    Last sync: {lastSynced.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                    Synced: {lastSynced.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </p>
                 )}
                 {syncError && (
@@ -2249,6 +2252,11 @@ export default function App() {
               {syncStatus === 'syncing' ? '...' : '↻ Sync'}
             </button>
           </div>
+          {cloudUpdatedAt && (
+            <div className="px-3 py-2 bg-slate-50 rounded-xl text-[10px] text-slate-500 font-bold">
+              ☁ Cloud last updated: {cloudUpdatedAt.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </div>
+          )}
           <p className="text-[11px] text-slate-400 leading-relaxed">
             Phone pe add kiya aur yahan nahi dikh raha? <span className="font-bold">↻ Sync</span> dabao — cloud se latest data aa jayega.
           </p>

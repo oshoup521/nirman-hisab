@@ -27,7 +27,9 @@ export function useCloudSync<T>(key: string, initialValue: T) {
   const [loading, setLoading] = useState(true);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
   const [lastSynced, setLastSynced] = useState<Date | null>(null);
+  const [cloudUpdatedAt, setCloudUpdatedAt] = useState<Date | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const storedValueRef = useRef(storedValue);
   storedValueRef.current = storedValue;
 
@@ -51,10 +53,11 @@ export function useCloudSync<T>(key: string, initialValue: T) {
         setSyncStatus('offline');
         return;
       }
+      setUserEmail(session.user.email ?? null);
 
       const { data, error } = await supabase
         .from('app_state')
-        .select('data')
+        .select('data, updated_at')
         .eq('user_id', session.user.id)
         .single();
 
@@ -64,6 +67,7 @@ export function useCloudSync<T>(key: string, initialValue: T) {
         window.localStorage.setItem(key, JSON.stringify(merged));
         setSyncStatus('synced');
         setLastSynced(new Date());
+        if (data.updated_at) setCloudUpdatedAt(new Date(data.updated_at));
       } else if (error && error.code === 'PGRST116') {
         await supabase.from('app_state').insert({
           user_id: session.user.id,
@@ -123,10 +127,11 @@ export function useCloudSync<T>(key: string, initialValue: T) {
     setSyncStatus('syncing');
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) { setSyncStatus('offline'); return; }
+    setUserEmail(session.user.email ?? null);
 
     const { data, error } = await supabase
       .from('app_state')
-      .select('data')
+      .select('data, updated_at')
       .eq('user_id', session.user.id)
       .single();
 
@@ -136,6 +141,7 @@ export function useCloudSync<T>(key: string, initialValue: T) {
       window.localStorage.setItem(key, JSON.stringify(merged));
       setSyncStatus('synced');
       setLastSynced(new Date());
+      if (data.updated_at) setCloudUpdatedAt(new Date(data.updated_at));
       setSyncError(null);
     } else if (error) {
       setSyncStatus('error');
@@ -143,5 +149,5 @@ export function useCloudSync<T>(key: string, initialValue: T) {
     }
   }, [key, mergeCloud]);
 
-  return [storedValue, setStoredValue, loading, syncStatus, lastSynced, syncError, syncNow] as const;
+  return [storedValue, setStoredValue, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt] as const;
 }
