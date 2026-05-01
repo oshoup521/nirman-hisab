@@ -448,7 +448,7 @@ export default function App() {
             { label: 'Construction (Samaan + Mazdoor)', value: totalSpent, color: 'bg-indigo-500' },
             { label: 'Tod-Phod Theka', value: demolitionThekaCost, color: 'bg-orange-500' },
             { label: 'Malwa Disposal', value: malwaCost, color: 'bg-amber-500' },
-            { label: 'Kiraya (Rent Paid)', value: totalRentPaid, color: 'bg-violet-500' },
+            { label: 'Kiraya (Khud se Diya)', value: totalCashRentPaid, color: 'bg-violet-500' },
             { label: 'Deposit Diya (Wapas Milega)', value: depositPaid, color: 'bg-blue-400' },
             { label: 'Miscellaneous', value: totalMisc, color: 'bg-slate-400' },
           ].filter(r => r.value > 0).map(row => (
@@ -465,6 +465,12 @@ export default function App() {
               </div>
             </div>
           ))}
+          {(totalRentPaid - totalCashRentPaid) > 0 && (
+            <div className="bg-violet-50 rounded-2xl px-3 py-2 flex justify-between items-center">
+              <span className="text-[11px] text-violet-500 font-bold">+ Deposit Se Kata Rent</span>
+              <span className="text-[11px] font-bold text-violet-600">{formatCurrency(totalRentPaid - totalCashRentPaid)}</span>
+            </div>
+          )}
           <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
             <span className="text-xs font-bold text-slate-500 uppercase">Total</span>
             <span className="font-bold text-slate-900">{formatCurrency(totalKharcha)}</span>
