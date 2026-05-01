@@ -93,33 +93,40 @@ export function useCloudSync<T>(key: string, initialValue: T) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  // Sync to Cloud on change (Debounced)
+  // Sync to Cloud on change (Debounced, with retry)
   useEffect(() => {
     if (loading) return;
 
     window.localStorage.setItem(key, JSON.stringify(storedValue));
     setSyncStatus('syncing');
 
-    const timeoutId = setTimeout(async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+    const pushToCloud = async (valueToSync: T, attempt = 1): Promise<void> => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) { setSyncStatus('offline'); return; }
+
         const { error } = await supabase
           .from('app_state')
-          .update({ data: storedValue, updated_at: new Date().toISOString() })
+          .update({ data: valueToSync, updated_at: new Date().toISOString() })
           .eq('user_id', session.user.id);
-        if (error) {
-          setSyncStatus('error');
-          setSyncError(error.message);
-        } else {
-          setSyncStatus('synced');
-          setLastSynced(new Date());
-          setSyncError(null);
-        }
-      } else {
-        setSyncStatus('offline');
-      }
-    }, 1500);
 
+        if (error) throw new Error(error.message);
+
+        setSyncStatus('synced');
+        setLastSynced(new Date());
+        setSyncError(null);
+      } catch (err: any) {
+        if (attempt < 3) {
+          // Retry after 3s, then 6s
+          setTimeout(() => pushToCloud(valueToSync, attempt + 1), attempt * 3000);
+        } else {
+          setSyncStatus('error');
+          setSyncError(err?.message || 'Network error — retry karein');
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(() => pushToCloud(storedValue), 1500);
     return () => clearTimeout(timeoutId);
   }, [storedValue, key, loading]);
 
