@@ -2060,7 +2060,7 @@ export default function App() {
                   >
                     + Online/Cash
                   </button>
-                  {rental.depositStatus === 'paid' && depositRemaining > 0 && (
+                  {getDepositStatus(rental) === 'paid' && depositRemaining > 0 && (
                     <button
                       onClick={() => {
                         const maxFromDeposit = depositRemaining;
