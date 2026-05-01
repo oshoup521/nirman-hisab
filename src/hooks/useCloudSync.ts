@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../utils/supabaseClient';
+
+export type SyncStatus = 'loading' | 'syncing' | 'synced' | 'error' | 'offline';
 
 export function useCloudSync<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -8,7 +10,6 @@ export function useCloudSync<T>(key: string, initialValue: T) {
       if (item) {
          const parsed = JSON.parse(item);
          const merged = { ...initialValue, ...(typeof parsed === 'object' && parsed ? parsed : {}) } as any;
-         // Ensure fallback for arrays to prevent white screen crashes
          for (const k in initialValue) {
            if (Array.isArray((initialValue as any)[k]) && !Array.isArray(merged[k])) {
              merged[k] = (initialValue as any)[k];
@@ -24,6 +25,22 @@ export function useCloudSync<T>(key: string, initialValue: T) {
   });
 
   const [loading, setLoading] = useState(true);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('loading');
+  const [lastSynced, setLastSynced] = useState<Date | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const storedValueRef = useRef(storedValue);
+  storedValueRef.current = storedValue;
+
+  const mergeCloud = useCallback((cloudData: any): T => {
+    const merged = { ...initialValue, ...(typeof cloudData === 'object' && cloudData ? cloudData : {}) } as any;
+    for (const k in initialValue) {
+      if (Array.isArray((initialValue as any)[k]) && !Array.isArray(merged[k])) {
+        merged[k] = (initialValue as any)[k];
+      }
+    }
+    return merged as T;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fetch initial data from Cloud
   useEffect(() => {
@@ -31,60 +48,100 @@ export function useCloudSync<T>(key: string, initialValue: T) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setLoading(false);
+        setSyncStatus('offline');
         return;
       }
-      
+
       const { data, error } = await supabase
         .from('app_state')
         .select('data')
         .eq('user_id', session.user.id)
         .single();
-        
+
       if (data && data.data) {
-        // We found data in the cloud!
-        const cloudMerged = { ...initialValue, ...(typeof data.data === 'object' && data.data ? data.data : {}) } as any;
-        for (const k in initialValue) {
-           if (Array.isArray((initialValue as any)[k]) && !Array.isArray(cloudMerged[k])) {
-             cloudMerged[k] = (initialValue as any)[k];
-           }
-        }
-        setStoredValue(cloudMerged as T);
-        window.localStorage.setItem(key, JSON.stringify(cloudMerged));
+        const merged = mergeCloud(data.data);
+        setStoredValue(merged);
+        window.localStorage.setItem(key, JSON.stringify(merged));
+        setSyncStatus('synced');
+        setLastSynced(new Date());
       } else if (error && error.code === 'PGRST116') {
-        // Table is empty for this user. Insert current local storage
         await supabase.from('app_state').insert({
           user_id: session.user.id,
-          data: storedValue || initialValue
+          data: storedValueRef.current || initialValue
         }).then(({ error: insertError }) => {
-          if (insertError) console.error("Insert error:", insertError);
+          if (insertError) {
+            console.error("Insert error:", insertError);
+            setSyncStatus('error');
+            setSyncError(insertError.message);
+          } else {
+            setSyncStatus('synced');
+            setLastSynced(new Date());
+          }
         });
       } else if (error) {
         console.error("Supabase fetch error:", error);
+        setSyncStatus('error');
+        setSyncError(error.message);
       }
       setLoading(false);
     };
     fetchCloud();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   // Sync to Cloud on change (Debounced)
   useEffect(() => {
-    if (loading) return; // Don't upload while initially loading
+    if (loading) return;
 
     window.localStorage.setItem(key, JSON.stringify(storedValue));
+    setSyncStatus('syncing');
 
     const timeoutId = setTimeout(async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        await supabase
+        const { error } = await supabase
           .from('app_state')
           .update({ data: storedValue, updated_at: new Date().toISOString() })
           .eq('user_id', session.user.id);
+        if (error) {
+          setSyncStatus('error');
+          setSyncError(error.message);
+        } else {
+          setSyncStatus('synced');
+          setLastSynced(new Date());
+          setSyncError(null);
+        }
+      } else {
+        setSyncStatus('offline');
       }
-    }, 1500); // 1.5s debounce
+    }, 1500);
 
     return () => clearTimeout(timeoutId);
   }, [storedValue, key, loading]);
 
-  return [storedValue, setStoredValue, loading] as const;
+  const syncNow = useCallback(async () => {
+    setSyncStatus('syncing');
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { setSyncStatus('offline'); return; }
+
+    const { data, error } = await supabase
+      .from('app_state')
+      .select('data')
+      .eq('user_id', session.user.id)
+      .single();
+
+    if (data && data.data) {
+      const merged = mergeCloud(data.data);
+      setStoredValue(merged);
+      window.localStorage.setItem(key, JSON.stringify(merged));
+      setSyncStatus('synced');
+      setLastSynced(new Date());
+      setSyncError(null);
+    } else if (error) {
+      setSyncStatus('error');
+      setSyncError(error.message);
+    }
+  }, [key, mergeCloud]);
+
+  return [storedValue, setStoredValue, loading, syncStatus, lastSynced, syncError, syncNow] as const;
 }

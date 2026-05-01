@@ -82,7 +82,7 @@ const LABOUR_TYPES = [
 ];
 
 export default function App() {
-  const [state, setState, loading] = useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
+  const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow] = useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'construction' | 'demolition' | 'kiraya' | 'settings'>('dashboard');
   const [subTab, setSubTab] = useState<string>('overview');
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title?: string; message: string; confirmText?: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => {} });
@@ -134,7 +134,10 @@ export default function App() {
   const demolitionThekaCost = useMemo(() => (state.demolitionThekas || []).reduce((acc, t) => acc + t.payments.reduce((a, p) => a + p.amount, 0), 0), [state.demolitionThekas]);
   const demolitionThekaPending = useMemo(() => (state.demolitionThekas || []).reduce((acc, t) => acc + (t.totalAmount - t.payments.reduce((a, p) => a + p.amount, 0)), 0), [state.demolitionThekas]);
 
+  // totalRentPaid = all payments (for display in kiraya tab)
   const totalRentPaid = useMemo(() => (state.rentals || []).reduce((a, r) => a + r.payments.reduce((s, p) => s + p.amount, 0), 0), [state.rentals]);
+  // totalCashRentPaid = only cash/online payments (deposit-se wale exclude) — for kharcha calculation to avoid double counting
+  const totalCashRentPaid = useMemo(() => (state.rentals || []).reduce((a, r) => a + r.payments.filter(p => !p.paidFromDeposit).reduce((s, p) => s + p.amount, 0), 0), [state.rentals]);
   const totalDeposit = useMemo(() => (state.rentals || []).reduce((a, r) => a + (r.deposit || 0), 0), [state.rentals]);
 
   // helper: get effective depositStatus, handles old data that had depositPaid boolean
@@ -151,10 +154,13 @@ export default function App() {
   const depositPending = useMemo(() => (state.rentals || [])
     .filter(r => getDepositStatus(r) === 'pending')
     .reduce((a, r) => a + (r.deposit || 0), 0), [state.rentals]);
-  // depositWapas = money paid but recoverable
+  // depositWapas = remaining deposit recoverable (full deposit minus jo rent se already kata)
   const depositWapas = useMemo(() => (state.rentals || [])
     .filter(r => getDepositStatus(r) === 'paid')
-    .reduce((a, r) => a + (r.deposit || 0), 0), [state.rentals]);
+    .reduce((a, r) => {
+      const usedForRent = r.payments.filter(p => p.paidFromDeposit).reduce((s, p) => s + p.amount, 0);
+      return a + Math.max(0, (r.deposit || 0) - usedForRent);
+    }, 0), [state.rentals]);
   const currentMonthRent = useMemo(() => {
     const m = format(new Date(), 'yyyy-MM');
     return (state.rentals || []).reduce((a, r) => {
@@ -165,10 +171,11 @@ export default function App() {
 
   const totalMisc = useMemo(() => (state.miscExpenses || []).reduce((a, e) => a + e.amount, 0), [state.miscExpenses]);
 
-  // Master total kharcha = construction + demolition theka + malwa + rent paid + deposit paid + misc
+  // Master total kharcha = construction + demolition theka + malwa + cash rent paid + deposit paid + misc
+  // Note: deposit-se-kata rent excluded from rent total (already counted in depositPaid) to avoid double counting
   const totalKharcha = useMemo(() =>
-    totalSpent + demolitionThekaCost + malwaCost + totalRentPaid + depositPaid + totalMisc,
-    [totalSpent, demolitionThekaCost, malwaCost, totalRentPaid, depositPaid, totalMisc]
+    totalSpent + demolitionThekaCost + malwaCost + totalCashRentPaid + depositPaid + totalMisc,
+    [totalSpent, demolitionThekaCost, malwaCost, totalCashRentPaid, depositPaid, totalMisc]
   );
   const masterRemaining = masterBudget > 0 ? masterBudget - totalKharcha : 0;
   const masterBurnRate = masterBudget > 0 ? (totalKharcha / masterBudget) * 100 : 0;
@@ -2188,6 +2195,63 @@ export default function App() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Cloud Sync Status */}
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+          <h3 className="font-bold text-slate-900">Cloud Sync</h3>
+          <div className={cn("flex items-center justify-between p-3 rounded-2xl", {
+            'bg-green-50': syncStatus === 'synced',
+            'bg-blue-50': syncStatus === 'syncing',
+            'bg-red-50': syncStatus === 'error',
+            'bg-slate-50': syncStatus === 'offline' || syncStatus === 'loading',
+          })}>
+            <div className="flex items-center gap-2.5">
+              <div className={cn("w-2.5 h-2.5 rounded-full", {
+                'bg-green-500': syncStatus === 'synced',
+                'bg-blue-500 animate-pulse': syncStatus === 'syncing',
+                'bg-red-500': syncStatus === 'error',
+                'bg-slate-400': syncStatus === 'offline' || syncStatus === 'loading',
+              })} />
+              <div>
+                <p className={cn("text-sm font-bold", {
+                  'text-green-700': syncStatus === 'synced',
+                  'text-blue-700': syncStatus === 'syncing',
+                  'text-red-700': syncStatus === 'error',
+                  'text-slate-600': syncStatus === 'offline' || syncStatus === 'loading',
+                })}>
+                  {syncStatus === 'synced' && 'Connected — Synced'}
+                  {syncStatus === 'syncing' && 'Sync ho raha hai...'}
+                  {syncStatus === 'error' && 'Sync Error'}
+                  {syncStatus === 'offline' && 'Offline — Login Karein'}
+                  {syncStatus === 'loading' && 'Connect ho raha hai...'}
+                </p>
+                {lastSynced && (
+                  <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                    Last sync: {lastSynced.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </p>
+                )}
+                {syncError && (
+                  <p className="text-[10px] text-red-400 font-bold mt-0.5">{syncError}</p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={syncNow}
+              disabled={syncStatus === 'syncing'}
+              className={cn("text-xs font-bold px-3 py-1.5 rounded-xl border disabled:opacity-50", {
+                'bg-green-100 text-green-700 border-green-200': syncStatus === 'synced',
+                'bg-blue-100 text-blue-700 border-blue-200': syncStatus === 'syncing',
+                'bg-red-100 text-red-700 border-red-200': syncStatus === 'error',
+                'bg-slate-100 text-slate-600 border-slate-200': syncStatus === 'offline' || syncStatus === 'loading',
+              })}
+            >
+              {syncStatus === 'syncing' ? '...' : '↻ Sync'}
+            </button>
+          </div>
+          <p className="text-[11px] text-slate-400 leading-relaxed">
+            Phone pe add kiya aur yahan nahi dikh raha? <span className="font-bold">↻ Sync</span> dabao — cloud se latest data aa jayega.
+          </p>
         </div>
 
         {/* Account Section */}
