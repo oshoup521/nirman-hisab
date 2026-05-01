@@ -1424,6 +1424,32 @@ export default function App() {
               </button>
             </div>
 
+            {/* Totals summary */}
+            {state.brickRecovery.length > 0 && (() => {
+              const totalRecovered = state.brickRecovery.reduce((a, b) => a + b.recovered, 0);
+              const totalBroken = state.brickRecovery.reduce((a, b) => a + b.broken, 0);
+              const totalEstimated = state.brickRecovery.reduce((a, b) => a + b.estimated, 0);
+              return (
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-green-50 p-3 rounded-2xl border border-green-100 text-center">
+                    <p className="text-[10px] font-bold text-green-500 uppercase mb-0.5">Bachao</p>
+                    <p className="text-lg font-bold text-green-700">{formatNumber(totalRecovered)}</p>
+                    <p className="text-[10px] text-green-400 font-bold">pcs</p>
+                  </div>
+                  <div className="bg-red-50 p-3 rounded-2xl border border-red-100 text-center">
+                    <p className="text-[10px] font-bold text-red-400 uppercase mb-0.5">Tooti</p>
+                    <p className="text-lg font-bold text-red-600">{formatNumber(totalBroken)}</p>
+                    <p className="text-[10px] text-red-300 font-bold">pcs</p>
+                  </div>
+                  <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">Kul</p>
+                    <p className="text-lg font-bold text-slate-700">{formatNumber(totalEstimated)}</p>
+                    <p className="text-[10px] text-slate-400 font-bold">pcs</p>
+                  </div>
+                </div>
+              );
+            })()}
+
             {[...state.brickRecovery].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(entry => (
               <div key={entry.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                 <div className="flex justify-between items-start mb-2">
