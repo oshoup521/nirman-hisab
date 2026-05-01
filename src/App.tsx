@@ -1861,6 +1861,8 @@ export default function App() {
           const currentMonth = format(new Date(), 'yyyy-MM');
           const paidThisMonth = rental.payments.filter(p => p.month === currentMonth).reduce((a, p) => a + p.amount, 0);
           const thisMonthDone = paidThisMonth >= rental.monthlyRent;
+          const depositUsedForRent = rental.payments.filter(p => p.paidFromDeposit).reduce((a, p) => a + p.amount, 0);
+          const depositRemaining = rental.deposit - depositUsedForRent;
 
           return (
             <div key={rental.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -1943,6 +1945,23 @@ export default function App() {
                     <p className="font-bold text-slate-400">—</p>
                   )}
                 </div>
+                {depositUsedForRent > 0 && (
+                  <div className="col-span-2 bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-[10px] font-bold text-indigo-400 uppercase mb-0.5">Deposit Remaining</p>
+                        <p className="font-bold text-indigo-700">{formatCurrency(Math.max(0, depositRemaining))}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-bold text-indigo-300 uppercase mb-0.5">Rent se Kata</p>
+                        <p className="font-bold text-indigo-400">- {formatCurrency(depositUsedForRent)}</p>
+                      </div>
+                    </div>
+                    {depositRemaining <= 0 && (
+                      <p className="text-[10px] font-bold text-red-400 mt-1">Deposit khatam — ab online dena hoga</p>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Agreement info */}
@@ -1969,7 +1988,12 @@ export default function App() {
                   {[...rental.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
                     <div key={payment.id} className="flex justify-between items-center text-sm">
                       <div>
-                        <p className="font-bold text-slate-700">{formatCurrency(payment.amount)}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-bold text-slate-700">{formatCurrency(payment.amount)}</p>
+                          {payment.paidFromDeposit && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 bg-indigo-100 text-indigo-500 rounded-full">Deposit se</span>
+                          )}
+                        </div>
                         <p className="text-[10px] text-slate-400 font-bold uppercase">
                           {format(new Date(payment.date), 'dd MMM yyyy')} • {payment.month}
                           {payment.note && ` • ${payment.note}`}
@@ -1983,10 +2007,12 @@ export default function App() {
                             const month = prompt('Mahina (YYYY-MM)?', payment.month) || payment.month;
                             const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(payment.date), 'yyyy-MM-dd')) || format(new Date(payment.date), 'yyyy-MM-dd');
                             const note = prompt('Note?', payment.note) || '';
+                            const fromDepositStr = prompt('Deposit se kata? (haan/nahi)', payment.paidFromDeposit ? 'haan' : 'nahi') || 'nahi';
+                            const paidFromDeposit = fromDepositStr.toLowerCase() === 'haan';
                             setState(prev => ({
                               ...prev,
                               rentals: (prev.rentals || []).map(r => r.id === rental.id
-                                ? { ...r, payments: r.payments.map(p => p.id === payment.id ? { ...p, amount, month, date: new Date(dateStr).toISOString(), note } : p) }
+                                ? { ...r, payments: r.payments.map(p => p.id === payment.id ? { ...p, amount, month, date: new Date(dateStr).toISOString(), note, paidFromDeposit } : p) }
                                 : r)
                             }));
                           }}
@@ -2015,24 +2041,47 @@ export default function App() {
 
               {/* Add payment */}
               <div className="border-t border-slate-50 p-3">
-                <button
-                  onClick={() => {
-                    const amount = Number(prompt(`${rental.name} ka rent kitna diya?`, String(rental.monthlyRent)));
-                    if (!amount) return;
-                    const month = prompt('Kis mahine ka? (YYYY-MM)', format(new Date(), 'yyyy-MM')) || format(new Date(), 'yyyy-MM');
-                    const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
-                    const note = prompt('Note (optional)?') || '';
-                    setState(prev => ({
-                      ...prev,
-                      rentals: (prev.rentals || []).map(r => r.id === rental.id
-                        ? { ...r, payments: [...r.payments, { id: Math.random().toString(36).substr(2, 9), date: new Date(dateStr).toISOString(), amount, month, note }] }
-                        : r)
-                    }));
-                  }}
-                  className="w-full py-2 bg-violet-50 text-violet-600 rounded-xl text-xs font-bold border border-violet-100"
-                >
-                  + Rent Payment Add Karo
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      const amount = Number(prompt(`${rental.name} ka rent kitna diya?`, String(rental.monthlyRent)));
+                      if (!amount) return;
+                      const month = prompt('Kis mahine ka? (YYYY-MM)', format(new Date(), 'yyyy-MM')) || format(new Date(), 'yyyy-MM');
+                      const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                      const note = prompt('Note (optional)?') || '';
+                      setState(prev => ({
+                        ...prev,
+                        rentals: (prev.rentals || []).map(r => r.id === rental.id
+                          ? { ...r, payments: [...r.payments, { id: Math.random().toString(36).substr(2, 9), date: new Date(dateStr).toISOString(), amount, month, note, paidFromDeposit: false }] }
+                          : r)
+                      }));
+                    }}
+                    className="flex-1 py-2 bg-violet-50 text-violet-600 rounded-xl text-xs font-bold border border-violet-100"
+                  >
+                    + Online/Cash
+                  </button>
+                  {rental.depositStatus === 'paid' && depositRemaining > 0 && (
+                    <button
+                      onClick={() => {
+                        const maxFromDeposit = depositRemaining;
+                        const amount = Number(prompt(`Deposit se kitna kata? (Max: ₹${maxFromDeposit})`, String(Math.min(rental.monthlyRent, maxFromDeposit))));
+                        if (!amount) return;
+                        const month = prompt('Kis mahine ka? (YYYY-MM)', format(new Date(), 'yyyy-MM')) || format(new Date(), 'yyyy-MM');
+                        const dateStr = prompt('Date (YYYY-MM-DD)?', format(new Date(), 'yyyy-MM-dd')) || format(new Date(), 'yyyy-MM-dd');
+                        const note = prompt('Note (optional)?') || '';
+                        setState(prev => ({
+                          ...prev,
+                          rentals: (prev.rentals || []).map(r => r.id === rental.id
+                            ? { ...r, payments: [...r.payments, { id: Math.random().toString(36).substr(2, 9), date: new Date(dateStr).toISOString(), amount, month, note, paidFromDeposit: true }] }
+                            : r)
+                        }));
+                      }}
+                      className="flex-1 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
+                    >
+                      + Deposit se
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );

@@ -128,6 +128,7 @@ export interface RentPayment {
   amount: number;
   month: string; // e.g. "2026-03"
   note: string;
+  paidFromDeposit?: boolean; // true = deposit se kata, cash nahi gaya
 }
 
 export interface RentalProperty {
