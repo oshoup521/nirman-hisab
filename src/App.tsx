@@ -89,6 +89,14 @@ export default function App() {
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title?: string; message: string; confirmText?: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => {} });
   const [pwForm, setPwForm] = useState({ open: false, newPw: '', confirmPw: '', loading: false, error: '', success: '' });
   const [showAllMisc, setShowAllMisc] = useState(false);
+  useEffect(() => {
+    if (showAllMisc) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showAllMisc]);
 
   const askConfirm = (message: string, onConfirm: () => void, title?: string, confirmText?: string) => {
     setConfirmDialog({ open: true, title, message, confirmText, onConfirm });
@@ -628,7 +636,7 @@ export default function App() {
                   <X size={18} />
                 </button>
               </div>
-              <div className="overflow-y-auto flex-1 px-5 py-3 space-y-3">
+              <div className="overflow-y-auto flex-1 px-5 py-3 space-y-3 overscroll-contain">
                 {[...(state.miscExpenses || [])].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(e => (
                   <div key={e.id} className="flex justify-between items-center text-sm py-1">
                     <div>
