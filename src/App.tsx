@@ -1588,23 +1588,29 @@ export default function App() {
                         />
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Khatam</p>
+                        <p className={cn("text-[10px] font-bold uppercase mb-1", milestone.status !== 'completed' ? "text-slate-200" : "text-slate-400")}>Khatam</p>
                         <input
                           type="date"
                           value={milestone.endDate ?? ''}
+                          disabled={milestone.status !== 'completed'}
                           onChange={(e) => setState(prev => ({
                             ...prev,
                             milestones: prev.milestones.map(m => m.id === milestone.id ? { ...m, endDate: e.target.value || undefined } : m)
                           }))}
-                          className="w-full text-xs bg-slate-50 border border-slate-100 rounded-lg px-2 py-1.5 text-slate-700"
+                          className={cn("w-full text-xs border rounded-lg px-2 py-1.5", milestone.status !== 'completed' ? "bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed" : "bg-slate-50 border-slate-100 text-slate-700")}
                         />
                       </div>
                     </div>
-                    {milestone.startDate && milestone.endDate && (() => {
-                      const days = Math.round((new Date(milestone.endDate).getTime() - new Date(milestone.startDate).getTime()) / 86400000);
-                      return days >= 0 ? (
-                        <p className="mt-2 text-xs text-slate-400">{days} din lage</p>
-                      ) : null;
+                    {milestone.startDate && (() => {
+                      if (milestone.status === 'completed' && milestone.endDate) {
+                        const days = Math.round((new Date(milestone.endDate).getTime() - new Date(milestone.startDate).getTime()) / 86400000);
+                        return days >= 0 ? <p className="mt-2 text-xs text-slate-400">{days} din lage</p> : null;
+                      }
+                      if (milestone.status === 'in-progress') {
+                        const days = Math.round((Date.now() - new Date(milestone.startDate).getTime()) / 86400000);
+                        return <p className="mt-2 text-xs text-indigo-400 font-medium">{days} din se chal raha hai</p>;
+                      }
+                      return null;
                     })()}
 
                     {/* Photos */}
@@ -1613,32 +1619,47 @@ export default function App() {
                         <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
                           <ImageIcon size={11} /> Photos {milestone.photos?.length ? `(${milestone.photos.length})` : ''}
                         </p>
-                        <label className={cn(
-                          "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer transition-colors",
-                          photoUploading === milestone.id
-                            ? "bg-slate-100 text-slate-400"
-                            : "bg-indigo-50 text-indigo-600 active:bg-indigo-100"
-                        )}>
-                          {photoUploading === milestone.id ? (
-                            <span>Uploading…</span>
-                          ) : (
-                            <><Camera size={12} /> Add</>
-                          )}
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={photoUploading === milestone.id}
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const caption = prompt('Photo ka naam / caption (optional):') ?? '';
-                                uploadPhotoForMilestone(milestone.id, file, caption);
-                              }
-                              e.target.value = '';
-                            }}
-                          />
-                        </label>
+                        {photoUploading === milestone.id ? (
+                          <span className="text-xs text-slate-400 font-bold">Uploading…</span>
+                        ) : (
+                          <div className="flex gap-1.5">
+                            {/* Camera */}
+                            <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-indigo-50 text-indigo-600 active:bg-indigo-100">
+                              <Camera size={12} />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const caption = prompt('Photo ka naam / caption (optional):') ?? '';
+                                    uploadPhotoForMilestone(milestone.id, file, caption);
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
+                            {/* Gallery */}
+                            <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-slate-100 text-slate-600 active:bg-slate-200">
+                              <ImageIcon size={12} />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const caption = prompt('Photo ka naam / caption (optional):') ?? '';
+                                    uploadPhotoForMilestone(milestone.id, file, caption);
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
+                          </div>
+                        )}
                       </div>
                       {milestone.photos && milestone.photos.length > 0 && (
                         <div className="grid grid-cols-3 gap-1.5">
