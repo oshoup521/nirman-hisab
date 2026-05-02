@@ -449,7 +449,10 @@ export default function App() {
 
         {/* Quick stats */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <button
+            onClick={() => { setActiveTab('construction'); setSubTab('materials'); }}
+            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-95 transition-transform"
+          >
             <div className="flex items-center gap-2 text-slate-500 mb-1">
               <Package size={16} />
               <span className="text-xs font-bold uppercase">Low Stock</span>
@@ -457,8 +460,11 @@ export default function App() {
             <p className="text-xl font-bold text-slate-900">
               {state.materials.filter(m => m.purchased - m.used <= m.minStock).length} Items
             </p>
-          </div>
-          <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          </button>
+          <button
+            onClick={() => { setActiveTab('construction'); setSubTab('timeline'); }}
+            className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-95 transition-transform"
+          >
             <div className="flex items-center gap-2 text-slate-500 mb-1">
               <Clock size={16} />
               <span className="text-xs font-bold uppercase">Active Phases</span>
@@ -466,7 +472,7 @@ export default function App() {
             <p className="text-xl font-bold text-slate-900">
               {state.milestones.filter(m => m.status === 'in-progress').length}
             </p>
-          </div>
+          </button>
           {currentMonthRent > 0 && (
             <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100 shadow-sm col-span-2">
               <div className="flex items-center gap-2 text-orange-500 mb-1">
