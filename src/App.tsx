@@ -21,7 +21,7 @@ import { format } from 'date-fns';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
-import { AppState, Project, Material, Labour, Theka, ThekaPayment, DemolitionTheka, RentalProperty, RentPayment, MiscExpense, Expense, BrickRecovery, MalwaEntry, ScrapEntry } from './types';
+import { AppState, Project, Material, Labour, Theka, ThekaPayment, DemolitionTheka, RentalProperty, RentPayment, MiscExpense, Expense, BrickRecovery, MalwaEntry, ScrapEntry, Milestone } from './types';
 import { useCloudSync } from './hooks/useCloudSync';
 import { useDragScroll } from './hooks/useDragScroll';
 import { formatCurrency, formatNumber } from './utils/formatters';
@@ -1317,12 +1317,22 @@ export default function App() {
                   <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                     <div className="flex justify-between items-center">
                       <h4 className="font-bold text-slate-900">{milestone.phase}</h4>
-                      <select 
+                      <select
                         value={milestone.status}
                         onChange={(e) => {
+                          const newStatus = e.target.value as Milestone['status'];
+                          const today = format(new Date(), 'yyyy-MM-dd');
                           setState(prev => ({
                             ...prev,
-                            milestones: prev.milestones.map(m => m.id === milestone.id ? { ...m, status: e.target.value as any } : m)
+                            milestones: prev.milestones.map(m => {
+                              if (m.id !== milestone.id) return m;
+                              return {
+                                ...m,
+                                status: newStatus,
+                                startDate: newStatus === 'in-progress' && !m.startDate ? today : m.startDate,
+                                endDate: newStatus === 'completed' ? today : undefined,
+                              };
+                            })
                           }));
                         }}
                         className="text-xs font-bold bg-slate-50 border-none rounded-lg focus:ring-0"
@@ -1332,6 +1342,20 @@ export default function App() {
                         <option value="completed">Completed</option>
                       </select>
                     </div>
+                    {(milestone.startDate || milestone.endDate) && (
+                      <div className="mt-2 flex gap-3 text-xs text-slate-400">
+                        {milestone.startDate && (
+                          <span>▶ {format(new Date(milestone.startDate), 'd MMM yyyy')}</span>
+                        )}
+                        {milestone.endDate && (
+                          <span>✓ {format(new Date(milestone.endDate), 'd MMM yyyy')}</span>
+                        )}
+                        {milestone.startDate && milestone.endDate && (() => {
+                          const days = Math.round((new Date(milestone.endDate).getTime() - new Date(milestone.startDate).getTime()) / 86400000);
+                          return <span className="text-slate-300">· {days}d</span>;
+                        })()}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

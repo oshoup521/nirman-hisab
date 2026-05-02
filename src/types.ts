@@ -83,6 +83,8 @@ export interface Milestone {
   phase: string;
   status: 'pending' | 'in-progress' | 'completed';
   delayReason?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface DemolitionProject {
