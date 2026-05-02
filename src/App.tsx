@@ -15,7 +15,10 @@ import {
   Download,
   Pencil,
   Home,
-  X
+  X,
+  Camera,
+  ImageIcon,
+  Images,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { clsx, type ClassValue } from 'clsx';
@@ -58,6 +61,39 @@ const INITIAL_STATE: AppState = {
 };
 
 
+function PhotoThumb({ path, getSignedUrl, onOpen, onDelete }: {
+  path: string;
+  getSignedUrl: (path: string) => Promise<string | null>;
+  onOpen: (url: string) => void;
+  onDelete: () => void;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    getSignedUrl(path).then(setUrl);
+  }, [path, getSignedUrl]);
+
+  if (!url) return (
+    <div className="aspect-square bg-slate-100 rounded-lg animate-pulse" />
+  );
+
+  return (
+    <div className="relative aspect-square group">
+      <img
+        src={url}
+        className="w-full h-full object-cover rounded-lg cursor-pointer"
+        onClick={() => onOpen(url)}
+      />
+      <button
+        onClick={onDelete}
+        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <X size={12} />
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt] = useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
   const [activeTab, setActiveTab] = useState<'dashboard' | 'construction' | 'demolition' | 'kiraya' | 'settings'>('dashboard');
@@ -65,6 +101,9 @@ export default function App() {
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title?: string; message: string; confirmText?: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => {} });
   const [pwForm, setPwForm] = useState({ open: false, newPw: '', confirmPw: '', loading: false, error: '', success: '' });
   const [showAllMisc, setShowAllMisc] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState<string | null>(null); // milestoneId being uploaded
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({}); // path -> signed url
+  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null); // signed url to show fullscreen
   useEffect(() => {
     if (showAllMisc) {
       document.body.style.overflow = 'hidden';
@@ -76,6 +115,47 @@ export default function App() {
 
   const askConfirm = (message: string, onConfirm: () => void, title?: string, confirmText?: string) => {
     setConfirmDialog({ open: true, title, message, confirmText, onConfirm });
+  };
+
+  const uploadPhotoForMilestone = async (milestoneId: string, file: File) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+    setPhotoUploading(milestoneId);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${session.user.id}/${milestoneId}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('phase-photos').upload(path, file, { upsert: false });
+      if (error) throw error;
+      setState(prev => ({
+        ...prev,
+        milestones: prev.milestones.map(m =>
+          m.id === milestoneId ? { ...m, photos: [...(m.photos ?? []), path] } : m
+        )
+      }));
+    } finally {
+      setPhotoUploading(null);
+    }
+  };
+
+  const getSignedUrl = useCallback(async (path: string) => {
+    if (signedUrls[path]) return signedUrls[path];
+    const { data } = await supabase.storage.from('phase-photos').createSignedUrl(path, 3600);
+    if (data?.signedUrl) {
+      setSignedUrls(prev => ({ ...prev, [path]: data.signedUrl }));
+      return data.signedUrl;
+    }
+    return null;
+  }, [signedUrls]);
+
+  const deletePhoto = async (milestoneId: string, path: string) => {
+    await supabase.storage.from('phase-photos').remove([path]);
+    setSignedUrls(prev => { const n = { ...prev }; delete n[path]; return n; });
+    setState(prev => ({
+      ...prev,
+      milestones: prev.milestones.map(m =>
+        m.id === milestoneId ? { ...m, photos: (m.photos ?? []).filter(p => p !== path) } : m
+      )
+    }));
   };
 
   // Pull-to-refresh
@@ -650,6 +730,7 @@ export default function App() {
       { id: 'theka', label: 'Theka', icon: ChevronRight },
       { id: 'expenses', label: 'Kharcha', icon: IndianRupee },
       { id: 'timeline', label: 'Raftaar', icon: Clock },
+      { id: 'gallery', label: 'Gallery', icon: Images },
     ];
 
     return (
@@ -1374,10 +1455,109 @@ export default function App() {
                         <p className="mt-2 text-xs text-slate-400">{days} din lage</p>
                       ) : null;
                     })()}
+
+                    {/* Photos */}
+                    <div className="mt-3 border-t border-slate-100 pt-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                          <ImageIcon size={11} /> Photos {milestone.photos?.length ? `(${milestone.photos.length})` : ''}
+                        </p>
+                        <label className={cn(
+                          "flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer transition-colors",
+                          photoUploading === milestone.id
+                            ? "bg-slate-100 text-slate-400"
+                            : "bg-indigo-50 text-indigo-600 active:bg-indigo-100"
+                        )}>
+                          {photoUploading === milestone.id ? (
+                            <span>Uploading…</span>
+                          ) : (
+                            <><Camera size={12} /> Add</>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            capture="environment"
+                            className="hidden"
+                            disabled={photoUploading === milestone.id}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) uploadPhotoForMilestone(milestone.id, file);
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                      </div>
+                      {milestone.photos && milestone.photos.length > 0 && (
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {milestone.photos.map((path) => (
+                            <PhotoThumb
+                              key={path}
+                              path={path}
+                              getSignedUrl={getSignedUrl}
+                              onOpen={setLightboxPhoto}
+                              onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, path))}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {subTab === 'gallery' && (
+          <div className="space-y-4">
+            <h3 className="font-bold text-slate-900">Site Gallery</h3>
+            {state.milestones.filter(m => m.photos && m.photos.length > 0).length === 0 ? (
+              <div className="text-center py-16 text-slate-400">
+                <Images size={40} className="mx-auto mb-3 opacity-30" />
+                <p className="text-sm font-bold">Abhi koi photo nahi hai</p>
+                <p className="text-xs mt-1">Raftaar tab mein phases mein photos add karo</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {state.milestones.filter(m => m.photos && m.photos.length > 0).map(milestone => (
+                  <div key={milestone.id}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={cn(
+                        "w-2.5 h-2.5 rounded-full",
+                        milestone.status === 'completed' ? 'bg-green-500' :
+                        milestone.status === 'in-progress' ? 'bg-indigo-500' : 'bg-slate-300'
+                      )} />
+                      <p className="text-sm font-bold text-slate-700">{milestone.phase}</p>
+                      <span className="text-xs text-slate-400">{milestone.photos!.length} photos</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {milestone.photos!.map(path => (
+                        <PhotoThumb
+                          key={path}
+                          path={path}
+                          getSignedUrl={getSignedUrl}
+                          onOpen={setLightboxPhoto}
+                          onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, path))}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Lightbox */}
+        {lightboxPhoto && (
+          <div
+            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+            onClick={() => setLightboxPhoto(null)}
+          >
+            <button className="absolute top-4 right-4 text-white" onClick={() => setLightboxPhoto(null)}>
+              <X size={28} />
+            </button>
+            <img src={lightboxPhoto} className="max-w-full max-h-full object-contain rounded-lg" />
           </div>
         )}
       </div>
