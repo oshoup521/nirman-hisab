@@ -1342,20 +1342,38 @@ export default function App() {
                         <option value="completed">Completed</option>
                       </select>
                     </div>
-                    {(milestone.startDate || milestone.endDate) && (
-                      <div className="mt-2 flex gap-3 text-xs text-slate-400">
-                        {milestone.startDate && (
-                          <span>▶ {format(new Date(milestone.startDate), 'd MMM yyyy')}</span>
-                        )}
-                        {milestone.endDate && (
-                          <span>✓ {format(new Date(milestone.endDate), 'd MMM yyyy')}</span>
-                        )}
-                        {milestone.startDate && milestone.endDate && (() => {
-                          const days = Math.round((new Date(milestone.endDate).getTime() - new Date(milestone.startDate).getTime()) / 86400000);
-                          return <span className="text-slate-300">· {days}d</span>;
-                        })()}
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Shuru</p>
+                        <input
+                          type="date"
+                          value={milestone.startDate ?? ''}
+                          onChange={(e) => setState(prev => ({
+                            ...prev,
+                            milestones: prev.milestones.map(m => m.id === milestone.id ? { ...m, startDate: e.target.value || undefined } : m)
+                          }))}
+                          className="w-full text-xs bg-slate-50 border border-slate-100 rounded-lg px-2 py-1.5 text-slate-700"
+                        />
                       </div>
-                    )}
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Khatam</p>
+                        <input
+                          type="date"
+                          value={milestone.endDate ?? ''}
+                          onChange={(e) => setState(prev => ({
+                            ...prev,
+                            milestones: prev.milestones.map(m => m.id === milestone.id ? { ...m, endDate: e.target.value || undefined } : m)
+                          }))}
+                          className="w-full text-xs bg-slate-50 border border-slate-100 rounded-lg px-2 py-1.5 text-slate-700"
+                        />
+                      </div>
+                    </div>
+                    {milestone.startDate && milestone.endDate && (() => {
+                      const days = Math.round((new Date(milestone.endDate).getTime() - new Date(milestone.startDate).getTime()) / 86400000);
+                      return days >= 0 ? (
+                        <p className="mt-2 text-xs text-slate-400">{days} din lage</p>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
               ))}
