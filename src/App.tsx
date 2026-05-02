@@ -1476,7 +1476,6 @@ export default function App() {
                           <input
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             className="hidden"
                             disabled={photoUploading === milestone.id}
                             onChange={(e) => {
