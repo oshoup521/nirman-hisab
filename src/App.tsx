@@ -16,7 +16,6 @@ import {
   Pencil,
   Home,
   X,
-  Camera,
   ImageIcon,
   Images,
 } from 'lucide-react';
@@ -1623,25 +1622,6 @@ export default function App() {
                           <span className="text-xs text-slate-400 font-bold">Uploading…</span>
                         ) : (
                           <div className="flex gap-1.5">
-                            {/* Camera */}
-                            <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-indigo-50 text-indigo-600 active:bg-indigo-100">
-                              <Camera size={12} />
-                              <input
-                                type="file"
-                                accept="image/*"
-                                capture="environment"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const caption = prompt('Photo ka naam / caption (optional):') ?? '';
-                                    uploadPhotoForMilestone(milestone.id, file, caption);
-                                  }
-                                  e.target.value = '';
-                                }}
-                              />
-                            </label>
-                            {/* Gallery */}
                             <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-slate-100 text-slate-600 active:bg-slate-200">
                               <ImageIcon size={12} />
                               <input
