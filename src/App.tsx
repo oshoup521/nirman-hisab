@@ -42,6 +42,7 @@ const INITIAL_STATE: AppState = {
   thekas: [],
   expenses: [],
   milestones: [
+    { id: 'demolition', phase: 'Demolition', status: 'pending' },
     { id: '1', phase: 'Foundation', status: 'pending' },
     { id: '2', phase: 'Plinth', status: 'pending' },
     { id: '3', phase: 'Slab', status: 'pending' },
@@ -61,10 +62,11 @@ const INITIAL_STATE: AppState = {
 };
 
 
-function PhotoThumb({ path, getSignedUrl, onOpen, onDelete }: {
+function PhotoThumb({ path, caption, getSignedUrl, onOpen, onDelete }: {
   path: string;
+  caption?: string;
   getSignedUrl: (path: string) => Promise<string | null>;
-  onOpen: (url: string) => void;
+  onOpen: (url: string, caption?: string) => void;
   onDelete: () => void;
 }) {
   const [url, setUrl] = useState<string | null>(null);
@@ -78,15 +80,20 @@ function PhotoThumb({ path, getSignedUrl, onOpen, onDelete }: {
   );
 
   return (
-    <div className="relative aspect-square group">
-      <img
-        src={url}
-        className="w-full h-full object-cover rounded-lg cursor-pointer"
-        onClick={() => onOpen(url)}
-      />
+    <div className="relative group">
+      <div className="aspect-square">
+        <img
+          src={url}
+          className="w-full h-full object-cover rounded-lg cursor-pointer"
+          onClick={() => onOpen(url, caption)}
+        />
+      </div>
+      {caption && (
+        <p className="text-[10px] text-slate-500 font-medium mt-1 truncate px-0.5">{caption}</p>
+      )}
       <button
         onClick={onDelete}
-        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5"
       >
         <X size={12} />
       </button>
@@ -101,9 +108,19 @@ export default function App() {
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title?: string; message: string; confirmText?: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => {} });
   const [pwForm, setPwForm] = useState({ open: false, newPw: '', confirmPw: '', loading: false, error: '', success: '' });
   const [showAllMisc, setShowAllMisc] = useState(false);
+  // One-time migration: prepend Demolition phase if not already present
+  useEffect(() => {
+    if (!loading && !state.milestones.find(m => m.id === 'demolition')) {
+      setState(prev => ({
+        ...prev,
+        milestones: [{ id: 'demolition', phase: 'Demolition', status: 'pending' as const }, ...prev.milestones]
+      }));
+    }
+  }, [loading]);
+
   const [photoUploading, setPhotoUploading] = useState<string | null>(null); // milestoneId being uploaded
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({}); // path -> signed url
-  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null); // signed url to show fullscreen
+  const [lightboxPhoto, setLightboxPhoto] = useState<{ url: string; caption?: string } | null>(null);
   useEffect(() => {
     if (showAllMisc) {
       document.body.style.overflow = 'hidden';
@@ -117,7 +134,7 @@ export default function App() {
     setConfirmDialog({ open: true, title, message, confirmText, onConfirm });
   };
 
-  const uploadPhotoForMilestone = async (milestoneId: string, file: File) => {
+  const uploadPhotoForMilestone = async (milestoneId: string, file: File, caption: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     setPhotoUploading(milestoneId);
@@ -129,7 +146,7 @@ export default function App() {
       setState(prev => ({
         ...prev,
         milestones: prev.milestones.map(m =>
-          m.id === milestoneId ? { ...m, photos: [...(m.photos ?? []), path] } : m
+          m.id === milestoneId ? { ...m, photos: [...(m.photos ?? []), { path, caption: caption || undefined }] } : m
         )
       }));
     } finally {
@@ -153,7 +170,7 @@ export default function App() {
     setState(prev => ({
       ...prev,
       milestones: prev.milestones.map(m =>
-        m.id === milestoneId ? { ...m, photos: (m.photos ?? []).filter(p => p !== path) } : m
+        m.id === milestoneId ? { ...m, photos: (m.photos ?? []).filter(p => p.path !== path) } : m
       )
     }));
   };
@@ -777,7 +794,7 @@ export default function App() {
                   <h3 className="font-bold text-slate-900">No Project Found</h3>
                   <p className="text-slate-500 text-sm">Settings mein jaake project setup karein.</p>
                 </div>
-                <button 
+                <button
                   onClick={() => setActiveTab('settings')}
                   className="px-6 py-2 bg-indigo-600 text-white rounded-full font-bold text-sm"
                 >
@@ -785,27 +802,161 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">{state.project.name}</h3>
-                    <p className="text-slate-500 text-sm">{state.project.location}</p>
+              <>
+                {/* Project Info */}
+                <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-900">{state.project.name}</h3>
+                      <p className="text-slate-500 text-sm">{state.project.location}</p>
+                    </div>
+                    <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold uppercase">
+                      {state.project.type}
+                    </span>
                   </div>
-                  <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold uppercase">
-                    {state.project.type}
-                  </span>
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-50">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">Shuru</p>
+                      <p className="font-bold text-slate-700 text-sm">{format(new Date(state.project.startDate), 'dd MMM yyyy')}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">Khatam (Plan)</p>
+                      <p className="font-bold text-slate-700 text-sm">{format(new Date(state.project.endDate), 'dd MMM yyyy')}</p>
+                    </div>
+                  </div>
+                  {(() => {
+                    const start = new Date(state.project.startDate).getTime();
+                    const end = new Date(state.project.endDate).getTime();
+                    const now = Date.now();
+                    const totalDays = Math.round((end - start) / 86400000);
+                    const elapsed = Math.round((now - start) / 86400000);
+                    const remaining = Math.max(0, Math.round((end - now) / 86400000));
+                    const timePct = Math.min(100, Math.max(0, Math.round((elapsed / totalDays) * 100)));
+                    const phasePct = Math.round((state.milestones.filter(m => m.status === 'completed').length / state.milestones.length) * 100);
+                    const isOverdue = now > end;
+                    const isAhead = phasePct >= timePct;
+                    return (
+                      <div className="pt-3 border-t border-slate-50 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase">Time Progress</p>
+                          <p className={cn("text-[10px] font-bold", isOverdue ? "text-red-500" : isAhead ? "text-green-600" : "text-orange-500")}>
+                            {isOverdue ? `${Math.round((now - end) / 86400000)}d overdue` : `${remaining}d baaki`}
+                          </p>
+                        </div>
+                        <div className="relative w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                          {/* time elapsed bar */}
+                          <div
+                            className={cn("absolute h-full rounded-full transition-all", isOverdue ? "bg-red-400" : "bg-slate-300")}
+                            style={{ width: `${timePct}%` }}
+                          />
+                          {/* phase completion bar on top */}
+                          <div
+                            className="absolute h-full bg-indigo-500 rounded-full transition-all opacity-90"
+                            style={{ width: `${phasePct}%` }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                          <span>Kaam: <span className="font-bold text-indigo-600">{phasePct}%</span></span>
+                          <span className={cn("font-bold", isAhead ? "text-green-600" : "text-orange-500")}>
+                            {isAhead ? "Time se aage ✓" : "Thoda peeche"}
+                          </span>
+                          <span>Samay: <span className={cn("font-bold", isOverdue ? "text-red-500" : "text-slate-600")}>{timePct}%</span></span>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">Start Date</p>
-                    <p className="font-bold text-slate-700">{format(new Date(state.project.startDate), 'dd MMM yyyy')}</p>
+
+                {/* Phase Progress */}
+                {(() => {
+                  const total = state.milestones.length;
+                  const done = state.milestones.filter(m => m.status === 'completed').length;
+                  const inProgress = state.milestones.filter(m => m.status === 'in-progress').length;
+                  const pct = Math.round((done / total) * 100);
+                  return (
+                    <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-slate-900">Kaam ki Progress</h4>
+                        <span className="text-sm font-bold text-indigo-600">{pct}%</span>
+                      </div>
+                      <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 pt-1">
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-green-600">{done}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Done</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-indigo-500">{inProgress}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Chal Raha</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-bold text-slate-400">{total - done - inProgress}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Baaki</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSubTab('timeline')}
+                        className="w-full text-xs font-bold text-indigo-600 pt-2 border-t border-slate-50"
+                      >
+                        Sab phases dekho →
+                      </button>
+                    </div>
+                  );
+                })()}
+
+                {/* Kharcha Summary */}
+                <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-3">
+                  <h4 className="font-bold text-slate-900">Kharcha</h4>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Samaan + Mazdoor', value: totalSpent },
+                      { label: 'Miscellaneous', value: totalMisc },
+                    ].map(row => (
+                      <div key={row.label} className="flex justify-between items-center text-sm">
+                        <span className="text-slate-500">{row.label}</span>
+                        <span className="font-bold text-slate-900">{formatCurrency(row.value)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center text-sm pt-2 border-t border-slate-100">
+                      <span className="font-bold text-slate-700">Total</span>
+                      <span className="font-bold text-red-600">{formatCurrency(totalSpent + totalMisc)}</span>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-400 uppercase mb-1">End Date</p>
-                    <p className="font-bold text-slate-700">{format(new Date(state.project.endDate), 'dd MMM yyyy')}</p>
-                  </div>
+                  <button
+                    onClick={() => setSubTab('expenses')}
+                    className="w-full text-xs font-bold text-indigo-600 pt-2 border-t border-slate-50"
+                  >
+                    Detail dekho →
+                  </button>
                 </div>
-              </div>
+
+                {/* Material + Labour quick stats */}
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setSubTab('materials')}
+                    className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-95 transition-transform"
+                  >
+                    <Package size={18} className="text-indigo-400 mb-2" />
+                    <p className="text-xl font-bold text-slate-900">{state.materials.length}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Materials</p>
+                    {state.materials.filter(m => m.purchased - m.used <= m.minStock).length > 0 && (
+                      <p className="text-[10px] text-red-500 font-bold mt-1">
+                        {state.materials.filter(m => m.purchased - m.used <= m.minStock).length} low stock
+                      </p>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setSubTab('labour')}
+                    className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-95 transition-transform"
+                  >
+                    <Users size={18} className="text-indigo-400 mb-2" />
+                    <p className="text-xl font-bold text-slate-900">{state.labours.length}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Mazdoor</p>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         )}
@@ -1480,7 +1631,10 @@ export default function App() {
                             disabled={photoUploading === milestone.id}
                             onChange={(e) => {
                               const file = e.target.files?.[0];
-                              if (file) uploadPhotoForMilestone(milestone.id, file);
+                              if (file) {
+                                const caption = prompt('Photo ka naam / caption (optional):') ?? '';
+                                uploadPhotoForMilestone(milestone.id, file, caption);
+                              }
                               e.target.value = '';
                             }}
                           />
@@ -1488,13 +1642,14 @@ export default function App() {
                       </div>
                       {milestone.photos && milestone.photos.length > 0 && (
                         <div className="grid grid-cols-3 gap-1.5">
-                          {milestone.photos.map((path) => (
+                          {milestone.photos.map((photo) => (
                             <PhotoThumb
-                              key={path}
-                              path={path}
+                              key={photo.path}
+                              path={photo.path}
+                              caption={photo.caption}
                               getSignedUrl={getSignedUrl}
-                              onOpen={setLightboxPhoto}
-                              onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, path))}
+                              onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
+                              onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, photo.path))}
                             />
                           ))}
                         </div>
@@ -1530,13 +1685,14 @@ export default function App() {
                       <span className="text-xs text-slate-400">{milestone.photos!.length} photos</span>
                     </div>
                     <div className="grid grid-cols-3 gap-1.5">
-                      {milestone.photos!.map(path => (
+                      {milestone.photos!.map(photo => (
                         <PhotoThumb
-                          key={path}
-                          path={path}
+                          key={photo.path}
+                          path={photo.path}
+                          caption={photo.caption}
                           getSignedUrl={getSignedUrl}
-                          onOpen={setLightboxPhoto}
-                          onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, path))}
+                          onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
+                          onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, photo.path))}
                         />
                       ))}
                     </div>
@@ -1550,13 +1706,16 @@ export default function App() {
         {/* Lightbox */}
         {lightboxPhoto && (
           <div
-            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center"
             onClick={() => setLightboxPhoto(null)}
           >
             <button className="absolute top-4 right-4 text-white" onClick={() => setLightboxPhoto(null)}>
               <X size={28} />
             </button>
-            <img src={lightboxPhoto} className="max-w-full max-h-full object-contain rounded-lg" />
+            <img src={lightboxPhoto.url} className="max-w-full max-h-[85vh] object-contain rounded-lg" />
+            {lightboxPhoto.caption && (
+              <p className="mt-3 text-white text-sm font-medium px-6 text-center">{lightboxPhoto.caption}</p>
+            )}
           </div>
         )}
       </div>

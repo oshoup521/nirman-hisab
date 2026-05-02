@@ -85,7 +85,7 @@ export interface Milestone {
   delayReason?: string;
   startDate?: string;
   endDate?: string;
-  photos?: string[]; // storage paths: {uid}/{milestoneId}/{filename}
+  photos?: { path: string; caption?: string }[];
 }
 
 export interface DemolitionProject {
