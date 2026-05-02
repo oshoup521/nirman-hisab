@@ -133,14 +133,31 @@ export default function App() {
     setConfirmDialog({ open: true, title, message, confirmText, onConfirm });
   };
 
+  const compressImage = (file: File): Promise<Blob> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const MAX = 1200;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(blob ?? file), 'image/jpeg', 0.78);
+      };
+      img.src = url;
+    });
+
   const uploadPhotoForMilestone = async (milestoneId: string, file: File, caption: string) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     setPhotoUploading(milestoneId);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `${session.user.id}/${milestoneId}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('phase-photos').upload(path, file, { upsert: false });
+      const compressed = await compressImage(file);
+      const path = `${session.user.id}/${milestoneId}/${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from('phase-photos').upload(path, compressed, { upsert: false, contentType: 'image/jpeg' });
       if (error) throw error;
       setState(prev => ({
         ...prev,
