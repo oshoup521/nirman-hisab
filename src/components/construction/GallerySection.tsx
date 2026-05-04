@@ -1,0 +1,201 @@
+import React, { useState, useCallback } from 'react';
+import { Images, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { cn } from '../../lib/cn';
+import { useAppContext } from '../../context/AppContext';
+import PhotoThumb from '../common/PhotoThumb';
+import { Milestone } from '../../types';
+
+type Photo = NonNullable<Milestone['photos']>[number];
+type LightboxState = {
+  phase: string;
+  photos: Photo[];
+  idx: number;
+  urls: Record<string, string>;
+};
+
+const STATUS_CFG = {
+  completed:    { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-600 border-emerald-100', label: 'Done' },
+  'in-progress':{ dot: 'bg-indigo-500',  badge: 'bg-indigo-50 text-indigo-600 border-indigo-100',   label: 'Active' },
+  pending:      { dot: 'bg-slate-300',   badge: 'bg-slate-50 text-slate-400 border-slate-100',      label: 'Pending' },
+} as const;
+
+export default function GallerySection() {
+  const { state, askConfirm, photos } = useAppContext();
+  const { getSignedUrl, deletePhoto } = photos;
+
+  const [lightbox, setLightbox] = useState<LightboxState | null>(null);
+
+  const milestonesWithPhotos = state.milestones.filter(m => m.photos && m.photos.length > 0);
+  const totalPhotos = milestonesWithPhotos.reduce((sum, m) => sum + (m.photos?.length ?? 0), 0);
+
+  const openLightbox = useCallback((milestone: Milestone, clickedPath: string, resolvedUrl: string) => {
+    const phasePhotos = milestone.photos!;
+    const idx = phasePhotos.findIndex(p => p.path === clickedPath);
+    setLightbox({ phase: milestone.phase, photos: phasePhotos, idx, urls: { [clickedPath]: resolvedUrl } });
+  }, []);
+
+  const navigate = useCallback(async (dir: 1 | -1) => {
+    setLightbox(prev => {
+      if (!prev) return null;
+      const newIdx = prev.idx + dir;
+      if (newIdx < 0 || newIdx >= prev.photos.length) return prev;
+      const photo = prev.photos[newIdx];
+      if (prev.urls[photo.path]) {
+        return { ...prev, idx: newIdx };
+      }
+      getSignedUrl(photo.path).then(url => {
+        if (url) setLightbox(p => p ? { ...p, idx: newIdx, urls: { ...p.urls, [photo.path]: url } } : null);
+      });
+      return { ...prev, idx: newIdx };
+    });
+  }, [getSignedUrl]);
+
+  const currentPhoto = lightbox ? lightbox.photos[lightbox.idx] : null;
+  const currentUrl = lightbox && currentPhoto ? lightbox.urls[currentPhoto.path] : null;
+
+  if (milestonesWithPhotos.length === 0) {
+    return (
+      <div className="space-y-4">
+        <h3 className="font-bold text-slate-900">Site Gallery</h3>
+        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
+          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Images size={28} className="text-slate-300" />
+          </div>
+          <p className="font-bold text-slate-600 text-sm">Abhi koi photo nahi</p>
+          <p className="text-xs text-slate-400 mt-1">Timeline tab mein phases mein photos add karo</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex justify-between items-end">
+        <h3 className="font-bold text-slate-900">Site Gallery</h3>
+        <p className="text-xs text-slate-400 font-bold">
+          {totalPhotos} photos • {milestonesWithPhotos.length} phases
+        </p>
+      </div>
+
+      {/* Phase sections */}
+      {milestonesWithPhotos.map(milestone => {
+        const cfg = STATUS_CFG[milestone.status] ?? STATUS_CFG.pending;
+        return (
+          <div key={milestone.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            {/* Phase header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
+              <div className="flex items-center gap-2.5">
+                <div className={cn('w-2.5 h-2.5 rounded-full shrink-0', cfg.dot)} />
+                <p className="font-bold text-slate-900 text-sm">{milestone.phase}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-400 font-bold">{milestone.photos!.length} photos</span>
+                <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', cfg.badge)}>
+                  {cfg.label}
+                </span>
+              </div>
+            </div>
+
+            {/* Photo grid */}
+            <div className="p-3 grid grid-cols-3 gap-2">
+              {milestone.photos!.map(photo => (
+                <PhotoThumb
+                  key={photo.path}
+                  path={photo.path}
+                  caption={photo.caption}
+                  getSignedUrl={getSignedUrl}
+                  onOpen={(url) => openLightbox(milestone, photo.path, url)}
+                  onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, photo.path))}
+                />
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* Full-screen lightbox with prev/next navigation */}
+      {lightbox && (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col select-none">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 shrink-0">
+            <div>
+              <p className="text-white font-bold text-sm leading-tight">{lightbox.phase}</p>
+              <p className="text-white/50 text-[10px] font-bold mt-0.5">
+                {lightbox.idx + 1} / {lightbox.photos.length}
+              </p>
+            </div>
+            <button
+              onClick={() => setLightbox(null)}
+              className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center text-white active:bg-white/20"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Image area */}
+          <div className="flex-1 flex items-center justify-center relative px-2 min-h-0">
+            {/* Prev */}
+            <button
+              onClick={() => navigate(-1)}
+              className={cn(
+                'absolute left-2 z-10 w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-white active:bg-white/20 transition-opacity',
+                lightbox.idx === 0 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              )}
+            >
+              <ChevronLeft size={22} />
+            </button>
+
+            {/* Photo */}
+            {currentUrl ? (
+              <img
+                src={currentUrl}
+                className="max-w-full max-h-full object-contain rounded-xl"
+                alt={currentPhoto?.caption || lightbox.phase}
+                draggable={false}
+              />
+            ) : (
+              <div className="w-56 h-56 bg-white/5 rounded-2xl animate-pulse" />
+            )}
+
+            {/* Next */}
+            <button
+              onClick={() => navigate(1)}
+              className={cn(
+                'absolute right-2 z-10 w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center text-white active:bg-white/20 transition-opacity',
+                lightbox.idx === lightbox.photos.length - 1 ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              )}
+            >
+              <ChevronRight size={22} />
+            </button>
+          </div>
+
+          {/* Caption + dot indicators */}
+          <div
+            className="shrink-0 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-3 text-center"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)' }}
+          >
+            {currentPhoto?.caption && (
+              <p className="text-white text-sm font-medium mb-3">{currentPhoto.caption}</p>
+            )}
+
+            {/* Dot strip */}
+            {lightbox.photos.length > 1 && (
+              <div className="flex items-center justify-center gap-1.5">
+                {lightbox.photos.map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'h-1.5 rounded-full transition-all duration-300',
+                      i === lightbox.idx ? 'w-5 bg-white' : 'w-1.5 bg-white/30'
+                    )}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
