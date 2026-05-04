@@ -1506,21 +1506,24 @@ export default function App() {
 
             <div className="space-y-2">
               {[...state.expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 20).map(expense => (
-                <div key={expense.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
-                      <IndianRupee size={18} />
+                <div key={expense.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                      <div className="w-10 h-10 shrink-0 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+                        <IndianRupee size={18} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-bold text-slate-900 text-sm break-words">
+                          {expense.notes ? expense.notes : expense.category}
+                        </h4>
+                        <p className="text-[10px] text-slate-400 uppercase font-bold mt-0.5">
+                          {expense.category} • {format(new Date(expense.date), 'dd MMM, HH:mm')}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm">{expense.category}</h4>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold">{format(new Date(expense.date), 'dd MMM, HH:mm')}</p>
-                    </div>
+                    <p className="font-bold text-slate-900 shrink-0 whitespace-nowrap">{formatCurrency(expense.amount)}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <p className="font-bold text-slate-900">{formatCurrency(expense.amount)}</p>
-                      <p className="text-[10px] text-slate-500 truncate max-w-[80px]">{expense.notes}</p>
-                    </div>
+                  <div className="flex gap-2 mt-3 pt-3 border-t border-slate-50">
                     <button
                       onClick={() => {
                         const amount = Number(prompt('Amount?', String(expense.amount)));
@@ -1532,15 +1535,15 @@ export default function App() {
                           expenses: prev.expenses.map(e => e.id === expense.id ? { ...e, amount, date: new Date(dateStr).toISOString(), notes: notes || '' } : e)
                         }));
                       }}
-                      className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100"
+                      className="flex-1 py-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100 flex items-center justify-center gap-1 text-xs font-bold"
                     >
-                      <Pencil size={14} />
+                      <Pencil size={14} /> Edit
                     </button>
                     <button
                       onClick={() => askConfirm('Is kharche ko delete kar dein?', () => {
                         setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }));
                       })}
-                      className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                      className="p-1.5 px-3 bg-red-50 text-red-400 rounded-xl border border-red-100"
                     >
                       <Trash2 size={14} />
                     </button>
