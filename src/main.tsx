@@ -18,10 +18,19 @@ function installIOSZoomSnapBack() {
 
   let resetQueued = false;
   let resetTimer: number | null = null;
+
+  const getScrollY = () =>
+    window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+
+  const restoreScrollY = (y: number) => {
+    window.scrollTo({top: y, left: 0, behavior: 'instant' as ScrollBehavior});
+  };
+
   const resetZoom = () => {
     const scale = window.visualViewport?.scale ?? 1;
     if (scale <= 1.01 || resetQueued) return;
     resetQueued = true;
+    const savedY = getScrollY();
 
     if (resetTimer !== null) {
       window.clearTimeout(resetTimer);
@@ -31,7 +40,11 @@ function installIOSZoomSnapBack() {
       viewport.setAttribute('content', locked);
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
+          restoreScrollY(savedY);
           viewport.setAttribute('content', relaxed);
+          requestAnimationFrame(() => {
+            restoreScrollY(savedY);
+          });
           resetQueued = false;
           resetTimer = null;
         });
