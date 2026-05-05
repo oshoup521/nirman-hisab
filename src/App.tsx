@@ -19,6 +19,7 @@ import ConstructionTab from './components/construction/ConstructionTab';
 import DemolitionTab from './components/demolition/DemolitionTab';
 import KirayaTab from './components/kiraya/KirayaTab';
 import SettingsTab from './components/settings/SettingsTab';
+import DiaryTab from './components/diary/DiaryTab';
 
 export default function App() {
   const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt] =
@@ -137,6 +138,7 @@ export default function App() {
         <div className="max-w-md mx-auto px-4 pt-[max(env(safe-area-inset-top),24px)]">
           {activeTab === 'dashboard'    && <DashboardTab />}
           {activeTab === 'construction' && <ConstructionTab />}
+          {activeTab === 'diary'        && <DiaryTab />}
           {activeTab === 'demolition'   && <DemolitionTab />}
           {activeTab === 'kiraya'       && <KirayaTab />}
           {activeTab === 'settings'     && <SettingsTab />}

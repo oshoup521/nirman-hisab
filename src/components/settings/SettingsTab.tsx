@@ -7,7 +7,13 @@ import { useAppContext } from '../../context/AppContext';
 import { INITIAL_STATE } from '../../constants/initialState';
 import { Project } from '../../types';
 
-const PROJECT_TYPES = ['Residential', 'Commercial', 'Mixed', 'Renovation', 'Other'];
+const PROJECT_TYPES: { value: Project['type']; label: string }[] = [
+  { value: 'residential', label: 'Residential' },
+  { value: 'commercial',  label: 'Commercial'  },
+  { value: 'mixed',       label: 'Mixed'       },
+  { value: 'renovation',  label: 'Renovation'  },
+  { value: 'other',       label: 'Other'       },
+];
 
 const lbl = 'text-[10px] font-bold text-slate-400 uppercase tracking-wide block mb-1.5';
 const inp = 'w-full p-3 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 text-slate-900 text-sm';
@@ -56,7 +62,7 @@ export default function SettingsTab() {
         <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
         <p className="text-slate-400 text-sm">
           {project?.name ? project.name : 'Project Taiyari'}
-          {project?.type ? ` • ${project.type}` : ''}
+          {project?.type ? ` • ${project.type.charAt(0).toUpperCase()}${project.type.slice(1)}` : ''}
         </p>
       </header>
 
@@ -75,18 +81,18 @@ export default function SettingsTab() {
         <div>
           <label className={lbl}>Project Type</label>
           <div className="flex flex-wrap gap-2 mt-1">
-            {PROJECT_TYPES.map(t => (
+            {PROJECT_TYPES.map(({ value, label }) => (
               <button
-                key={t}
-                onClick={() => updateProject({ type: t })}
+                key={value}
+                onClick={() => updateProject({ type: value })}
                 className={cn(
                   'px-3 py-1.5 rounded-full text-xs font-bold border transition-all',
-                  project?.type === t
+                  project?.type === value
                     ? 'bg-indigo-100 text-indigo-700 border-indigo-200'
                     : 'bg-slate-50 text-slate-500 border-slate-100'
                 )}
               >
-                {t}
+                {label}
               </button>
             ))}
           </div>

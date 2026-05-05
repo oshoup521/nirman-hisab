@@ -10,7 +10,7 @@ export interface Project {
   id: string;
   name: string;
   location: string;
-  type: 'residential' | 'commercial' | 'renovation';
+  type: 'residential' | 'commercial' | 'mixed' | 'renovation' | 'other';
   budget: number;        // construction budget
   masterBudget: number;  // total overall budget
   startDate: string;
@@ -172,6 +172,19 @@ export interface Vendor {
   payments: VendorPayment[];
 }
 
+export type Weather = 'sunny' | 'cloudy' | 'rain' | 'hot' | 'cold';
+
+export interface DiaryEntry {
+  id: string;
+  date: string; // YYYY-MM-DD — unique per date
+  weather?: Weather;
+  whoCame?: string;
+  workDone?: string;
+  delivered?: string;
+  problems?: string;
+  photos?: { path: string; caption?: string }[];
+}
+
 export interface AppState {
   project: Project | null;
   materials: Material[];
@@ -187,4 +200,5 @@ export interface AppState {
   rentals: RentalProperty[];
   miscExpenses: MiscExpense[];
   vendors: Vendor[];
+  diary: DiaryEntry[];
 }

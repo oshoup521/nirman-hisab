@@ -24,4 +24,5 @@ export const INITIAL_STATE: AppState = {
   rentals: [],
   miscExpenses: [],
   vendors: [],
+  diary: [],
 };

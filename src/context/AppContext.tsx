@@ -4,7 +4,7 @@ import { SyncStatus } from '../hooks/useCloudSync';
 import { AppCalculations } from '../hooks/useAppCalculations';
 import { PhotoManager } from '../hooks/usePhotoManager';
 
-export type TabType = 'dashboard' | 'construction' | 'demolition' | 'kiraya' | 'settings';
+export type TabType = 'dashboard' | 'construction' | 'diary' | 'demolition' | 'kiraya' | 'settings';
 
 export interface ConfirmDialogState {
   open: boolean;
