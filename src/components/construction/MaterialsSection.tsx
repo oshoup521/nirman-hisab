@@ -5,7 +5,8 @@ import { formatCurrency } from '../../utils/formatters';
 import { genId } from '../../utils/helpers';
 import { useAppContext } from '../../context/AppContext';
 import { Material } from '../../types';
-import PhotoThumb from '../common/PhotoThumb';
+import PhotoStrip from '../common/PhotoStrip';
+import PhotosSheet from '../common/PhotosSheet';
 import Lightbox from '../common/Lightbox';
 
 type MatForm = { name: string; unit: string; purchased: string; rate: string; minStock: string };
@@ -15,10 +16,15 @@ const blankForm = (): MatForm => ({ name: '', unit: '', purchased: '', rate: '',
 
 export default function MaterialsSection() {
   const { state, setState, askConfirm, photos } = useAppContext();
-  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto, lightboxPhoto, setLightboxPhoto } = photos;
+  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
   const [form, setForm] = useState<MatForm | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [usageForm, setUsageForm] = useState<UsageForm | null>(null);
+  const [sheetMatId, setSheetMatId] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ matId: string; idx: number } | null>(null);
+
+  const sheetMaterial = sheetMatId ? state.materials.find(m => m.id === sheetMatId) : null;
+  const lightboxMaterial = lightbox ? state.materials.find(m => m.id === lightbox.matId) : null;
 
   const openAdd = () => { setEditId(null); setForm(blankForm()); };
   const openEdit = (m: Material) => {
@@ -192,20 +198,13 @@ export default function MaterialsSection() {
                       </label>
                     )}
                   </div>
-                  {material.photos && material.photos.length > 0 && (
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {material.photos.map(photo => (
-                        <PhotoThumb
-                          key={photo.path}
-                          path={photo.path}
-                          caption={photo.caption}
-                          getSignedUrl={getSignedUrl}
-                          onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
-                          onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('material', material.id, photo.path))}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <PhotoStrip
+                    photos={material.photos ?? []}
+                    getSignedUrl={getSignedUrl}
+                    onOpenAt={(idx) => setLightbox({ matId: material.id, idx })}
+                    onSeeAll={() => setSheetMatId(material.id)}
+                    onDelete={(path) => askConfirm('Is photo ko delete karein?', () => deletePhoto('material', material.id, path))}
+                  />
                 </div>
               </div>
             );
@@ -217,7 +216,7 @@ export default function MaterialsSection() {
       {form && (
         <>
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closeForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
             <div className="p-6 space-y-4">
               <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
               <div className="flex items-center justify-between">
@@ -272,14 +271,35 @@ export default function MaterialsSection() {
         </>
       )}
 
-      {/* Photo Lightbox */}
-      <Lightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
+      {/* Photos Sheet (full grid) */}
+      <PhotosSheet
+        open={!!sheetMaterial}
+        title={sheetMaterial?.name ?? ''}
+        subtitle="Bill / Photos"
+        photos={sheetMaterial?.photos ?? []}
+        uploading={photoUploading === `material:${sheetMatId}`}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setSheetMatId(null)}
+        onOpenAt={(idx) => sheetMatId && setLightbox({ matId: sheetMatId, idx })}
+        onDelete={(path) => sheetMatId && askConfirm('Is photo ko delete karein?', () => deletePhoto('material', sheetMatId, path))}
+        onAdd={(file, caption) => sheetMatId && uploadPhoto('material', sheetMatId, file, caption)}
+      />
+
+      {/* Photo Lightbox (swipeable) */}
+      <Lightbox
+        open={!!lightbox}
+        photos={lightboxMaterial?.photos ?? []}
+        startIndex={lightbox?.idx ?? 0}
+        title={lightboxMaterial?.name}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setLightbox(null)}
+      />
 
       {/* Usage Sheet */}
       {usageForm && (
         <>
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={() => setUsageForm(null)} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
+          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
             <div className="p-6 space-y-4">
               <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
               <div className="flex items-center justify-between">

@@ -7,9 +7,10 @@ interface PhotoThumbProps {
   getSignedUrl: (path: string) => Promise<string | null>;
   onOpen: (url: string, caption?: string) => void;
   onDelete: () => void;
+  hideDelete?: boolean;
 }
 
-const PhotoThumb: React.FC<PhotoThumbProps> = ({ path, caption, getSignedUrl, onOpen, onDelete }) => {
+const PhotoThumb: React.FC<PhotoThumbProps> = ({ path, caption, getSignedUrl, onOpen, onDelete, hideDelete }) => {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -17,11 +18,11 @@ const PhotoThumb: React.FC<PhotoThumbProps> = ({ path, caption, getSignedUrl, on
   }, [path, getSignedUrl]);
 
   if (!url) {
-    return <div className="aspect-square bg-slate-100 rounded-xl animate-pulse" />;
+    return <div className="w-full h-full aspect-square bg-slate-100 rounded-xl animate-pulse" />;
   }
 
   return (
-    <div className="relative aspect-square rounded-xl overflow-hidden shadow-sm active:scale-95 transition-transform duration-150">
+    <div className="relative w-full h-full aspect-square rounded-xl overflow-hidden shadow-sm active:scale-95 transition-transform duration-150">
       <img
         src={url}
         className="w-full h-full object-cover cursor-pointer"
@@ -41,13 +42,15 @@ const PhotoThumb: React.FC<PhotoThumbProps> = ({ path, caption, getSignedUrl, on
       )}
 
       {/* Delete button */}
-      <button
-        onClick={e => { e.stopPropagation(); onDelete(); }}
-        className="absolute top-1 right-1 w-5 h-5 bg-black/50 backdrop-blur-sm text-white rounded-md flex items-center justify-center"
-        aria-label="Delete photo"
-      >
-        <X size={9} />
-      </button>
+      {!hideDelete && (
+        <button
+          onClick={e => { e.stopPropagation(); onDelete(); }}
+          className="absolute top-1 right-1 w-5 h-5 bg-black/50 backdrop-blur-sm text-white rounded-md flex items-center justify-center"
+          aria-label="Delete photo"
+        >
+          <X size={9} />
+        </button>
+      )}
     </div>
   );
 };

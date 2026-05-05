@@ -1,14 +1,21 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { useAppContext } from '../../context/AppContext';
 import { Milestone } from '../../types';
-import PhotoThumb from '../common/PhotoThumb';
+import PhotoStrip from '../common/PhotoStrip';
+import PhotosSheet from '../common/PhotosSheet';
+import Lightbox from '../common/Lightbox';
 
 export default function TimelineSection() {
   const { state, setState, askConfirm, photos } = useAppContext();
-  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto, setLightboxPhoto } = photos;
+  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
+  const [sheetMilestoneId, setSheetMilestoneId] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ milestoneId: string; idx: number } | null>(null);
+
+  const sheetMilestone = sheetMilestoneId ? state.milestones.find(m => m.id === sheetMilestoneId) : null;
+  const lightboxMilestone = lightbox ? state.milestones.find(m => m.id === lightbox.milestoneId) : null;
 
   const updateStatus = (milestoneId: string, newStatus: Milestone['status']) => {
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -128,24 +135,43 @@ export default function TimelineSection() {
                   )}
                 </div>
                 {milestone.photos && milestone.photos.length > 0 && (
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {milestone.photos.map(photo => (
-                      <PhotoThumb
-                        key={photo.path}
-                        path={photo.path}
-                        caption={photo.caption}
-                        getSignedUrl={getSignedUrl}
-                        onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
-                        onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', milestone.id, photo.path))}
-                      />
-                    ))}
-                  </div>
+                  <PhotoStrip
+                    photos={milestone.photos}
+                    getSignedUrl={getSignedUrl}
+                    onOpenAt={(idx) => setLightbox({ milestoneId: milestone.id, idx })}
+                    onSeeAll={() => setSheetMilestoneId(milestone.id)}
+                    onDelete={(path) => askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', milestone.id, path))}
+                  />
                 )}
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Photos Sheet */}
+      <PhotosSheet
+        open={!!sheetMilestone}
+        title={sheetMilestone?.phase ?? ''}
+        subtitle="Phase Photos"
+        photos={sheetMilestone?.photos ?? []}
+        uploading={photoUploading === `milestone:${sheetMilestoneId}`}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setSheetMilestoneId(null)}
+        onOpenAt={(idx) => sheetMilestoneId && setLightbox({ milestoneId: sheetMilestoneId, idx })}
+        onDelete={(path) => sheetMilestoneId && askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', sheetMilestoneId, path))}
+        onAdd={(file, caption) => sheetMilestoneId && uploadPhoto('milestone', sheetMilestoneId, file, caption)}
+      />
+
+      {/* Photo Lightbox (swipeable) */}
+      <Lightbox
+        open={!!lightbox}
+        photos={lightboxMilestone?.photos ?? []}
+        startIndex={lightbox?.idx ?? 0}
+        title={lightboxMilestone?.phase}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setLightbox(null)}
+      />
     </div>
   );
 }

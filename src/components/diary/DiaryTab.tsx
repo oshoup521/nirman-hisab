@@ -10,7 +10,8 @@ import { genId } from '../../utils/helpers';
 import { formatCurrency } from '../../utils/formatters';
 import { useAppContext } from '../../context/AppContext';
 import { DiaryEntry, Weather } from '../../types';
-import PhotoThumb from '../common/PhotoThumb';
+import PhotoStrip from '../common/PhotoStrip';
+import PhotosSheet from '../common/PhotosSheet';
 import Lightbox from '../common/Lightbox';
 
 type View = 'entry' | 'calendar' | 'search';
@@ -27,13 +28,15 @@ const todayStr = () => format(new Date(), 'yyyy-MM-dd');
 
 export default function DiaryTab() {
   const { state, setState, askConfirm, photos } = useAppContext();
-  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto, lightboxPhoto, setLightboxPhoto } = photos;
+  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
 
   const [view, setView] = useState<View>('entry');
   const [date, setDate] = useState<string>(todayStr());
   const [calMonth, setCalMonth] = useState<Date>(new Date());
   const [search, setSearch] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
+  const [photosSheetOpen, setPhotosSheetOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<{ idx: number } | null>(null);
 
   const diary = state.diary || [];
   const entry = useMemo(() => diary.find(d => d.date === date), [diary, date]);
@@ -326,18 +329,13 @@ export default function DiaryTab() {
               )}
             </div>
             {entry?.photos && entry.photos.length > 0 ? (
-              <div className="grid grid-cols-3 gap-1.5">
-                {entry.photos.map(photo => (
-                  <PhotoThumb
-                    key={photo.path}
-                    path={photo.path}
-                    caption={photo.caption}
-                    getSignedUrl={getSignedUrl}
-                    onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
-                    onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('diary', entry.id, photo.path))}
-                  />
-                ))}
-              </div>
+              <PhotoStrip
+                photos={entry.photos}
+                getSignedUrl={getSignedUrl}
+                onOpenAt={(idx) => setLightbox({ idx })}
+                onSeeAll={() => setPhotosSheetOpen(true)}
+                onDelete={(path) => askConfirm('Is photo ko delete karein?', () => deletePhoto('diary', entry.id, path))}
+              />
             ) : (
               <p className="text-xs text-slate-400 text-center py-3">Koi photo nahi — site ki tasveer add karo</p>
             )}
@@ -469,7 +467,36 @@ export default function DiaryTab() {
         </div>
       )}
 
-      <Lightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
+      {/* Photos Sheet */}
+      <PhotosSheet
+        open={photosSheetOpen}
+        title={`Diary — ${format(parseISO(date), 'dd MMM yyyy')}`}
+        photos={entry?.photos ?? []}
+        uploading={photoUploading === `diary:${entry?.id ?? ''}`}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setPhotosSheetOpen(false)}
+        onOpenAt={(idx) => setLightbox({ idx })}
+        onDelete={(path) => entry && askConfirm('Is photo ko delete karein?', () => deletePhoto('diary', entry.id, path))}
+        onAdd={(file, caption) => {
+          let id = entry?.id;
+          if (!id) {
+            id = genId();
+            const stubId = id;
+            setState(prev => ({ ...prev, diary: [...(prev.diary || []), { id: stubId, date }] }));
+          }
+          uploadPhoto('diary', id, file, caption);
+        }}
+      />
+
+      {/* Photo Lightbox (swipeable) */}
+      <Lightbox
+        open={!!lightbox}
+        photos={entry?.photos ?? []}
+        startIndex={lightbox?.idx ?? 0}
+        title={`Diary — ${format(parseISO(date), 'dd MMM yyyy')}`}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setLightbox(null)}
+      />
     </div>
   );
 }

@@ -1,9 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { Images, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Images, ChevronLeft, ChevronRight, X, ImageIcon } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAppContext } from '../../context/AppContext';
 import PhotoThumb from '../common/PhotoThumb';
+import PhotosSheet from '../common/PhotosSheet';
 import { Milestone } from '../../types';
+
+const PHASE_GRID_CAP = 8; // show 8 thumbs + "+N more" tile
 
 type Photo = NonNullable<Milestone['photos']>[number];
 type LightboxState = {
@@ -21,9 +24,11 @@ const STATUS_CFG = {
 
 export default function GallerySection() {
   const { state, askConfirm, photos } = useAppContext();
-  const { getSignedUrl, deletePhoto } = photos;
+  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
 
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
+  const [sheetMilestoneId, setSheetMilestoneId] = useState<string | null>(null);
+  const sheetMilestone = sheetMilestoneId ? state.milestones.find(m => m.id === sheetMilestoneId) : null;
 
   const milestonesWithPhotos = state.milestones.filter(m => m.photos && m.photos.length > 0);
   const totalPhotos = milestonesWithPhotos.reduce((sum, m) => sum + (m.photos?.length ?? 0), 0);
@@ -97,19 +102,37 @@ export default function GallerySection() {
               </div>
             </div>
 
-            {/* Photo grid */}
-            <div className="p-3 grid grid-cols-3 gap-2">
-              {milestone.photos!.map(photo => (
-                <PhotoThumb
-                  key={photo.path}
-                  path={photo.path}
-                  caption={photo.caption}
-                  getSignedUrl={getSignedUrl}
-                  onOpen={(url) => openLightbox(milestone, photo.path, url)}
-                  onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', milestone.id, photo.path))}
-                />
-              ))}
-            </div>
+            {/* Photo grid (capped) */}
+            {(() => {
+              const all = milestone.photos!;
+              const overflow = all.length > PHASE_GRID_CAP;
+              const visible = overflow ? all.slice(0, PHASE_GRID_CAP - 1) : all;
+              const hiddenCount = all.length - visible.length;
+              return (
+                <div className="p-3 grid grid-cols-3 gap-2">
+                  {visible.map(photo => (
+                    <PhotoThumb
+                      key={photo.path}
+                      path={photo.path}
+                      caption={photo.caption}
+                      getSignedUrl={getSignedUrl}
+                      onOpen={(url) => openLightbox(milestone, photo.path, url)}
+                      onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', milestone.id, photo.path))}
+                    />
+                  ))}
+                  {overflow && (
+                    <button
+                      onClick={() => setSheetMilestoneId(milestone.id)}
+                      className="aspect-square rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform shadow-sm"
+                    >
+                      <ImageIcon size={20} className="opacity-80" />
+                      <span className="text-base font-bold leading-none">+{hiddenCount}</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wide opacity-70">More</span>
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         );
       })}
@@ -196,6 +219,29 @@ export default function GallerySection() {
           </div>
         </div>
       )}
+
+      {/* Photos Sheet — opens when "+N more" tapped */}
+      <PhotosSheet
+        open={!!sheetMilestone}
+        title={sheetMilestone?.phase ?? ''}
+        subtitle="All Photos"
+        photos={sheetMilestone?.photos ?? []}
+        uploading={photoUploading === `milestone:${sheetMilestoneId}`}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setSheetMilestoneId(null)}
+        onOpenAt={(idx) => {
+          if (!sheetMilestone) return;
+          const phasePhotos = sheetMilestone.photos!;
+          const target = phasePhotos[idx];
+          if (!target) return;
+          setLightbox({ phase: sheetMilestone.phase, photos: phasePhotos, idx, urls: {} });
+          getSignedUrl(target.path).then(url => {
+            if (url) setLightbox(p => p ? { ...p, urls: { ...p.urls, [target.path]: url } } : null);
+          });
+        }}
+        onDelete={(path) => sheetMilestoneId && askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', sheetMilestoneId, path))}
+        onAdd={(file, caption) => sheetMilestoneId && uploadPhoto('milestone', sheetMilestoneId, file, caption)}
+      />
     </div>
   );
 }

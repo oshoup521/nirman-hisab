@@ -6,7 +6,8 @@ import { formatCurrency } from '../../utils/formatters';
 import { genId } from '../../utils/helpers';
 import { useAppContext } from '../../context/AppContext';
 import { Expense } from '../../types';
-import PhotoThumb from '../common/PhotoThumb';
+import PhotoStrip from '../common/PhotoStrip';
+import PhotosSheet from '../common/PhotosSheet';
 import Lightbox from '../common/Lightbox';
 
 const CATEGORIES: Expense['category'][] = ['Material', 'Labour', 'Theka', 'Equipment', 'Transport', 'Misc'];
@@ -32,9 +33,14 @@ const blankForm = (): FormState => ({
 
 export default function ExpensesSection() {
   const { state, setState, askConfirm, photos } = useAppContext();
-  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto, lightboxPhoto, setLightboxPhoto } = photos;
+  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
   const [form, setForm] = useState<FormState | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
+  const [sheetExpId, setSheetExpId] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ expId: string; idx: number } | null>(null);
+
+  const sheetExpense = sheetExpId ? state.expenses.find(e => e.id === sheetExpId) : null;
+  const lightboxExpense = lightbox ? state.expenses.find(e => e.id === lightbox.expId) : null;
 
   const openAdd = () => { setEditId(null); setForm(blankForm()); };
 
@@ -210,17 +216,14 @@ export default function ExpensesSection() {
 
                 {/* Photo strip */}
                 {photoCount > 0 && (
-                  <div className="mt-3 grid grid-cols-4 gap-1.5">
-                    {expense.photos!.map(photo => (
-                      <PhotoThumb
-                        key={photo.path}
-                        path={photo.path}
-                        caption={photo.caption}
-                        getSignedUrl={getSignedUrl}
-                        onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
-                        onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('expense', expense.id, photo.path))}
-                      />
-                    ))}
+                  <div className="mt-3">
+                    <PhotoStrip
+                      photos={expense.photos ?? []}
+                      getSignedUrl={getSignedUrl}
+                      onOpenAt={(idx) => setLightbox({ expId: expense.id, idx })}
+                      onSeeAll={() => setSheetExpId(expense.id)}
+                      onDelete={(path) => askConfirm('Is photo ko delete karein?', () => deletePhoto('expense', expense.id, path))}
+                    />
                   </div>
                 )}
               </div>
@@ -235,7 +238,7 @@ export default function ExpensesSection() {
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closeForm} />
           <div
             className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto"
-            style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+            style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}
           >
             <div className="p-6 space-y-5">
               {/* Drag Handle */}
@@ -332,8 +335,29 @@ export default function ExpensesSection() {
         </>
       )}
 
-      {/* Photo Lightbox */}
-      <Lightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
+      {/* Photos Sheet */}
+      <PhotosSheet
+        open={!!sheetExpense}
+        title={sheetExpense?.notes || sheetExpense?.category || 'Expense'}
+        subtitle="Bills"
+        photos={sheetExpense?.photos ?? []}
+        uploading={photoUploading === `expense:${sheetExpId}`}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setSheetExpId(null)}
+        onOpenAt={(idx) => sheetExpId && setLightbox({ expId: sheetExpId, idx })}
+        onDelete={(path) => sheetExpId && askConfirm('Is photo ko delete karein?', () => deletePhoto('expense', sheetExpId, path))}
+        onAdd={(file, caption) => sheetExpId && uploadPhoto('expense', sheetExpId, file, caption)}
+      />
+
+      {/* Photo Lightbox (swipeable) */}
+      <Lightbox
+        open={!!lightbox}
+        photos={lightboxExpense?.photos ?? []}
+        startIndex={lightbox?.idx ?? 0}
+        title={lightboxExpense?.notes || lightboxExpense?.category}
+        getSignedUrl={getSignedUrl}
+        onClose={() => setLightbox(null)}
+      />
     </div>
   );
 }
