@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Package, AlertTriangle, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, AlertTriangle, X, ImageIcon } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
 import { genId } from '../../utils/helpers';
 import { useAppContext } from '../../context/AppContext';
 import { Material } from '../../types';
+import PhotoThumb from '../common/PhotoThumb';
+import Lightbox from '../common/Lightbox';
 
 type MatForm = { name: string; unit: string; purchased: string; rate: string; minStock: string };
 type UsageForm = { materialId: string; materialName: string; unit: string; amount: string };
@@ -12,7 +14,8 @@ type UsageForm = { materialId: string; materialName: string; unit: string; amoun
 const blankForm = (): MatForm => ({ name: '', unit: '', purchased: '', rate: '', minStock: '' });
 
 export default function MaterialsSection() {
-  const { state, setState, askConfirm } = useAppContext();
+  const { state, setState, askConfirm, photos } = useAppContext();
+  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto, lightboxPhoto, setLightboxPhoto } = photos;
   const [form, setForm] = useState<MatForm | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
   const [usageForm, setUsageForm] = useState<UsageForm | null>(null);
@@ -161,6 +164,49 @@ export default function MaterialsSection() {
                     <Trash2 size={14} />
                   </button>
                 </div>
+
+                {/* Photos: bill / samaan ki tasveer */}
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                      <ImageIcon size={11} /> Bill / Photos {material.photos?.length ? `(${material.photos.length})` : ''}
+                    </p>
+                    {photoUploading === `material:${material.id}` ? (
+                      <span className="text-xs text-slate-400 font-bold">Uploading…</span>
+                    ) : (
+                      <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-slate-100 text-slate-600 active:bg-slate-200">
+                        <ImageIcon size={12} /> Add
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const caption = prompt('Photo ka naam / caption (optional):') ?? '';
+                              uploadPhoto('material', material.id, file, caption);
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  {material.photos && material.photos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {material.photos.map(photo => (
+                        <PhotoThumb
+                          key={photo.path}
+                          path={photo.path}
+                          caption={photo.caption}
+                          getSignedUrl={getSignedUrl}
+                          onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
+                          onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('material', material.id, photo.path))}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
@@ -225,6 +271,9 @@ export default function MaterialsSection() {
           </div>
         </>
       )}
+
+      {/* Photo Lightbox */}
+      <Lightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
 
       {/* Usage Sheet */}
       {usageForm && (

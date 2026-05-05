@@ -32,6 +32,7 @@ export interface Material {
   date: string;
   billNumber: string;
   minStock: number;
+  photos?: { path: string; caption?: string }[];
 }
 
 export interface Labour {
@@ -76,6 +77,7 @@ export interface Expense {
   amount: number;
   category: 'Material' | 'Labour' | 'Theka' | 'Equipment' | 'Transport' | 'Misc';
   notes: string;
+  photos?: { path: string; caption?: string }[];
 }
 
 export interface Milestone {

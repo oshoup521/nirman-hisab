@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Package, Users, Hammer, Wrench, Truck, Tag, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, Users, Hammer, Wrench, Truck, Tag, X, ImageIcon, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
 import { genId } from '../../utils/helpers';
 import { useAppContext } from '../../context/AppContext';
 import { Expense } from '../../types';
+import PhotoThumb from '../common/PhotoThumb';
+import Lightbox from '../common/Lightbox';
 
 const CATEGORIES: Expense['category'][] = ['Material', 'Labour', 'Theka', 'Equipment', 'Transport', 'Misc'];
 
@@ -29,7 +31,8 @@ const blankForm = (): FormState => ({
 });
 
 export default function ExpensesSection() {
-  const { state, setState, askConfirm } = useAppContext();
+  const { state, setState, askConfirm, photos } = useAppContext();
+  const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto, lightboxPhoto, setLightboxPhoto } = photos;
   const [form, setForm] = useState<FormState | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -131,50 +134,95 @@ export default function ExpensesSection() {
         ) : (
           sorted.map(expense => {
             const { Icon, iconBg, iconText, badge } = CAT_CFG[expense.category];
+            const photoCount = expense.photos?.length ?? 0;
+            const isUploading = photoUploading === `expense:${expense.id}`;
             return (
-              <div key={expense.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5 flex items-start gap-3">
-                {/* Icon */}
-                <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5', iconBg)}>
-                  <Icon size={16} className={iconText} />
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900 text-sm leading-snug break-words">
-                    {expense.notes || expense.category}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                    <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', badge)}>
-                      {expense.category}
-                    </span>
-                    <span className="text-[10px] text-slate-400">•</span>
-                    <span className="text-[10px] text-slate-400 font-bold">
-                      {format(new Date(expense.date), 'dd MMM yyyy')}
-                    </span>
+              <div key={expense.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5">
+                <div className="flex items-start gap-3">
+                  {/* Icon */}
+                  <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5', iconBg)}>
+                    <Icon size={16} className={iconText} />
                   </div>
-                </div>
 
-                {/* Amount + Actions */}
-                <div className="shrink-0 flex flex-col items-end gap-2">
-                  <p className="font-bold text-slate-900 text-sm">{formatCurrency(expense.amount)}</p>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => openEdit(expense)}
-                      className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 active:bg-slate-200 transition-colors"
-                    >
-                      <Pencil size={12} />
-                    </button>
-                    <button
-                      onClick={() => askConfirm(
-                        'Is kharche ko delete kar dein?',
-                        () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-slate-900 text-sm leading-snug break-words">
+                      {expense.notes || expense.category}
+                    </p>
+                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                      <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', badge)}>
+                        {expense.category}
+                      </span>
+                      <span className="text-[10px] text-slate-400">•</span>
+                      <span className="text-[10px] text-slate-400 font-bold">
+                        {format(new Date(expense.date), 'dd MMM yyyy')}
+                      </span>
+                      {photoCount > 0 && (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-indigo-500">
+                          <Paperclip size={9} /> {photoCount}
+                        </span>
                       )}
-                      className="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-100 active:bg-red-200 transition-colors"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                    </div>
+                  </div>
+
+                  {/* Amount + Actions */}
+                  <div className="shrink-0 flex flex-col items-end gap-2">
+                    <p className="font-bold text-slate-900 text-sm">{formatCurrency(expense.amount)}</p>
+                    <div className="flex items-center gap-1">
+                      <label className={cn(
+                        'w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors',
+                        isUploading ? 'bg-indigo-100 text-indigo-500' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 active:bg-slate-200'
+                      )}>
+                        <ImageIcon size={12} />
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={isUploading}
+                          onChange={e => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const caption = prompt('Bill ka naam / caption (optional):') ?? '';
+                              uploadPhoto('expense', expense.id, file, caption);
+                            }
+                            e.target.value = '';
+                          }}
+                        />
+                      </label>
+                      <button
+                        onClick={() => openEdit(expense)}
+                        className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() => askConfirm(
+                          'Is kharche ko delete kar dein?',
+                          () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
+                        )}
+                        className="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-100 active:bg-red-200 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {/* Photo strip */}
+                {photoCount > 0 && (
+                  <div className="mt-3 grid grid-cols-4 gap-1.5">
+                    {expense.photos!.map(photo => (
+                      <PhotoThumb
+                        key={photo.path}
+                        path={photo.path}
+                        caption={photo.caption}
+                        getSignedUrl={getSignedUrl}
+                        onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
+                        onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('expense', expense.id, photo.path))}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })
@@ -283,6 +331,9 @@ export default function ExpensesSection() {
           </div>
         </>
       )}
+
+      {/* Photo Lightbox */}
+      <Lightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
     </div>
   );
 }

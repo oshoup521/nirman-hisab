@@ -106,7 +106,7 @@ export default function TimelineSection() {
                   <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
                     <ImageIcon size={11} /> Photos {milestone.photos?.length ? `(${milestone.photos.length})` : ''}
                   </p>
-                  {photoUploading === milestone.id ? (
+                  {photoUploading === `milestone:${milestone.id}` ? (
                     <span className="text-xs text-slate-400 font-bold">Uploading…</span>
                   ) : (
                     <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-slate-100 text-slate-600 active:bg-slate-200">
@@ -119,7 +119,7 @@ export default function TimelineSection() {
                           const file = e.target.files?.[0];
                           if (file) {
                             const caption = prompt('Photo ka naam / caption (optional):') ?? '';
-                            uploadPhoto(milestone.id, file, caption);
+                            uploadPhoto('milestone', milestone.id, file, caption);
                           }
                           e.target.value = '';
                         }}
@@ -136,7 +136,7 @@ export default function TimelineSection() {
                         caption={photo.caption}
                         getSignedUrl={getSignedUrl}
                         onOpen={(url, caption) => setLightboxPhoto({ url, caption })}
-                        onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, photo.path))}
+                        onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', milestone.id, photo.path))}
                       />
                     ))}
                   </div>

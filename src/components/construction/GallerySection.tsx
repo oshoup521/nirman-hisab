@@ -106,7 +106,7 @@ export default function GallerySection() {
                   caption={photo.caption}
                   getSignedUrl={getSignedUrl}
                   onOpen={(url) => openLightbox(milestone, photo.path, url)}
-                  onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto(milestone.id, photo.path))}
+                  onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', milestone.id, photo.path))}
                 />
               ))}
             </div>

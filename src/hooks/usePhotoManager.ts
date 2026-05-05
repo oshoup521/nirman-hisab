@@ -2,6 +2,14 @@ import { useState, useCallback, Dispatch, SetStateAction } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { AppState } from '../types';
 
+export type PhotoEntity = 'milestone' | 'material' | 'expense';
+
+const ENTITY_KEY: Record<PhotoEntity, 'milestones' | 'materials' | 'expenses'> = {
+  milestone: 'milestones',
+  material: 'materials',
+  expense: 'expenses',
+};
+
 function compressImage(file: File): Promise<Blob> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -38,23 +46,34 @@ export function usePhotoManager(setState: Dispatch<SetStateAction<AppState>>) {
     [signedUrls]
   );
 
-  const uploadPhoto = async (milestoneId: string, file: File, caption: string) => {
+  const uploadPhoto = async (
+    entity: PhotoEntity,
+    entityId: string,
+    file: File,
+    caption: string,
+  ) => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
-    setPhotoUploading(milestoneId);
+    const uploadKey = `${entity}:${entityId}`;
+    setPhotoUploading(uploadKey);
     try {
       const compressed = await compressImage(file);
-      const path = `${session.user.id}/${milestoneId}/${Date.now()}.jpg`;
+      // Milestones keep legacy path shape ({uid}/{id}/...) so existing photos
+      // remain reachable. New entities are namespaced by type.
+      const path = entity === 'milestone'
+        ? `${session.user.id}/${entityId}/${Date.now()}.jpg`
+        : `${session.user.id}/${entity}/${entityId}/${Date.now()}.jpg`;
       const { error } = await supabase.storage
         .from('phase-photos')
         .upload(path, compressed, { upsert: false, contentType: 'image/jpeg' });
       if (error) throw error;
+      const key = ENTITY_KEY[entity];
       setState(prev => ({
         ...prev,
-        milestones: prev.milestones.map(m =>
-          m.id === milestoneId
-            ? { ...m, photos: [...(m.photos ?? []), { path, caption: caption || undefined }] }
-            : m
+        [key]: (prev[key] as { id: string; photos?: { path: string; caption?: string }[] }[]).map(item =>
+          item.id === entityId
+            ? { ...item, photos: [...(item.photos ?? []), { path, caption: caption || undefined }] }
+            : item
         ),
       }));
     } finally {
@@ -62,15 +81,16 @@ export function usePhotoManager(setState: Dispatch<SetStateAction<AppState>>) {
     }
   };
 
-  const deletePhoto = async (milestoneId: string, path: string) => {
+  const deletePhoto = async (entity: PhotoEntity, entityId: string, path: string) => {
     await supabase.storage.from('phase-photos').remove([path]);
     setSignedUrls(prev => { const n = { ...prev }; delete n[path]; return n; });
+    const key = ENTITY_KEY[entity];
     setState(prev => ({
       ...prev,
-      milestones: prev.milestones.map(m =>
-        m.id === milestoneId
-          ? { ...m, photos: (m.photos ?? []).filter(p => p.path !== path) }
-          : m
+      [key]: (prev[key] as { id: string; photos?: { path: string; caption?: string }[] }[]).map(item =>
+        item.id === entityId
+          ? { ...item, photos: (item.photos ?? []).filter(p => p.path !== path) }
+          : item
       ),
     }));
   };
