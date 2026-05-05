@@ -151,7 +151,8 @@ export default function VendorsSection() {
           </button>
         </div>
       ) : (
-        vendors.map(vendor => {
+        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
+        {vendors.map(vendor => {
           const totalPaid = vendor.payments.reduce((a, p) => a + p.amount, 0);
           const balance = vendor.totalBilled - totalPaid;
           return (
@@ -194,32 +195,38 @@ export default function VendorsSection() {
               <div className="flex gap-2">
                 <button
                   onClick={() => openAddPay(vendor)}
-                  className="flex-1 py-1.5 bg-green-50 text-green-600 rounded-xl text-xs font-bold border border-green-100"
+                  className="flex-1 py-1.5 bg-green-50 text-green-600 rounded-xl text-xs font-bold border border-green-100 hover:bg-green-100"
                 >
                   + Paise Jama
                 </button>
                 <button
                   onClick={() => openAddBill(vendor)}
-                  className="flex-1 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
+                  className="flex-1 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100 hover:bg-indigo-100"
                 >
                   + Bill Badao
                 </button>
               </div>
             </div>
           );
-        })
+        })}
+        </div>
       )}
 
-      {/* Vendor Form Sheet */}
+      {/* Vendor Form — bottom sheet on mobile, centered modal on desktop */}
       {vendorForm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closeVendorForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto overflow-y-auto max-h-[92vh]" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closeVendorForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-lg">{vendorEditId ? 'Vendor Edit' : 'Naya Vendor'}</h3>
-                <button onClick={closeVendorForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><X size={16} /></button>
+                <button onClick={closeVendorForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
               </div>
 
               <div>
@@ -266,27 +273,32 @@ export default function VendorsSection() {
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closeVendorForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">Cancel</button>
+                <button onClick={closeVendorForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
                 <button onClick={saveVendor} disabled={!vendorForm.name}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200">
+                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
                   {vendorEditId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
-      {/* Payment Form Sheet */}
+      {/* Payment Form — bottom sheet on mobile, centered modal on desktop */}
       {payForm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closePayForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closePayForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-lg">Paise Jama</h3>
-                <button onClick={closePayForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><X size={16} /></button>
+                <button onClick={closePayForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
               </div>
 
               <div>
@@ -313,27 +325,32 @@ export default function VendorsSection() {
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closePayForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">Cancel</button>
+                <button onClick={closePayForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
                 <button onClick={savePay} disabled={!payForm.amount || Number(payForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200">
+                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
                   Save Karo
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
-      {/* Bill Form Sheet */}
+      {/* Bill Form — bottom sheet on mobile, centered modal on desktop */}
       {billForm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closeBillForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closeBillForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-lg">Naya Bill Add</h3>
-                <button onClick={closeBillForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><X size={16} /></button>
+                <button onClick={closeBillForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
               </div>
 
               <div>
@@ -346,15 +363,15 @@ export default function VendorsSection() {
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closeBillForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">Cancel</button>
+                <button onClick={closeBillForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
                 <button onClick={saveBill} disabled={!billForm.amount || Number(billForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200">
+                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
                   Save Karo
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

@@ -93,40 +93,92 @@ export default function MalwaSection() {
           </button>
         </div>
       ) : (
-        sorted.map(entry => (
-          <div key={entry.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
-            <div>
-              <h4 className="font-bold text-slate-900">{entry.disposed} Trolleys</h4>
-              <p className="text-xs text-slate-500">{format(new Date(entry.date), 'dd MMM yyyy')}{entry.vendor ? ` • ${entry.vendor}` : ''}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <p className="font-bold text-red-500">-{formatCurrency(entry.disposed * entry.costPerTrip)}</p>
-              <button onClick={() => openEdit(entry)} className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100">
-                <Pencil size={14} />
-              </button>
-              <button
-                onClick={() => askConfirm('Is malwa entry ko delete kar dein?', () =>
-                  setState(prev => ({ ...prev, malwa: prev.malwa.filter(m => m.id !== entry.id) }))
-                )}
-                className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
+        <>
+          {/* Mobile: cards */}
+          <div className="md:hidden space-y-3">
+            {sorted.map(entry => (
+              <div key={entry.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex justify-between items-center">
+                <div>
+                  <h4 className="font-bold text-slate-900">{entry.disposed} Trolleys</h4>
+                  <p className="text-xs text-slate-500">{format(new Date(entry.date), 'dd MMM yyyy')}{entry.vendor ? ` • ${entry.vendor}` : ''}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="font-bold text-red-500">-{formatCurrency(entry.disposed * entry.costPerTrip)}</p>
+                  <button onClick={() => openEdit(entry)} className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100">
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => askConfirm('Is malwa entry ko delete kar dein?', () =>
+                      setState(prev => ({ ...prev, malwa: prev.malwa.filter(m => m.id !== entry.id) }))
+                    )}
+                    className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))
+
+          {/* Desktop: table */}
+          <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="py-2.5 px-4 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Date</th>
+                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Trolleys</th>
+                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Vendor / Driver</th>
+                  <th className="py-2.5 px-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wide">Cost / Trip</th>
+                  <th className="py-2.5 px-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wide">Total</th>
+                  <th className="py-2.5 px-4 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wide">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map(entry => (
+                  <tr key={entry.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
+                    <td className="py-2.5 px-4 text-xs text-slate-500 font-bold whitespace-nowrap">
+                      {format(new Date(entry.date), 'dd MMM yyyy')}
+                    </td>
+                    <td className="py-2.5 px-3 font-bold text-slate-800">{entry.disposed}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{entry.vendor || '—'}</td>
+                    <td className="py-2.5 px-3 text-right text-slate-700 whitespace-nowrap">{formatCurrency(entry.costPerTrip)}</td>
+                    <td className="py-2.5 px-3 text-right font-bold text-red-500 whitespace-nowrap">−{formatCurrency(entry.disposed * entry.costPerTrip)}</td>
+                    <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                      <button onClick={() => openEdit(entry)} className="w-7 h-7 inline-flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100">
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() => askConfirm('Is malwa entry ko delete kar dein?', () =>
+                          setState(prev => ({ ...prev, malwa: prev.malwa.filter(m => m.id !== entry.id) }))
+                        )}
+                        className="w-7 h-7 inline-flex items-center justify-center text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50 ml-0.5"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
-      {/* Form Sheet */}
+      {/* Form — bottom sheet on mobile, centered modal on desktop */}
       {form && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closeForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closeForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-lg">{editId ? 'Malwa Entry Edit' : 'Naya Malwa Entry'}</h3>
-                <button onClick={closeForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><X size={16} /></button>
+                <button onClick={closeForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -169,15 +221,15 @@ export default function MalwaSection() {
               )}
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closeForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">Cancel</button>
+                <button onClick={closeForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
                 <button onClick={save} disabled={Number(form.trips) <= 0}
-                  className="flex-1 py-3.5 bg-orange-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-orange-200">
+                  className="flex-1 py-3.5 bg-orange-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-orange-200 hover:bg-orange-700">
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

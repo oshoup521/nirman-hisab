@@ -96,10 +96,31 @@ export default function DashboardTab() {
     </div>
   );
 
+  const renderMiscTableRow = (e: typeof sortedMisc[0]) => (
+    <tr key={e.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
+      <td className="py-2.5 pr-3 text-xs text-slate-500 font-bold whitespace-nowrap">
+        {format(new Date(e.date), 'dd MMM yyyy')}
+      </td>
+      <td className="py-2.5 pr-3 text-sm font-bold text-slate-800">{e.category}</td>
+      <td className="py-2.5 pr-3 text-xs text-slate-500 max-w-[280px] truncate">{e.notes || '—'}</td>
+      <td className="py-2.5 pr-3 text-sm font-bold text-slate-900 text-right whitespace-nowrap">
+        {formatCurrency(e.amount)}
+      </td>
+      <td className="py-2.5 text-right whitespace-nowrap">
+        <button onClick={() => openEditMisc(e)} className="w-7 h-7 inline-flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100">
+          <Pencil size={12} />
+        </button>
+        <button onClick={() => deleteMisc(e.id)} className="w-7 h-7 inline-flex items-center justify-center text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50 ml-0.5">
+          <Trash2 size={12} />
+        </button>
+      </td>
+    </tr>
+  );
+
   return (
-    <div className="space-y-5 pb-28">
+    <div className="space-y-5 md:space-y-6">
       {/* Header */}
-      <header className="flex justify-between items-center pt-1">
+      <header className="flex justify-between items-center pt-1 md:hidden">
         <div className="flex items-center gap-3">
           <img src="/pwa-64x64.png" alt="" className="w-10 h-10 rounded-2xl" onError={e => (e.currentTarget.style.display = 'none')} />
           <div>
@@ -115,6 +136,25 @@ export default function DashboardTab() {
           </button>
           <button onClick={() => downloadCSV(state)} className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500">
             <Download size={18} />
+          </button>
+        </div>
+      </header>
+
+      {/* Desktop header — TopNav already shows project name; this row only adds actions */}
+      <header className="hidden md:flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900 leading-tight">Hisaab Overview</h1>
+          <p className="text-slate-500 text-sm font-medium">{state.project?.name || 'Project Overview'}{state.project?.location ? ` • ${state.project.location}` : ''}</p>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={shareOnWhatsApp} className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 rounded-xl text-sm font-bold hover:bg-green-100">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" />
+            </svg>
+            Share
+          </button>
+          <button onClick={() => downloadCSV(state)} className="flex items-center gap-2 px-3 py-2 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200">
+            <Download size={16} /> Export CSV
           </button>
         </div>
       </header>
@@ -204,10 +244,10 @@ export default function DashboardTab() {
       )}
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <button
           onClick={() => { setActiveTab('construction'); setSubTab('materials'); }}
-          className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-95 transition-transform"
+          className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-95 hover:shadow-md transition-all"
         >
           <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center mb-2">
             <Package size={18} className="text-indigo-500" />
@@ -219,7 +259,7 @@ export default function DashboardTab() {
         </button>
         <button
           onClick={() => { setActiveTab('construction'); setSubTab('timeline'); }}
-          className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-95 transition-transform"
+          className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-left active:scale-95 hover:shadow-md transition-all"
         >
           <div className="w-9 h-9 bg-indigo-50 rounded-xl flex items-center justify-center mb-2">
             <Clock size={18} className="text-indigo-500" />
@@ -232,7 +272,7 @@ export default function DashboardTab() {
         {currentMonthRent > 0 && (
           <button
             onClick={() => setActiveTab('kiraya')}
-            className="bg-orange-50 p-4 rounded-2xl border border-orange-100 text-left active:scale-95 transition-transform col-span-2"
+            className="bg-orange-50 p-4 rounded-2xl border border-orange-100 text-left active:scale-95 hover:shadow-md transition-all col-span-2 lg:col-span-1"
           >
             <div className="flex items-center gap-1.5 mb-1">
               <Home size={14} className="text-orange-500" />
@@ -244,7 +284,7 @@ export default function DashboardTab() {
         {depositPending > 0 && (
           <button
             onClick={() => setActiveTab('kiraya')}
-            className="bg-purple-50 p-4 rounded-2xl border border-purple-100 text-left active:scale-95 transition-transform col-span-2"
+            className="bg-purple-50 p-4 rounded-2xl border border-purple-100 text-left active:scale-95 hover:shadow-md transition-all col-span-2 lg:col-span-1"
           >
             <div className="flex items-center gap-1.5 mb-1">
               <Home size={14} className="text-purple-500" />
@@ -290,7 +330,7 @@ export default function DashboardTab() {
           </div>
           <button
             onClick={openAddMisc}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 text-white rounded-xl text-xs font-bold hover:bg-slate-900"
           >
             <Plus size={14} /> Add
           </button>
@@ -298,20 +338,48 @@ export default function DashboardTab() {
         {sortedMisc.length === 0 ? (
           <p className="text-slate-400 text-sm text-center py-3">Koi misc kharcha nahi</p>
         ) : (
-          <div>
-            {sortedMisc.slice(0, 5).map(renderMiscRow)}
-            {sortedMisc.length > 5 && (
-              <button onClick={() => setShowAllMisc(true)} className="w-full pt-3 text-xs font-bold text-indigo-600 text-center">
-                Sab Dekho ({sortedMisc.length} entries)
-              </button>
-            )}
-          </div>
+          <>
+            {/* Mobile: card-style list (top 5, then "Sab Dekho" sheet) */}
+            <div className="md:hidden">
+              {sortedMisc.slice(0, 5).map(renderMiscRow)}
+              {sortedMisc.length > 5 && (
+                <button onClick={() => setShowAllMisc(true)} className="w-full pt-3 text-xs font-bold text-indigo-600 text-center">
+                  Sab Dekho ({sortedMisc.length} entries)
+                </button>
+              )}
+            </div>
+
+            {/* Desktop: full table */}
+            <div className="hidden md:block">
+              <div className="max-h-[420px] overflow-y-auto">
+                <table className="w-full">
+                  <thead className="sticky top-0 bg-white">
+                    <tr className="border-b border-slate-200">
+                      <th className="py-2 pr-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wide">Date</th>
+                      <th className="py-2 pr-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wide">Category</th>
+                      <th className="py-2 pr-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wide">Notes</th>
+                      <th className="py-2 pr-3 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wide">Amount</th>
+                      <th className="py-2 text-right text-[10px] font-bold text-slate-400 uppercase tracking-wide">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedMisc.map(renderMiscTableRow)}
+                  </tbody>
+                </table>
+              </div>
+              {sortedMisc.length > 0 && (
+                <p className="text-[11px] text-slate-400 font-bold mt-2 text-right">
+                  {sortedMisc.length} {sortedMisc.length === 1 ? 'entry' : 'entries'}
+                </p>
+              )}
+            </div>
+          </>
         )}
       </div>
 
-      {/* All Misc Bottom Sheet */}
+      {/* All Misc Bottom Sheet — mobile only */}
       {showAllMisc && (
-        <div className="fixed inset-0 z-[60] flex flex-col justify-end">
+        <div className="md:hidden fixed inset-0 z-[60] flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowAllMisc(false)} />
           <div className="relative bg-white rounded-t-3xl max-h-[80vh] flex flex-col">
             <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-slate-100">
@@ -332,16 +400,21 @@ export default function DashboardTab() {
         </div>
       )}
 
-      {/* Misc Form Sheet */}
+      {/* Misc Form — bottom sheet on mobile, centered modal on desktop */}
       {miscForm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closeMiscForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closeMiscForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-lg">{miscEditId ? 'Misc Edit' : 'Naya Misc Kharcha'}</h3>
-                <button onClick={closeMiscForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><X size={16} /></button>
+                <button onClick={closeMiscForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Amount (₹)</label>
@@ -371,15 +444,15 @@ export default function DashboardTab() {
                   className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-slate-400" />
               </div>
               <div className="flex gap-3 pt-1">
-                <button onClick={closeMiscForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">Cancel</button>
+                <button onClick={closeMiscForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
                 <button onClick={saveMisc} disabled={!miscForm.amount || Number(miscForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-slate-800 text-white rounded-2xl font-bold text-sm disabled:opacity-40">
+                  className="flex-1 py-3.5 bg-slate-800 text-white rounded-2xl font-bold text-sm disabled:opacity-40 hover:bg-slate-900">
                   {miscEditId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

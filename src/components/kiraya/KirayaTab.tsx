@@ -192,7 +192,7 @@ export default function KirayaTab() {
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
           {rentals.map(rental => {
             const currentMonth = format(new Date(), 'yyyy-MM');
             const paidThisMonth = rental.payments.filter(p => p.month === currentMonth).reduce((a, p) => a + p.amount, 0);
@@ -359,16 +359,21 @@ export default function KirayaTab() {
         </div>
       )}
 
-      {/* Property Form Sheet */}
+      {/* Property Form — bottom sheet on mobile, centered modal on desktop */}
       {propForm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closePropForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto overflow-y-auto max-h-[92vh]" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closePropForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-lg">{propEditId ? 'Property Edit' : 'Naya Property'}</h3>
-                <button onClick={closePropForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><X size={16} /></button>
+                <button onClick={closePropForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
               </div>
 
               <div>
@@ -453,29 +458,34 @@ export default function KirayaTab() {
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closePropForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">Cancel</button>
+                <button onClick={closePropForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
                 <button onClick={saveProp} disabled={!propForm.name}
-                  className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-violet-200">
+                  className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-violet-200 hover:bg-violet-700">
                   {propEditId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
-      {/* Payment Form Sheet */}
+      {/* Payment Form — bottom sheet on mobile, centered modal on desktop */}
       {payForm && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closePayForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closePayForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-lg">
                   {payForm.paymentId ? 'Payment Edit' : payForm.isDepositMode ? 'Deposit se Kata' : 'Rent Payment'}
                 </h3>
-                <button onClick={closePayForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><X size={16} /></button>
+                <button onClick={closePayForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
               </div>
 
               {payForm.isDepositMode && (
@@ -523,15 +533,15 @@ export default function KirayaTab() {
                 </button>
               )}
               <div className="flex gap-3 pt-1">
-                <button onClick={closePayForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">Cancel</button>
+                <button onClick={closePayForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
                 <button onClick={savePay} disabled={!payForm.amount || Number(payForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-violet-200">
+                  className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-violet-200 hover:bg-violet-700">
                   {payForm.paymentId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

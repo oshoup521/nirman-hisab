@@ -12,6 +12,7 @@ import { formatCurrency } from './utils/formatters';
 import { downloadCSV } from './utils/csv';
 import LoadingScreen from './components/layout/LoadingScreen';
 import BottomNav from './components/layout/BottomNav';
+import TopNav from './components/layout/TopNav';
 import PullToRefreshIndicator from './components/layout/PullToRefreshIndicator';
 import ConfirmDialog from './components/ConfirmDialog';
 import DashboardTab from './components/dashboard/DashboardTab';
@@ -135,7 +136,9 @@ export default function App() {
           syncError={syncStatus === 'error'}
         />
 
-        <div className="max-w-md mx-auto px-4 pt-[max(env(safe-area-inset-top),24px)]">
+        <TopNav />
+
+        <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto px-4 md:px-6 pt-[max(env(safe-area-inset-top),24px)] md:pt-6 pb-28 md:pb-10">
           {activeTab === 'dashboard'    && <DashboardTab />}
           {activeTab === 'construction' && <ConstructionTab />}
           {activeTab === 'diary'        && <DiaryTab />}

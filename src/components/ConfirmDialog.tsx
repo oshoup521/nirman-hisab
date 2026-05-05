@@ -1,5 +1,6 @@
 import React from 'react';
-import { AlertTriangle, Trash2, X } from 'lucide-react';
+import { AlertTriangle, Trash2 } from 'lucide-react';
+import { useEscapeKey } from '../hooks/useEscapeKey';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface ConfirmDialogProps {
 }
 
 export default function ConfirmDialog({ open, title, message, confirmText, onConfirm, onCancel }: ConfirmDialogProps) {
+  useEscapeKey(open, onCancel);
   if (!open) return null;
 
   return (
@@ -42,13 +44,14 @@ export default function ConfirmDialog({ open, title, message, confirmText, onCon
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="flex-1 py-3 rounded-2xl bg-slate-100 text-slate-600 font-bold text-sm"
+              className="flex-1 py-3 rounded-2xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200"
             >
               Cancel
             </button>
             <button
               onClick={() => { onConfirm(); onCancel(); }}
-              className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2"
+              className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-600"
+              autoFocus
             >
               {!confirmText && <Trash2 size={14} />}
               {confirmText ?? 'Delete'}

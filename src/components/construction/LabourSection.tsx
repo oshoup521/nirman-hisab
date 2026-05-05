@@ -83,7 +83,7 @@ export default function LabourSection() {
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
           {state.labours.map(labour => {
             const { fullDays, halfDays, wages } = getMonthStats(labour);
             const todayStatus = labour.attendance[today];
@@ -165,16 +165,21 @@ export default function LabourSection() {
         </div>
       )}
 
-      {/* Add / Edit Sheet */}
+      {/* Add / Edit Form — bottom sheet on mobile, centered modal on desktop */}
       {form && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closeForm} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closeForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-900 text-lg">{editId ? 'Mazdoor Edit' : 'Naya Mazdoor'}</h3>
-                <button onClick={closeForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500"><X size={16} /></button>
+                <button onClick={closeForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Labour Type</label>
@@ -189,15 +194,15 @@ export default function LabourSection() {
                   placeholder="0" />
               </div>
               <div className="flex gap-3 pt-1">
-                <button onClick={closeForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">Cancel</button>
+                <button onClick={closeForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
                 <button onClick={save} disabled={!form.type}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200">
+                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

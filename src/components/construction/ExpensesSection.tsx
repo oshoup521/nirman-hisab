@@ -72,8 +72,7 @@ export default function ExpensesSection() {
   };
 
   const sorted = [...state.expenses]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 20);
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const total = state.expenses.reduce((s, e) => s + e.amount, 0);
 
@@ -121,24 +120,126 @@ export default function ExpensesSection() {
         </div>
       )}
 
-      {/* Expense Cards */}
-      <div className="space-y-3">
-        {sorted.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <Package size={26} className="text-slate-300" />
-            </div>
-            <p className="font-bold text-slate-600 text-sm">Koi kharcha nahi abhi tak</p>
-            <p className="text-slate-400 text-xs mt-1">Pehla kharcha add karo</p>
-            <button
-              onClick={openAdd}
-              className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
-            >
-              + Kharcha Add Karein
-            </button>
+      {/* Expense Cards (mobile) / Table (desktop) */}
+      {sorted.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
+          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Package size={26} className="text-slate-300" />
           </div>
-        ) : (
-          sorted.map(expense => {
+          <p className="font-bold text-slate-600 text-sm">Koi kharcha nahi abhi tak</p>
+          <p className="text-slate-400 text-xs mt-1">Pehla kharcha add karo</p>
+          <button
+            onClick={openAdd}
+            className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
+          >
+            + Kharcha Add Karein
+          </button>
+        </div>
+      ) : (
+        <>
+        {/* Desktop: table */}
+        <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="py-2.5 px-4 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Date</th>
+                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Category</th>
+                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Notes</th>
+                  <th className="py-2.5 px-3 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wide">Photos</th>
+                  <th className="py-2.5 px-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wide">Amount</th>
+                  <th className="py-2.5 px-4 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wide">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map(expense => {
+                  const { Icon, iconText, badge } = CAT_CFG[expense.category];
+                  const photoCount = expense.photos?.length ?? 0;
+                  const isUploading = photoUploading === `expense:${expense.id}`;
+                  return (
+                    <tr key={expense.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
+                      <td className="py-2.5 px-4 text-xs text-slate-500 font-bold whitespace-nowrap">
+                        {format(new Date(expense.date), 'dd MMM yyyy')}
+                      </td>
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className={cn('inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full', badge)}>
+                          <Icon size={10} className={iconText} /> {expense.category}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-700 max-w-[320px] truncate">
+                        {expense.notes || '—'}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        {photoCount > 0 ? (
+                          <button
+                            onClick={() => setSheetExpId(expense.id)}
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800"
+                          >
+                            <Paperclip size={10} /> {photoCount}
+                          </button>
+                        ) : (
+                          <span className="text-slate-300 text-[10px]">—</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
+                        {formatCurrency(expense.amount)}
+                      </td>
+                      <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                        <label className={cn(
+                          'w-7 h-7 rounded-lg inline-flex items-center justify-center cursor-pointer transition-colors mr-0.5',
+                          isUploading ? 'bg-indigo-100 text-indigo-500' : 'text-slate-400 hover:bg-slate-100'
+                        )}>
+                          <ImageIcon size={12} />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={isUploading}
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const caption = prompt('Bill ka naam / caption (optional):') ?? '';
+                                uploadPhoto('expense', expense.id, file, caption);
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        <button
+                          onClick={() => openEdit(expense)}
+                          className="w-7 h-7 inline-flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={() => askConfirm(
+                            'Is kharche ko delete kar dein?',
+                            () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
+                          )}
+                          className="w-7 h-7 inline-flex items-center justify-center text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50 ml-0.5"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+            <span className="text-[11px] text-slate-500 font-bold">
+              {sorted.length} {sorted.length === 1 ? 'entry' : 'entries'}
+            </span>
+            <span className="text-[11px] text-slate-700 font-bold">
+              Total: {formatCurrency(total)}
+            </span>
+          </div>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="md:hidden space-y-3">
+          {sorted.map(expense => {
             const { Icon, iconBg, iconText, badge } = CAT_CFG[expense.category];
             const photoCount = expense.photos?.length ?? 0;
             const isUploading = photoUploading === `expense:${expense.id}`;
@@ -228,21 +329,24 @@ export default function ExpensesSection() {
                 )}
               </div>
             );
-          })
-        )}
-      </div>
+          })}
+        </div>
+        </>
+      )}
 
-      {/* Bottom Sheet Form */}
+      {/* Form — bottom sheet on mobile, centered modal on desktop */}
       {form && (
-        <>
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={closeForm} />
+        <div
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closeForm}
+        >
           <div
-            className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto"
-            style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}
+            onClick={e => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-5">
               {/* Drag Handle */}
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto -mt-1 mb-1" />
+              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto -mt-1 mb-1 md:hidden" />
 
               {/* Title */}
               <div className="flex items-center justify-between">
@@ -325,14 +429,14 @@ export default function ExpensesSection() {
                 <button
                   onClick={save}
                   disabled={!form.amount || Number(form.amount) <= 0}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200"
+                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700"
                 >
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Photos Sheet */}

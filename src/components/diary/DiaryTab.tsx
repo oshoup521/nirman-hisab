@@ -153,27 +153,176 @@ export default function DiaryTab() {
   }, [diary, search]);
 
   // -----------------------------------------------------------------
-  return (
-    <div className="space-y-4 pb-32">
-      {/* Header */}
-      <div className="pt-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              <NotebookPen size={22} className="text-emerald-600" /> Site Diary
-            </h2>
-            <p className="text-xs text-slate-400 font-bold mt-0.5">Aaj kya hua — roz ka record</p>
-          </div>
-          {savedFlash && (
-            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
-              Saved ✓
-            </span>
-          )}
+  // Layout: mobile uses `view` (entry|calendar|search) for full-screen tab.
+  // Desktop has split layout: left pane (calendar OR search), right pane = entry editor (always).
+  // On desktop, `view === 'entry'` is treated as `calendar` for the left pane (default).
+  const leftPaneView: 'calendar' | 'search' = view === 'search' ? 'search' : 'calendar';
+
+  const entryBlock = (
+    <>
+      {/* Date strip */}
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 flex items-center gap-2">
+        <button onClick={goPrev} className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 active:bg-slate-100 hover:bg-slate-100">
+          <ChevronLeft size={18} />
+        </button>
+        <input
+          type="date"
+          value={date}
+          max={todayStr()}
+          onChange={e => { flushNow(); setDate(e.target.value || todayStr()); }}
+          className="flex-1 text-center font-bold text-slate-800 bg-slate-50 rounded-xl py-2 px-2 border-none focus:ring-2 focus:ring-emerald-500"
+        />
+        <button onClick={goNext} disabled={date >= todayStr()}
+          className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 active:bg-slate-100 hover:bg-slate-100 disabled:opacity-30">
+          <ChevronRight size={18} />
+        </button>
+      </div>
+
+      {/* Auto summary card */}
+      <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-4 text-white shadow-sm shadow-emerald-200/40">
+        <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-100">Is din ka auto-hisaab</p>
+        <div className="grid grid-cols-3 gap-2 mt-3">
+          <SummaryStat Icon={IndianRupee} label="Kharcha" value={formatCurrency(summary.totalKharcha)} sub={`${summary.expenseCount} entries`} />
+          <SummaryStat Icon={Users} label="Labour" value={summary.labourPresent ? `${summary.labourPresent}` : '—'} sub="present" />
+          <SummaryStat Icon={Wrench} label="Active" value={`${summary.milestonesActive.length}`} sub="phases" />
         </div>
       </div>
 
-      {/* View tabs */}
-      <div className="flex gap-2 bg-white p-1 rounded-2xl border border-slate-100 shadow-sm">
+      {/* Weather */}
+      <Section icon={<Sun size={14} />} title="Mausam">
+        <div className="flex flex-wrap gap-2">
+          {WEATHER_OPTS.map(({ id, label, Icon, tone }) => {
+            const sel = draft.weather === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setWeather(id)}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all',
+                  sel ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'
+                )}
+              >
+                <Icon size={14} className={sel ? 'text-emerald-600' : tone} /> {label}
+              </button>
+            );
+          })}
+        </div>
+      </Section>
+
+      {/* Who came */}
+      <Section icon={<Users size={14} />} title="Kaun aaya">
+        <textarea
+          rows={2}
+          value={draft.whoCame ?? ''}
+          onChange={e => scheduleFlush({ whoCame: e.target.value })}
+          onBlur={flushNow}
+          placeholder="e.g. Raju mistri + 4 mazdoor, Plumber Salim"
+          className="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-sm text-slate-800 resize-none"
+        />
+      </Section>
+
+      {/* Work done */}
+      <Section icon={<Wrench size={14} />} title="Kya kaam hua">
+        <textarea
+          rows={3}
+          value={draft.workDone ?? ''}
+          onChange={e => scheduleFlush({ workDone: e.target.value })}
+          onBlur={flushNow}
+          placeholder="2 line mein likho — aaj kya kaam khatam hua, kya bacha"
+          className="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-sm text-slate-800 resize-none"
+        />
+      </Section>
+
+      {/* Delivered */}
+      <Section icon={<Package size={14} />} title="Kya delivery aayi">
+        <textarea
+          rows={2}
+          value={draft.delivered ?? ''}
+          onChange={e => scheduleFlush({ delivered: e.target.value })}
+          onBlur={flushNow}
+          placeholder="e.g. 10 bori cement, 2 trolley reti, 1 truck sariya"
+          className="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-sm text-slate-800 resize-none"
+        />
+      </Section>
+
+      {/* Problems */}
+      <Section icon={<AlertTriangle size={14} />} title="Problem / Dikkat">
+        <textarea
+          rows={2}
+          value={draft.problems ?? ''}
+          onChange={e => scheduleFlush({ problems: e.target.value })}
+          onBlur={flushNow}
+          placeholder="Koi issue, vendor delay, paani/light ki problem..."
+          className="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-sm text-slate-800 resize-none"
+        />
+      </Section>
+
+      {/* Photos */}
+      <Section icon={<ImageIcon size={14} />} title={`Photos ${entry?.photos?.length ? `(${entry.photos.length})` : ''}`}>
+        <div className="flex items-center justify-end mb-2">
+          {photoUploading === `diary:${entry?.id ?? ''}` ? (
+            <span className="text-xs text-slate-400 font-bold">Uploading…</span>
+          ) : (
+            <label className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer bg-slate-100 text-slate-600 active:bg-slate-200 hover:bg-slate-200">
+              <ImageIcon size={12} /> Photo Add
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    let id = entry?.id;
+                    if (!id) {
+                      id = genId();
+                      const stubId = id;
+                      setState(prev => ({
+                        ...prev,
+                        diary: [...(prev.diary || []), { id: stubId, date }],
+                      }));
+                    }
+                    const caption = prompt('Photo ka naam / caption (optional):') ?? '';
+                    uploadPhoto('diary', id, file, caption);
+                  }
+                  e.target.value = '';
+                }}
+              />
+            </label>
+          )}
+        </div>
+        {entry?.photos && entry.photos.length > 0 ? (
+          <PhotoStrip
+            photos={entry.photos}
+            getSignedUrl={getSignedUrl}
+            onOpenAt={(idx) => setLightbox({ idx })}
+            onSeeAll={() => setPhotosSheetOpen(true)}
+            onDelete={(path) => askConfirm('Is photo ko delete karein?', () => deletePhoto('diary', entry.id, path))}
+          />
+        ) : (
+          <p className="text-xs text-slate-400 text-center py-3">Koi photo nahi — site ki tasveer add karo</p>
+        )}
+      </Section>
+    </>
+  );
+  return (
+    <div className="space-y-4 pb-32 lg:pb-0">
+      {/* Header */}
+      <div className="pt-2 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <NotebookPen size={22} className="text-emerald-600" /> Site Diary
+          </h2>
+          <p className="text-xs text-slate-400 font-bold mt-0.5">Aaj kya hua — roz ka record</p>
+        </div>
+        {savedFlash && (
+          <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100">
+            Saved ✓
+          </span>
+        )}
+      </div>
+
+      {/* View tabs — mobile: 3 tabs; desktop: hidden (sub-tabs sit inside left pane) */}
+      <div className="flex gap-2 bg-white p-1 rounded-2xl border border-slate-100 shadow-sm lg:hidden">
         {([
           { id: 'entry',    label: 'Aaj',      Icon: NotebookPen },
           { id: 'calendar', label: 'Calendar', Icon: CalendarDays },
@@ -195,156 +344,45 @@ export default function DiaryTab() {
         })}
       </div>
 
-      {view === 'entry' && (
-        <>
-          {/* Date strip */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 flex items-center gap-2">
-            <button onClick={goPrev} className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 active:bg-slate-100">
-              <ChevronLeft size={18} />
-            </button>
-            <input
-              type="date"
-              value={date}
-              max={todayStr()}
-              onChange={e => { flushNow(); setDate(e.target.value || todayStr()); }}
-              className="flex-1 text-center font-bold text-slate-800 bg-slate-50 rounded-xl py-2 px-2 border-none focus:ring-2 focus:ring-emerald-500"
-            />
-            <button onClick={goNext} disabled={date >= todayStr()}
-              className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500 active:bg-slate-100 disabled:opacity-30">
-              <ChevronRight size={18} />
-            </button>
-          </div>
+      {/* Split layout on desktop: [left 360px] [right 1fr] */}
+      <div className="lg:grid lg:grid-cols-[360px_1fr] lg:gap-4 lg:items-start">
 
-          {/* Auto summary card */}
-          <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl p-4 text-white shadow-sm shadow-emerald-200/40">
-            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-100">Is din ka auto-hisaab</p>
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              <SummaryStat Icon={IndianRupee} label="Kharcha" value={formatCurrency(summary.totalKharcha)} sub={`${summary.expenseCount} entries`} />
-              <SummaryStat Icon={Users} label="Labour" value={summary.labourPresent ? `${summary.labourPresent}` : '—'} sub="present" />
-              <SummaryStat Icon={Wrench} label="Active" value={`${summary.milestonesActive.length}`} sub="phases" />
-            </div>
-          </div>
+      {/* LEFT PANE: calendar + search (mobile shows only when view matches; desktop always renders, sub-tab toggles inner blocks) */}
+      <aside className={cn('space-y-4 lg:sticky lg:top-20 lg:self-start', view === 'entry' && 'hidden lg:block')}>
+        {/* Desktop-only sub-tabs (calendar / search) */}
+        <div className="hidden lg:flex gap-2 bg-white p-1 rounded-2xl border border-slate-100 shadow-sm">
+          {([
+            { id: 'calendar', label: 'Calendar', Icon: CalendarDays },
+            { id: 'search',   label: 'Khojo',    Icon: Search },
+          ] as const).map(({ id, label, Icon }) => {
+            const active = leftPaneView === id;
+            return (
+              <button
+                key={id}
+                onClick={() => setView(id)}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all',
+                  active ? 'bg-emerald-50 text-emerald-700' : 'text-slate-400 hover:text-slate-700'
+                )}
+              >
+                <Icon size={13} /> {label}
+              </button>
+            );
+          })}
+        </div>
 
-          {/* Weather */}
-          <Section icon={<Sun size={14} />} title="Mausam">
-            <div className="flex flex-wrap gap-2">
-              {WEATHER_OPTS.map(({ id, label, Icon, tone }) => {
-                const sel = draft.weather === id;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => setWeather(id)}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all',
-                      sel ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-50 text-slate-500 border-slate-100'
-                    )}
-                  >
-                    <Icon size={14} className={sel ? 'text-emerald-600' : tone} /> {label}
-                  </button>
-                );
-              })}
-            </div>
-          </Section>
+      {/* MOBILE-ONLY entry block (desktop renders entry in right pane below) */}
+      <div className={cn('space-y-4 lg:hidden', view !== 'entry' && 'hidden')}>
+        {entryBlock}
+      </div>
 
-          {/* Who came */}
-          <Section icon={<Users size={14} />} title="Kaun aaya">
-            <textarea
-              rows={2}
-              value={draft.whoCame ?? ''}
-              onChange={e => scheduleFlush({ whoCame: e.target.value })}
-              onBlur={flushNow}
-              placeholder="e.g. Raju mistri + 4 mazdoor, Plumber Salim"
-              className="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-sm text-slate-800 resize-none"
-            />
-          </Section>
-
-          {/* Work done */}
-          <Section icon={<Wrench size={14} />} title="Kya kaam hua">
-            <textarea
-              rows={3}
-              value={draft.workDone ?? ''}
-              onChange={e => scheduleFlush({ workDone: e.target.value })}
-              onBlur={flushNow}
-              placeholder="2 line mein likho — aaj kya kaam khatam hua, kya bacha"
-              className="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-sm text-slate-800 resize-none"
-            />
-          </Section>
-
-          {/* Delivered */}
-          <Section icon={<Package size={14} />} title="Kya delivery aayi">
-            <textarea
-              rows={2}
-              value={draft.delivered ?? ''}
-              onChange={e => scheduleFlush({ delivered: e.target.value })}
-              onBlur={flushNow}
-              placeholder="e.g. 10 bori cement, 2 trolley reti, 1 truck sariya"
-              className="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-sm text-slate-800 resize-none"
-            />
-          </Section>
-
-          {/* Problems */}
-          <Section icon={<AlertTriangle size={14} />} title="Problem / Dikkat">
-            <textarea
-              rows={2}
-              value={draft.problems ?? ''}
-              onChange={e => scheduleFlush({ problems: e.target.value })}
-              onBlur={flushNow}
-              placeholder="Koi issue, vendor delay, paani/light ki problem..."
-              className="w-full p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-emerald-500 text-sm text-slate-800 resize-none"
-            />
-          </Section>
-
-          {/* Photos */}
-          <Section icon={<ImageIcon size={14} />} title={`Photos ${entry?.photos?.length ? `(${entry.photos.length})` : ''}`}>
-            <div className="flex items-center justify-end mb-2">
-              {photoUploading === `diary:${entry?.id ?? ''}` ? (
-                <span className="text-xs text-slate-400 font-bold">Uploading…</span>
-              ) : (
-                <label className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer bg-slate-100 text-slate-600 active:bg-slate-200">
-                  <ImageIcon size={12} /> Photo Add
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        // Ensure entry exists before upload — flush a stub
-                        let id = entry?.id;
-                        if (!id) {
-                          id = genId();
-                          const stubId = id;
-                          setState(prev => ({
-                            ...prev,
-                            diary: [...(prev.diary || []), { id: stubId, date }],
-                          }));
-                        }
-                        const caption = prompt('Photo ka naam / caption (optional):') ?? '';
-                        uploadPhoto('diary', id, file, caption);
-                      }
-                      e.target.value = '';
-                    }}
-                  />
-                </label>
-              )}
-            </div>
-            {entry?.photos && entry.photos.length > 0 ? (
-              <PhotoStrip
-                photos={entry.photos}
-                getSignedUrl={getSignedUrl}
-                onOpenAt={(idx) => setLightbox({ idx })}
-                onSeeAll={() => setPhotosSheetOpen(true)}
-                onDelete={(path) => askConfirm('Is photo ko delete karein?', () => deletePhoto('diary', entry.id, path))}
-              />
-            ) : (
-              <p className="text-xs text-slate-400 text-center py-3">Koi photo nahi — site ki tasveer add karo</p>
-            )}
-          </Section>
-        </>
-      )}
-
-      {view === 'calendar' && (
-        <div className="space-y-3">
+      <div className={cn(
+        'space-y-3',
+        // Mobile: visible only when view === 'calendar'
+        view === 'calendar' ? 'block' : 'hidden',
+        // Desktop: visible only when leftPaneView === 'calendar'
+        leftPaneView === 'calendar' ? 'lg:block' : 'lg:hidden',
+      )}>
           {/* Month nav */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 flex items-center gap-2">
             <button onClick={() => setCalMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
@@ -376,7 +414,11 @@ export default function DiaryTab() {
                 return (
                   <button
                     key={i}
-                    onClick={() => { setDate(ds); setView('entry'); }}
+                    onClick={() => {
+                      setDate(ds);
+                      // On mobile, navigate to entry view. On desktop, entry is always visible.
+                      if (window.matchMedia('(max-width: 1023px)').matches) setView('entry');
+                    }}
                     disabled={!inMonth}
                     className={cn(
                       'aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all',
@@ -414,10 +456,14 @@ export default function DiaryTab() {
             </div>
           </div>
         </div>
-      )}
 
-      {view === 'search' && (
-        <div className="space-y-3">
+      <div className={cn(
+        'space-y-3',
+        // Mobile: visible only when view === 'search'
+        view === 'search' ? 'block' : 'hidden',
+        // Desktop: visible only when leftPaneView === 'search'
+        leftPaneView === 'search' ? 'lg:block' : 'lg:hidden',
+      )}>
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 flex items-center gap-2">
             <Search size={16} className="text-slate-400" />
             <input
@@ -454,8 +500,15 @@ export default function DiaryTab() {
           {searchResults.map(d => (
             <button
               key={d.id}
-              onClick={() => { setDate(d.date); setView('entry'); }}
-              className="w-full bg-white rounded-2xl border border-slate-100 shadow-sm p-3 text-left active:scale-[0.99] transition-transform"
+              onClick={() => {
+                setDate(d.date);
+                // On mobile, navigate to entry view. On desktop, entry is always visible — keep search results visible.
+                if (window.matchMedia('(max-width: 1023px)').matches) setView('entry');
+              }}
+              className={cn(
+                'w-full bg-white rounded-2xl border border-slate-100 shadow-sm p-3 text-left active:scale-[0.99] hover:shadow-md transition-all',
+                d.date === date && 'ring-2 ring-emerald-400 border-emerald-200',
+              )}
             >
               <div className="flex items-center justify-between mb-1.5">
                 <p className="font-bold text-slate-800 text-sm">{format(parseISO(d.date), 'dd MMM yyyy, EEE')}</p>
@@ -465,7 +518,14 @@ export default function DiaryTab() {
             </button>
           ))}
         </div>
-      )}
+      </aside>
+
+      {/* RIGHT PANE — desktop only: entry editor always visible */}
+      <main className="hidden lg:block space-y-4">
+        {entryBlock}
+      </main>
+
+      </div>{/* end split grid */}
 
       {/* Photos Sheet */}
       <PhotosSheet
