@@ -81,7 +81,7 @@ export default function MaterialsSection() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-slate-900">Samaan ka Stock</h3>
+          <h3 className="font-bold text-text-primary">Samaan ka Stock</h3>
           {lowCount > 0 && (
             <p className="text-[10px] font-bold text-red-500 mt-0.5 flex items-center gap-1">
               <AlertTriangle size={10} /> {lowCount} item{lowCount > 1 ? 's' : ''} low stock
@@ -90,7 +90,7 @@ export default function MaterialsSection() {
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-indigo-100"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
@@ -98,12 +98,12 @@ export default function MaterialsSection() {
 
       {/* Empty state */}
       {sorted.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <Package size={26} className="text-slate-300" />
+        <div className="bg-surface rounded-2xl border border-border-default p-10 text-center">
+          <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Package size={26} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-slate-600 text-sm">Koi material nahi abhi tak</p>
-          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100">
+          <p className="font-bold text-text-secondary text-sm">Koi material nahi abhi tak</p>
+          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
             + Material Add Karein
           </button>
         </div>
@@ -114,37 +114,37 @@ export default function MaterialsSection() {
             const isLow = stock <= material.minStock;
             const usedPct = material.purchased > 0 ? Math.min(100, (material.used / material.purchased) * 100) : 0;
             return (
-              <div key={material.id} className={cn('bg-white rounded-2xl border shadow-sm p-4', isLow ? 'border-red-100' : 'border-slate-100')}>
+              <div key={material.id} className={cn('bg-surface rounded-2xl border shadow-sm p-4', isLow ? 'border-red-500/30 bg-red-500/5' : 'border-border-default')}>
                 {/* Top row */}
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-bold text-slate-900">{material.name}</h4>
+                      <h4 className="font-bold text-text-primary">{material.name}</h4>
                       {isLow && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-red-50 text-red-500 rounded-full">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-red-500/10 text-red-500 rounded-full border border-red-500/20">
                           <AlertTriangle size={9} /> Low
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-text-subdued mt-0.5">
                       {material.purchased} {material.unit} bought • {formatCurrency(material.rate)}/{material.unit}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={cn('text-2xl font-bold leading-none', isLow ? 'text-red-500' : 'text-emerald-600')}>{stock}</p>
-                    <p className="text-[10px] text-slate-400 font-bold mt-0.5">{material.unit} left</p>
+                    <p className={cn('text-2xl font-bold leading-none', isLow ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>{stock}</p>
+                    <p className="text-[10px] text-text-subdued font-bold mt-0.5">{material.unit} left</p>
                   </div>
                 </div>
 
                 {/* Usage bar */}
                 <div className="mb-3">
-                  <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-1">
+                  <div className="flex justify-between text-[10px] text-text-subdued font-bold mb-1">
                     <span>Used: {material.used} {material.unit}</span>
                     <span>{usedPct.toFixed(0)}% consumed</span>
                   </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                  <div className="w-full bg-surface-subdued h-2 rounded-full overflow-hidden border border-border-subdued">
                     <div
-                      className={cn('h-full rounded-full transition-all', isLow ? 'bg-red-400' : usedPct > 75 ? 'bg-amber-400' : 'bg-indigo-400')}
+                      className={cn('h-full rounded-full transition-all', isLow ? 'bg-red-400' : usedPct > 75 ? 'bg-amber-500' : 'bg-brand')}
                       style={{ width: `${usedPct}%` }}
                     />
                   </div>
@@ -154,33 +154,33 @@ export default function MaterialsSection() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setUsageForm({ materialId: material.id, materialName: material.name, unit: material.unit, amount: '' })}
-                    className="flex-1 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
+                    className="flex-1 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
                   >
                     Update Usage
                   </button>
-                  <button onClick={() => openEdit(material)} className="w-9 h-9 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
+                  <button onClick={() => openEdit(material)} className="w-9 h-9 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary border border-border-default hover:bg-border-default transition-colors">
                     <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => askConfirm(`"${material.name}" delete kar dein?`, () =>
                       setState(prev => ({ ...prev, materials: prev.materials.filter(m => m.id !== material.id) }))
                     )}
-                    className="w-9 h-9 bg-red-50 rounded-xl flex items-center justify-center text-red-400 border border-red-100"
+                    className="w-9 h-9 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
 
                 {/* Photos: bill / samaan ki tasveer */}
-                <div className="mt-3 border-t border-slate-100 pt-3">
+                <div className="mt-3 border-t border-border-subdued pt-3">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                    <p className="text-[10px] font-bold text-text-subdued uppercase flex items-center gap-1">
                       <ImageIcon size={11} /> Bill / Photos {material.photos?.length ? `(${material.photos.length})` : ''}
                     </p>
                     {photoUploading === `material:${material.id}` ? (
-                      <span className="text-xs text-slate-400 font-bold">Uploading…</span>
+                      <span className="text-xs text-text-subdued font-bold">Uploading…</span>
                     ) : (
-                      <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-slate-100 text-slate-600 active:bg-slate-200">
+                      <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-surface-subdued text-text-secondary active:bg-border-default transition-colors">
                         <ImageIcon size={12} /> Add
                         <input
                           type="file"
@@ -215,59 +215,59 @@ export default function MaterialsSection() {
       {/* Add / Edit Form — bottom sheet on mobile, centered modal on desktop */}
       {form && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closeForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">{editId ? 'Material Edit' : 'Naya Material'}</h3>
-                <button onClick={closeForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">{editId ? 'Material Edit' : 'Naya Material'}</h3>
+                <button onClick={closeForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Material Name</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Material Name</label>
                 <input type="text" autoFocus value={form.name} onChange={e => setForm(f => f ? { ...f, name: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g. Cement, Sand, Sariya" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Unit</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Unit</label>
                   <input type="text" value={form.unit} onChange={e => setForm(f => f ? { ...f, unit: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                     placeholder="bags / tons" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Quantity</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Quantity</label>
                   <input type="number" inputMode="numeric" value={form.purchased} onChange={e => setForm(f => f ? { ...f, purchased: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500" placeholder="0" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="0" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Rate / Unit (₹)</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Rate / Unit (₹)</label>
                   <input type="number" inputMode="numeric" value={form.rate} onChange={e => setForm(f => f ? { ...f, rate: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500" placeholder="0" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="0" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Low Stock Alert</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Low Stock Alert</label>
                   <input type="number" inputMode="numeric" value={form.minStock} onChange={e => setForm(f => f ? { ...f, minStock: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500" placeholder="0" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="0" />
                 </div>
               </div>
               {!editId && form.purchased && form.rate && (
-                <div className="bg-indigo-50 rounded-xl px-3 py-2 text-center">
-                  <p className="text-[10px] text-indigo-500 font-bold uppercase">Total Cost (auto-logged as expense)</p>
-                  <p className="text-lg font-bold text-indigo-700">{formatCurrency(Number(form.purchased) * Number(form.rate))}</p>
+                <div className="bg-brand/10 border border-brand/20 rounded-xl px-3 py-2 text-center">
+                  <p className="text-[10px] text-brand font-bold uppercase">Total Cost (auto-logged as expense)</p>
+                  <p className="text-lg font-bold text-brand">{formatCurrency(Number(form.purchased) * Number(form.rate))}</p>
                 </div>
               )}
               <div className="flex gap-3 pt-1">
-                <button onClick={closeForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
-                <button onClick={save} disabled={!form.name} className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
+                <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
+                <button onClick={save} disabled={!form.name} className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
@@ -303,31 +303,31 @@ export default function MaterialsSection() {
       {/* Usage Form — bottom sheet on mobile, centered modal on desktop */}
       {usageForm && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={() => setUsageForm(null)}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">Usage Update</h3>
-                <button onClick={() => setUsageForm(null)} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">Usage Update</h3>
+                <button onClick={() => setUsageForm(null)} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
-              <p className="text-slate-500 text-sm font-medium">{usageForm.materialName} — Kitna use hua aaj?</p>
+              <p className="text-text-secondary text-sm font-medium">{usageForm.materialName} — Kitna use hua aaj?</p>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Quantity ({usageForm.unit})</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Quantity ({usageForm.unit})</label>
                 <input type="number" inputMode="numeric" autoFocus value={usageForm.amount}
                   onChange={e => setUsageForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
                   placeholder="0" />
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setUsageForm(null)} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={() => setUsageForm(null)} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={submitUsage} disabled={!usageForm.amount || Number(usageForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 hover:bg-indigo-700">
+                  className="flex-1 py-3.5 bg-brand text-surface rounded-2xl font-bold text-sm disabled:opacity-40 hover:opacity-90 transition-opacity">
                   Update Karo
                 </button>
               </div>

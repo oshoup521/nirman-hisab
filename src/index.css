@@ -3,11 +3,50 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-app: var(--theme-app);
+  --color-surface: var(--theme-surface);
+  --color-surface-subdued: var(--theme-surface-subdued);
+  --color-border-default: var(--theme-border-default);
+  --color-border-subdued: var(--theme-border-subdued);
+  --color-text-primary: var(--theme-text-primary);
+  --color-text-secondary: var(--theme-text-secondary);
+  --color-text-subdued: var(--theme-text-subdued);
+  --color-brand: var(--theme-brand);
+  --color-brand-subdued: var(--theme-brand-subdued);
+  --color-brand-text: var(--theme-brand-text);
 }
 
 @layer base {
+  :root {
+    --theme-app: var(--color-slate-50);
+    --theme-surface: var(--color-white);
+    --theme-surface-subdued: var(--color-slate-50);
+    --theme-border-default: var(--color-slate-200);
+    --theme-border-subdued: var(--color-slate-100);
+    --theme-text-primary: var(--color-slate-900);
+    --theme-text-secondary: var(--color-slate-500);
+    --theme-text-subdued: var(--color-slate-400);
+    --theme-brand: var(--color-indigo-600);
+    --theme-brand-subdued: var(--color-indigo-50);
+    --theme-brand-text: var(--color-indigo-700);
+  }
+
+  .dark {
+    --theme-app: var(--color-black);
+    --theme-surface: var(--color-zinc-900);
+    --theme-surface-subdued: var(--color-zinc-800);
+    --theme-border-default: var(--color-zinc-800);
+    --theme-border-subdued: color-mix(in srgb, var(--color-zinc-800) 50%, transparent);
+    --theme-text-primary: var(--color-zinc-50);
+    --theme-text-secondary: var(--color-zinc-400);
+    --theme-text-subdued: var(--color-zinc-500);
+    --theme-brand: var(--color-indigo-500);
+    --theme-brand-subdued: color-mix(in srgb, var(--color-indigo-500) 10%, transparent);
+    --theme-brand-text: var(--color-indigo-400);
+  }
+
   body {
-    @apply font-sans antialiased;
+    @apply font-sans antialiased bg-app text-text-primary transition-colors duration-200;
   }
 }
 

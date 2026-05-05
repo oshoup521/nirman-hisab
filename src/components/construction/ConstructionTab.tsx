@@ -31,8 +31,8 @@ export default function ConstructionTab() {
   return (
     <div className="space-y-6 pb-28">
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">Naya Kaam</h1>
-        <p className="text-slate-500 text-sm">Construction Tracker</p>
+        <h1 className="text-2xl font-bold text-text-primary">Naya Kaam</h1>
+        <p className="text-text-subdued text-sm">Construction Tracker</p>
       </header>
 
       {/* Sub-tab navigation */}
@@ -51,8 +51,8 @@ export default function ConstructionTab() {
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shrink-0',
               subTab === id
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
-                : 'bg-white text-slate-600 border border-slate-100'
+                ? 'bg-brand text-surface shadow-md shadow-brand/20'
+                : 'bg-surface text-text-secondary border border-border-default'
             )}
           >
             <Icon size={16} />

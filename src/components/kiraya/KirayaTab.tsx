@@ -132,12 +132,12 @@ export default function KirayaTab() {
       {/* Header */}
       <header className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Kiraya Hisaab</h1>
-          <p className="text-slate-500 text-sm">Rent Tracker</p>
+          <h1 className="text-2xl font-bold text-text-primary">Kiraya Hisaab</h1>
+          <p className="text-text-subdued text-sm">Rent Tracker</p>
         </div>
         <button
           onClick={openAddProp}
-          className="flex items-center gap-1.5 px-4 py-2 bg-violet-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-violet-200"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add Property
         </button>
@@ -145,35 +145,35 @@ export default function KirayaTab() {
 
       {/* Summary */}
       {rentals.length > 0 && (
-        <div className="bg-violet-600 rounded-3xl p-5">
-          <p className="text-violet-200 text-[10px] font-bold uppercase tracking-wide mb-3">Monthly Overview</p>
+        <div className="bg-brand dark:bg-brand-subdued dark:border dark:border-brand/20 rounded-3xl p-5 shadow-sm shadow-brand/20">
+          <p className="text-surface dark:text-brand-text/70 text-[10px] font-bold uppercase tracking-wide mb-3">Monthly Overview</p>
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-black/15 rounded-xl px-3 py-2">
-              <p className="text-violet-200 text-[10px] font-bold uppercase">Monthly Rent</p>
-              <p className="text-white font-bold text-lg leading-tight">{formatCurrency(totalMonthlyRent)}</p>
+            <div className="bg-black/15 dark:bg-white/10 rounded-xl px-3 py-2">
+              <p className="text-surface/80 dark:text-brand-text/80 text-[10px] font-bold uppercase">Monthly Rent</p>
+              <p className="text-surface dark:text-brand-text font-bold text-lg leading-tight">{formatCurrency(totalMonthlyRent)}</p>
             </div>
-            <div className="bg-black/15 rounded-xl px-3 py-2">
-              <p className="text-violet-200 text-[10px] font-bold uppercase">Rent Diya</p>
-              <p className="text-white font-bold text-lg leading-tight">{formatCurrency(totalPaidRent)}</p>
+            <div className="bg-black/15 dark:bg-white/10 rounded-xl px-3 py-2">
+              <p className="text-surface/80 dark:text-brand-text/80 text-[10px] font-bold uppercase">Rent Diya</p>
+              <p className="text-surface dark:text-brand-text font-bold text-lg leading-tight">{formatCurrency(totalPaidRent)}</p>
             </div>
             {depositPaid > 0 && (
-              <div className="bg-black/15 rounded-xl px-3 py-2">
-                <p className="text-violet-200 text-[10px] font-bold uppercase">Deposit Diya ✓</p>
-                <p className="text-white font-bold text-base leading-tight">{formatCurrency(depositPaid)}</p>
-                <p className="text-violet-300 text-[9px] mt-0.5">Wapas milega</p>
+              <div className="bg-black/15 dark:bg-white/10 rounded-xl px-3 py-2">
+                <p className="text-surface/80 dark:text-brand-text/80 text-[10px] font-bold uppercase">Deposit Diya ✓</p>
+                <p className="text-surface dark:text-brand-text font-bold text-base leading-tight">{formatCurrency(depositPaid)}</p>
+                <p className="text-surface/60 dark:text-brand-text/60 text-[9px] mt-0.5">Wapas milega</p>
               </div>
             )}
             {depositPending > 0 && (
-              <div className="bg-orange-500/30 rounded-xl px-3 py-2">
-                <p className="text-orange-200 text-[10px] font-bold uppercase">Deposit Baaki ⏳</p>
-                <p className="text-white font-bold text-base leading-tight">{formatCurrency(depositPending)}</p>
-                <p className="text-orange-200 text-[9px] mt-0.5">Maine nahi diya</p>
+              <div className="bg-amber-500/30 dark:bg-amber-500/20 rounded-xl px-3 py-2 border border-amber-500/30">
+                <p className="text-amber-100 dark:text-amber-400 text-[10px] font-bold uppercase">Deposit Baaki ⏳</p>
+                <p className="text-surface dark:text-amber-300 font-bold text-base leading-tight">{formatCurrency(depositPending)}</p>
+                <p className="text-amber-100 dark:text-amber-400/80 text-[9px] mt-0.5">Maine nahi diya</p>
               </div>
             )}
             {depositWapas > 0 && (
-              <div className="bg-emerald-500/30 rounded-xl px-3 py-2">
-                <p className="text-emerald-200 text-[10px] font-bold uppercase">Wapas Milega 🔄</p>
-                <p className="text-white font-bold text-base leading-tight">{formatCurrency(depositWapas)}</p>
+              <div className="bg-emerald-500/30 dark:bg-emerald-500/20 rounded-xl px-3 py-2 border border-emerald-500/30">
+                <p className="text-emerald-100 dark:text-emerald-400 text-[10px] font-bold uppercase">Wapas Milega 🔄</p>
+                <p className="text-surface dark:text-emerald-300 font-bold text-base leading-tight">{formatCurrency(depositWapas)}</p>
               </div>
             )}
           </div>
@@ -182,12 +182,12 @@ export default function KirayaTab() {
 
       {/* Property Cards */}
       {rentals.length === 0 ? (
-        <div className="bg-white p-10 rounded-3xl border-2 border-dashed border-slate-200 text-center">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <Home size={26} className="text-slate-300" />
+        <div className="bg-surface p-10 rounded-3xl border-2 border-dashed border-border-default text-center">
+          <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Home size={26} className="text-text-subdued" />
           </div>
-          <p className="font-bold text-slate-600 text-sm">Koi property nahi abhi tak</p>
-          <button onClick={openAddProp} className="mt-4 px-4 py-2 bg-violet-50 text-violet-600 rounded-xl text-xs font-bold border border-violet-100">
+          <p className="font-bold text-text-secondary text-sm">Koi property nahi abhi tak</p>
+          <button onClick={openAddProp} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
             + Property Add Karein
           </button>
         </div>
@@ -202,28 +202,28 @@ export default function KirayaTab() {
             const dStatus = getDepositStatus(rental);
 
             return (
-              <div key={rental.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <div key={rental.id} className="bg-surface rounded-2xl border border-border-default shadow-sm overflow-hidden">
                 {/* Card header */}
                 <div className="p-4 flex justify-between items-start">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Home size={15} className="text-violet-500 shrink-0" />
-                      <h4 className="font-bold text-slate-900">{rental.name}</h4>
-                      <span className="text-[10px] font-bold px-2 py-0.5 bg-violet-50 text-violet-600 rounded-full">{rental.type}</span>
+                      <Home size={15} className="text-brand shrink-0" />
+                      <h4 className="font-bold text-text-primary">{rental.name}</h4>
+                      <span className="text-[10px] font-bold px-2 py-0.5 bg-brand/10 text-brand rounded-full">{rental.type}</span>
                     </div>
                     {(rental.ownerName || rental.ownerPhone) && (
-                      <p className="text-xs text-slate-400 mt-0.5">{rental.ownerName}{rental.ownerPhone ? ` • ${rental.ownerPhone}` : ''}</p>
+                      <p className="text-xs text-text-subdued mt-0.5">{rental.ownerName}{rental.ownerPhone ? ` • ${rental.ownerPhone}` : ''}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0 ml-2">
-                    <button onClick={() => openEditProp(rental)} className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100">
+                    <button onClick={() => openEditProp(rental)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-border-default transition-colors">
                       <Pencil size={12} />
                     </button>
                     <button
                       onClick={() => askConfirm(`"${rental.name}" delete kar dein?`, () =>
                         setState(prev => ({ ...prev, rentals: (prev.rentals || []).filter(r => r.id !== rental.id) }))
                       )}
-                      className="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-100"
+                      className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -232,24 +232,24 @@ export default function KirayaTab() {
 
                 {/* Rent + Deposit mini stats */}
                 <div className="px-4 pb-3 grid grid-cols-2 gap-2">
-                  <div className="bg-slate-50 p-3 rounded-xl">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">Monthly Rent</p>
-                    <p className="font-bold text-slate-900">{formatCurrency(rental.monthlyRent)}</p>
+                  <div className="bg-surface-subdued p-3 rounded-xl border border-border-default">
+                    <p className="text-[10px] font-bold text-text-subdued uppercase mb-0.5">Monthly Rent</p>
+                    <p className="font-bold text-text-primary">{formatCurrency(rental.monthlyRent)}</p>
                   </div>
                   {(rental.deposit || 0) > 0 && (
-                    <div className={cn('p-3 rounded-xl', {
-                      'bg-blue-50': dStatus === 'paid',
-                      'bg-green-50': dStatus === 'refunded',
-                      'bg-red-50': dStatus === 'forfeited',
-                      'bg-orange-50': dStatus === 'pending',
+                    <div className={cn('p-3 rounded-xl border', {
+                      'bg-blue-500/10 border-blue-500/20': dStatus === 'paid',
+                      'bg-emerald-500/10 border-emerald-500/20': dStatus === 'refunded',
+                      'bg-red-500/10 border-red-500/20': dStatus === 'forfeited',
+                      'bg-amber-500/10 border-amber-500/20': dStatus === 'pending',
                     })}>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase mb-0.5">Deposit</p>
-                      <p className="font-bold text-slate-900">{formatCurrency(rental.deposit || 0)}</p>
+                      <p className="text-[10px] font-bold text-text-subdued uppercase mb-0.5">Deposit</p>
+                      <p className="font-bold text-text-primary">{formatCurrency(rental.deposit || 0)}</p>
                       <p className={cn('text-[10px] font-bold mt-0.5', {
-                        'text-blue-600': dStatus === 'paid',
-                        'text-green-600': dStatus === 'refunded',
-                        'text-red-600': dStatus === 'forfeited',
-                        'text-orange-600': dStatus === 'pending',
+                        'text-blue-500': dStatus === 'paid',
+                        'text-emerald-500': dStatus === 'refunded',
+                        'text-red-500': dStatus === 'forfeited',
+                        'text-amber-500': dStatus === 'pending',
                       })}>
                         {dStatus === 'pending' && '⏳ Dena Baaki'}
                         {dStatus === 'paid' && '✓ Diya'}
@@ -259,15 +259,15 @@ export default function KirayaTab() {
                     </div>
                   )}
                   {depositUsedForRent > 0 && (
-                    <div className="col-span-2 bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                    <div className="col-span-2 bg-brand/10 p-3 rounded-xl border border-brand/20">
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="text-[10px] font-bold text-indigo-400 uppercase mb-0.5">Deposit Remaining</p>
-                          <p className="font-bold text-indigo-700">{formatCurrency(Math.max(0, depositRemaining))}</p>
+                          <p className="text-[10px] font-bold text-brand uppercase mb-0.5">Deposit Remaining</p>
+                          <p className="font-bold text-text-primary">{formatCurrency(Math.max(0, depositRemaining))}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] font-bold text-indigo-300 uppercase mb-0.5">Rent se Kata</p>
-                          <p className="font-bold text-indigo-400">−{formatCurrency(depositUsedForRent)}</p>
+                          <p className="text-[10px] font-bold text-brand uppercase mb-0.5">Rent se Kata</p>
+                          <p className="font-bold text-brand">−{formatCurrency(depositUsedForRent)}</p>
                         </div>
                       </div>
                     </div>
@@ -276,7 +276,7 @@ export default function KirayaTab() {
 
                 {/* Agreement */}
                 {(rental.agreementEndDate || rental.agreementNote) && (
-                  <div className="mx-4 mb-3 px-3 py-2 bg-blue-50 rounded-xl text-xs text-blue-700 space-y-0.5">
+                  <div className="mx-4 mb-3 px-3 py-2 bg-blue-500/10 rounded-xl border border-blue-500/20 text-xs text-blue-500 space-y-0.5">
                     {rental.agreementEndDate && (
                       <p className="font-bold">Agreement ends: {format(new Date(rental.agreementEndDate), 'dd MMM yyyy')}</p>
                     )}
@@ -286,8 +286,8 @@ export default function KirayaTab() {
 
                 {/* This month badge */}
                 <div className={cn(
-                  'mx-4 mb-3 px-3 py-2 rounded-xl text-xs font-bold flex justify-between items-center',
-                  thisMonthDone ? 'bg-emerald-50 text-emerald-600' : 'bg-orange-50 text-orange-600'
+                  'mx-4 mb-3 px-3 py-2 rounded-xl text-xs font-bold flex justify-between items-center border',
+                  thisMonthDone ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
                 )}>
                   <div className="flex items-center gap-1.5">
                     {thisMonthDone ? <CheckCircle size={13} /> : <Clock size={13} />}
@@ -298,23 +298,23 @@ export default function KirayaTab() {
 
                 {/* Payment history */}
                 {rental.payments.length > 0 && (
-                  <div className="border-t border-slate-50 px-4 py-2 max-h-44 overflow-y-auto space-y-0">
+                  <div className="border-t border-border-default px-4 py-2 max-h-44 overflow-y-auto space-y-0">
                     {[...rental.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
-                      <div key={payment.id} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                      <div key={payment.id} className="flex justify-between items-center py-2 border-b border-border-subdued last:border-0">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <p className="font-bold text-slate-700 text-sm">{formatCurrency(payment.amount)}</p>
+                            <p className="font-bold text-text-primary text-sm">{formatCurrency(payment.amount)}</p>
                             {payment.paidFromDeposit && (
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 bg-indigo-100 text-indigo-500 rounded-full">Deposit se</span>
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 bg-brand/10 text-brand rounded-full">Deposit se</span>
                             )}
                           </div>
-                          <p className="text-[10px] text-slate-400 font-bold mt-0.5">
+                          <p className="text-[10px] text-text-subdued font-bold mt-0.5">
                             {format(new Date(payment.date), 'dd MMM yyyy')} • {payment.month}
                             {payment.note ? ` • ${payment.note}` : ''}
                           </p>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0 ml-2">
-                          <button onClick={() => openEditPay(rental.id, payment)} className="w-7 h-7 flex items-center justify-center text-slate-300 hover:text-violet-500 rounded-lg">
+                          <button onClick={() => openEditPay(rental.id, payment)} className="w-7 h-7 flex items-center justify-center text-text-secondary hover:text-brand rounded-lg transition-colors">
                             <Pencil size={12} />
                           </button>
                           <button
@@ -326,7 +326,7 @@ export default function KirayaTab() {
                                 ),
                               }))
                             )}
-                            className="w-7 h-7 flex items-center justify-center text-red-300 hover:text-red-500 rounded-lg"
+                            className="w-7 h-7 flex items-center justify-center text-red-500/50 hover:text-red-500 rounded-lg transition-colors"
                           >
                             <Trash2 size={12} />
                           </button>
@@ -337,17 +337,17 @@ export default function KirayaTab() {
                 )}
 
                 {/* Add payment buttons */}
-                <div className="border-t border-slate-50 p-3 flex gap-2">
+                <div className="border-t border-border-default p-3 flex gap-2">
                   <button
                     onClick={() => openAddPay(rental, false)}
-                    className="flex-1 py-2.5 bg-violet-50 text-violet-600 rounded-xl text-xs font-bold border border-violet-100"
+                    className="flex-1 py-2.5 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
                   >
                     + Online/Cash
                   </button>
                   {dStatus === 'paid' && depositRemaining > 0 && (
                     <button
                       onClick={() => openAddPay(rental, true)}
-                      className="flex-1 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
+                      className="flex-1 py-2.5 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
                     >
                       + Deposit se
                     </button>
@@ -362,34 +362,34 @@ export default function KirayaTab() {
       {/* Property Form — bottom sheet on mobile, centered modal on desktop */}
       {propForm && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closePropForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">{propEditId ? 'Property Edit' : 'Naya Property'}</h3>
-                <button onClick={closePropForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">{propEditId ? 'Property Edit' : 'Naya Property'}</h3>
+                <button onClick={closePropForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Property Name</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Property Name</label>
                 <input type="text" autoFocus value={propForm.name} onChange={e => setPropForm(f => f ? { ...f, name: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g. Basement, 1BHK Floor 1" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Type</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-2">Type</label>
                 <div className="flex flex-wrap gap-2">
                   {PROP_TYPES.map(t => (
                     <button key={t} onClick={() => setPropForm(f => f ? { ...f, type: t } : f)}
                       className={cn('px-3 py-1.5 rounded-full text-xs font-bold border transition-all',
-                        propForm.type === t ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-slate-50 text-slate-500 border-slate-100')}>
+                        propForm.type === t ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default')}>
                       {t}
                     </button>
                   ))}
@@ -398,25 +398,25 @@ export default function KirayaTab() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Monthly Rent (₹)</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Monthly Rent (₹)</label>
                   <input type="number" inputMode="numeric" value={propForm.monthlyRent} onChange={e => setPropForm(f => f ? { ...f, monthlyRent: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500 font-bold" placeholder="0" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold" placeholder="0" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Security Deposit (₹)</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Security Deposit (₹)</label>
                   <input type="number" inputMode="numeric" value={propForm.deposit} onChange={e => setPropForm(f => f ? { ...f, deposit: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500 font-bold" placeholder="0" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold" placeholder="0" />
                 </div>
               </div>
 
               {Number(propForm.deposit) > 0 && (
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Deposit Status</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-2">Deposit Status</label>
                   <div className="flex flex-wrap gap-2">
                     {DEP_STATUSES.map(s => (
                       <button key={s.value} onClick={() => setPropForm(f => f ? { ...f, depositStatus: s.value } : f)}
                         className={cn('px-3 py-1.5 rounded-full text-xs font-bold border transition-all',
-                          propForm.depositStatus === s.value ? 'bg-violet-100 text-violet-700 border-violet-200' : 'bg-slate-50 text-slate-500 border-slate-100')}>
+                          propForm.depositStatus === s.value ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default')}>
                         {s.label}
                       </button>
                     ))}
@@ -426,41 +426,41 @@ export default function KirayaTab() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Owner Name</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Owner Name</label>
                   <input type="text" value={propForm.ownerName} onChange={e => setPropForm(f => f ? { ...f, ownerName: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500" placeholder="Malik ji" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="Malik ji" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Owner Phone</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Owner Phone</label>
                   <input type="tel" value={propForm.ownerPhone} onChange={e => setPropForm(f => f ? { ...f, ownerPhone: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500" placeholder="9XXXXXXXXX" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="9XXXXXXXXX" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Start Date</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Start Date</label>
                   <input type="date" value={propForm.startDate} onChange={e => setPropForm(f => f ? { ...f, startDate: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Agreement End</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Agreement End</label>
                   <input type="date" value={propForm.agreementEndDate} onChange={e => setPropForm(f => f ? { ...f, agreementEndDate: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Agreement Notes</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Agreement Notes</label>
                 <input type="text" value={propForm.agreementNote} onChange={e => setPropForm(f => f ? { ...f, agreementNote: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g. 11 month, 1 month notice" />
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closePropForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={closePropForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={saveProp} disabled={!propForm.name}
-                  className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-violet-200 hover:bg-violet-700">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {propEditId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
@@ -472,70 +472,70 @@ export default function KirayaTab() {
       {/* Payment Form — bottom sheet on mobile, centered modal on desktop */}
       {payForm && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closePayForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">
+                <h3 className="font-bold text-text-primary text-lg">
                   {payForm.paymentId ? 'Payment Edit' : payForm.isDepositMode ? 'Deposit se Kata' : 'Rent Payment'}
                 </h3>
-                <button onClick={closePayForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <button onClick={closePayForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               {payForm.isDepositMode && (
-                <div className="bg-indigo-50 rounded-xl px-3 py-2 text-xs text-indigo-600 font-bold">
+                <div className="bg-brand/10 rounded-xl px-3 py-2 text-xs text-brand font-bold">
                   Deposit remaining: {formatCurrency(payForm.maxFromDeposit)}
                 </div>
               )}
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Amount (₹)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Amount (₹)</label>
                 <input type="number" inputMode="numeric" autoFocus value={payForm.amount}
                   onChange={e => setPayForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500 font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
                   placeholder="0" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Mahina</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Mahina</label>
                   <input type="month" value={payForm.month}
                     onChange={e => setPayForm(f => f ? { ...f, month: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Date</label>
+                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Date</label>
                   <input type="date" value={payForm.date}
                     onChange={e => setPayForm(f => f ? { ...f, date: e.target.value } : f)}
-                    className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500" />
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Note (optional)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Note (optional)</label>
                 <input type="text" value={payForm.note}
                   onChange={e => setPayForm(f => f ? { ...f, note: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-violet-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="Kuch note karna hai?" />
               </div>
               {!payForm.isDepositMode && (
                 <button
                   onClick={() => setPayForm(f => f ? { ...f, paidFromDeposit: !f.paidFromDeposit } : f)}
                   className={cn('w-full py-2.5 rounded-xl text-xs font-bold border transition-all',
-                    payForm.paidFromDeposit ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-500 border-slate-100'
+                    payForm.paidFromDeposit ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default'
                   )}
                 >
                   {payForm.paidFromDeposit ? '✓ Deposit se kata' : 'Deposit se katna hai?'}
                 </button>
               )}
               <div className="flex gap-3 pt-1">
-                <button onClick={closePayForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={closePayForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={savePay} disabled={!payForm.amount || Number(payForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-violet-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-violet-200 hover:bg-violet-700">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {payForm.paymentId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>

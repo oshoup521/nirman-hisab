@@ -23,8 +23,8 @@ export default function PullToRefreshIndicator({ pullY, isPulling, toast, pullTh
           <div className={cn(
             'flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold shadow-md transition-all',
             pullY >= pullThreshold
-              ? syncError ? 'bg-orange-100 text-orange-600' : 'bg-indigo-600 text-white'
-              : 'bg-white text-slate-400 border border-slate-200'
+              ? syncError ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400' : 'bg-brand text-white shadow-[0_0_15px_rgba(99,102,241,0.3)]'
+              : 'bg-surface text-text-subdued border border-border-default'
           )}>
             {pullY >= pullThreshold
               ? (syncError ? '⚠ Unsaved data — chord do' : '↑ Chord do to sync hoga')
@@ -35,7 +35,7 @@ export default function PullToRefreshIndicator({ pullY, isPulling, toast, pullTh
 
       {toast && (
         <div
-          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-slate-800 text-white text-xs font-bold rounded-2xl shadow-lg max-w-xs text-center"
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 bg-surface-subdued border border-border-default text-text-primary text-xs font-bold rounded-2xl shadow-lg max-w-xs text-center"
           style={{ top: 'calc(env(safe-area-inset-top) + 8px)' }}
         >
           {toast}

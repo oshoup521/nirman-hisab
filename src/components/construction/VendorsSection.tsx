@@ -129,24 +129,24 @@ export default function VendorsSection() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-slate-900">Dukandar Khata (Udhaar)</h3>
-          <p className="text-xs text-slate-400 mt-0.5">{vendors.length} vendors</p>
+          <h3 className="font-bold text-text-primary">Dukandar Khata (Udhaar)</h3>
+          <p className="text-xs text-text-subdued mt-0.5">{vendors.length} vendors</p>
         </div>
         <button
           onClick={openAddVendor}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-indigo-100"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
       </div>
 
       {vendors.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <Store size={26} className="text-slate-300" />
+        <div className="bg-surface rounded-2xl border border-border-default p-10 text-center">
+          <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Store size={26} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-slate-600 text-sm">Koi vendor nahi abhi tak</p>
-          <button onClick={openAddVendor} className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100">
+          <p className="font-bold text-text-secondary text-sm">Koi vendor nahi abhi tak</p>
+          <button onClick={openAddVendor} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
             + Vendor Add Karein
           </button>
         </div>
@@ -156,38 +156,38 @@ export default function VendorsSection() {
           const totalPaid = vendor.payments.reduce((a, p) => a + p.amount, 0);
           const balance = vendor.totalBilled - totalPaid;
           return (
-            <div key={vendor.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+            <div key={vendor.id} className="bg-surface p-4 rounded-2xl border border-border-default shadow-sm space-y-3">
               <div className="flex justify-between items-start">
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-slate-900">{vendor.name}</h4>
-                  <p className="text-xs text-slate-500 font-bold">{vendor.type}{vendor.phone ? ` • ${vendor.phone}` : ''}</p>
+                  <h4 className="font-bold text-text-primary">{vendor.name}</h4>
+                  <p className="text-xs text-text-subdued font-bold">{vendor.type}{vendor.phone ? ` • ${vendor.phone}` : ''}</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="text-right mr-1">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Total Bill</p>
-                    <p className="font-bold text-slate-900">₹{formatNumber(vendor.totalBilled)}</p>
+                    <p className="text-[10px] text-text-subdued font-bold uppercase">Total Bill</p>
+                    <p className="font-bold text-text-primary">₹{formatNumber(vendor.totalBilled)}</p>
                   </div>
-                  <button onClick={() => openEditVendor(vendor)} className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100">
+                  <button onClick={() => openEditVendor(vendor)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
                     <Pencil size={12} />
                   </button>
                   <button
                     onClick={() => askConfirm(`"${vendor.name}" vendor ko delete kar dein?`, () =>
                       setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }))
                     )}
-                    className="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-100"
+                    className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
                   >
                     <Trash2 size={12} />
                   </button>
                 </div>
               </div>
-              <div className="flex justify-between text-xs font-bold border-y border-slate-50 py-2">
+              <div className="flex justify-between text-xs font-bold border-y border-border-subdued py-2">
                 <div>
-                  <span className="text-slate-400">JAMA KIYA: </span>
-                  <span className="text-green-600">₹{formatNumber(totalPaid)}</span>
+                  <span className="text-text-subdued">JAMA KIYA: </span>
+                  <span className="text-emerald-600 dark:text-emerald-400">₹{formatNumber(totalPaid)}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400">DENA BAAKI: </span>
-                  <span className={balance > 0 ? 'text-red-500' : 'text-green-500'}>
+                  <span className="text-text-subdued">DENA BAAKI: </span>
+                  <span className={balance > 0 ? 'text-red-500' : 'text-emerald-500 dark:text-emerald-400'}>
                     {balance > 0 ? `₹${formatNumber(balance)}` : `Advance ₹${formatNumber(Math.abs(balance))}`}
                   </span>
                 </div>
@@ -195,13 +195,13 @@ export default function VendorsSection() {
               <div className="flex gap-2">
                 <button
                   onClick={() => openAddPay(vendor)}
-                  className="flex-1 py-1.5 bg-green-50 text-green-600 rounded-xl text-xs font-bold border border-green-100 hover:bg-green-100"
+                  className="flex-1 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
                 >
                   + Paise Jama
                 </button>
                 <button
                   onClick={() => openAddBill(vendor)}
-                  className="flex-1 py-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100 hover:bg-indigo-100"
+                  className="flex-1 py-1.5 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
                 >
                   + Bill Badao
                 </button>
@@ -215,35 +215,35 @@ export default function VendorsSection() {
       {/* Vendor Form — bottom sheet on mobile, centered modal on desktop */}
       {vendorForm && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closeVendorForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">{vendorEditId ? 'Vendor Edit' : 'Naya Vendor'}</h3>
-                <button onClick={closeVendorForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">{vendorEditId ? 'Vendor Edit' : 'Naya Vendor'}</h3>
+                <button onClick={closeVendorForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Dukandar Naam</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Dukandar Naam</label>
                 <input type="text" autoFocus value={vendorForm.name}
                   onChange={e => setVendorForm(f => f ? { ...f, name: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g. Gupta Cement" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Samaan ka Type</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-2">Samaan ka Type</label>
                 <div className="flex flex-wrap gap-2">
                   {VENDOR_TYPES.map(t => (
                     <button key={t} onClick={() => setVendorForm(f => f ? { ...f, type: t } : f)}
                       className={cn('px-3 py-1.5 rounded-full text-xs font-bold border transition-all',
-                        vendorForm.type === t ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-500 border-slate-100')}>
+                        vendorForm.type === t ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default')}>
                       {t}
                     </button>
                   ))}
@@ -251,31 +251,31 @@ export default function VendorsSection() {
                 {vendorForm.type === 'Other' && (
                   <input type="text" value={vendorForm.customType}
                     onChange={e => setVendorForm(f => f ? { ...f, customType: e.target.value } : f)}
-                    className="w-full mt-2 p-3 bg-slate-50 rounded-xl border-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                    className="w-full mt-2 p-3 bg-surface-subdued text-text-primary rounded-xl border-none focus:ring-2 focus:ring-brand text-sm"
                     placeholder="Custom type likho..." />
                 )}
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Phone (optional)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Phone (optional)</label>
                 <input type="tel" value={vendorForm.phone}
                   onChange={e => setVendorForm(f => f ? { ...f, phone: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="9XXXXXXXXX" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Ab tak ka Total Bill (₹)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Ab tak ka Total Bill (₹)</label>
                 <input type="number" inputMode="numeric" value={vendorForm.totalBilled}
                   onChange={e => setVendorForm(f => f ? { ...f, totalBilled: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
                   placeholder="0" />
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closeVendorForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={closeVendorForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={saveVendor} disabled={!vendorForm.name}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {vendorEditId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
@@ -287,47 +287,47 @@ export default function VendorsSection() {
       {/* Payment Form — bottom sheet on mobile, centered modal on desktop */}
       {payForm && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closePayForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">Paise Jama</h3>
-                <button onClick={closePayForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">Paise Jama</h3>
+                <button onClick={closePayForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Amount (₹)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Amount (₹)</label>
                 <input type="number" inputMode="numeric" autoFocus value={payForm.amount}
                   onChange={e => setPayForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
                   placeholder="0" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Date</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Date</label>
                 <input type="date" value={payForm.date}
                   onChange={e => setPayForm(f => f ? { ...f, date: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500" />
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Note (Cash/UPI/Cheque)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Note (Cash/UPI/Cheque)</label>
                 <input type="text" value={payForm.note}
                   onChange={e => setPayForm(f => f ? { ...f, note: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g. Cash diya" />
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closePayForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={closePayForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={savePay} disabled={!payForm.amount || Number(payForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   Save Karo
                 </button>
               </div>
@@ -339,33 +339,33 @@ export default function VendorsSection() {
       {/* Bill Form — bottom sheet on mobile, centered modal on desktop */}
       {billForm && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closeBillForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">Naya Bill Add</h3>
-                <button onClick={closeBillForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">Naya Bill Add</h3>
+                <button onClick={closeBillForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Bill Amount (₹)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Bill Amount (₹)</label>
                 <input type="number" inputMode="numeric" autoFocus value={billForm.amount}
                   onChange={e => setBillForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
                   placeholder="0" />
-                <p className="text-[10px] text-slate-400 font-bold mt-1.5">Yeh amount total bill mein add ho jayega</p>
+                <p className="text-[10px] text-text-subdued font-bold mt-1.5">Yeh amount total bill mein add ho jayega</p>
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closeBillForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={closeBillForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={saveBill} disabled={!billForm.amount || Number(billForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   Save Karo
                 </button>
               </div>

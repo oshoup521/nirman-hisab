@@ -123,24 +123,24 @@ export default function DemolitionThekaSection() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-slate-900">Tod-Phod Theka</h3>
-          <p className="text-xs text-slate-400 mt-0.5">{thekas.length} thekedar</p>
+          <h3 className="font-bold text-text-primary">Tod-Phod Theka</h3>
+          <p className="text-xs text-text-subdued mt-0.5">{thekas.length} thekedar</p>
         </div>
         <button
           onClick={openAddTheka}
-          className="flex items-center gap-1.5 px-4 py-2 bg-orange-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-orange-100"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
       </div>
 
       {thekas.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <Hammer size={26} className="text-slate-300" />
+        <div className="bg-surface rounded-2xl border border-border-default p-10 text-center">
+          <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Hammer size={26} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-slate-600 text-sm">Koi theka nahi abhi tak</p>
-          <button onClick={openAddTheka} className="mt-4 px-4 py-2 bg-orange-50 text-orange-600 rounded-xl text-xs font-bold border border-orange-100">
+          <p className="font-bold text-text-secondary text-sm">Koi theka nahi abhi tak</p>
+          <button onClick={openAddTheka} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
             + Theka Add Karein
           </button>
         </div>
@@ -151,54 +151,54 @@ export default function DemolitionThekaSection() {
           const remaining = theka.totalAmount - totalPaid;
           const pct = theka.totalAmount > 0 ? (totalPaid / theka.totalAmount) * 100 : 0;
           return (
-            <div key={theka.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div key={theka.id} className="bg-surface rounded-2xl border border-border-default shadow-sm overflow-hidden">
               <div className="p-4 flex justify-between items-start">
                 <div>
-                  <h4 className="font-bold text-slate-900">{theka.name}</h4>
-                  <span className="text-xs font-bold px-2 py-0.5 bg-orange-50 text-orange-600 rounded-full">{theka.workType}</span>
+                  <h4 className="font-bold text-text-primary">{theka.name}</h4>
+                  <span className="text-xs font-bold px-2 py-0.5 bg-brand/10 text-brand rounded-full">{theka.workType}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="text-right">
-                    <p className="text-xs text-slate-400 font-bold uppercase">Total</p>
-                    <p className="font-bold text-slate-900">{formatCurrency(theka.totalAmount)}</p>
+                    <p className="text-xs text-text-subdued font-bold uppercase">Total</p>
+                    <p className="font-bold text-text-primary">{formatCurrency(theka.totalAmount)}</p>
                   </div>
-                  <button onClick={() => openEditTheka(theka)} className="p-1.5 bg-slate-50 text-slate-500 rounded-xl border border-slate-100">
+                  <button onClick={() => openEditTheka(theka)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
                     <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => askConfirm(`"${theka.name}" ka demolition theka delete kar dein?`, () =>
                       setState(prev => ({ ...prev, demolitionThekas: (prev.demolitionThekas || []).filter(t => t.id !== theka.id) }))
                     )}
-                    className="p-1.5 bg-red-50 text-red-400 rounded-xl border border-red-100"
+                    className="p-1.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
                   >
                     <Trash2 size={14} />
                   </button>
                 </div>
               </div>
               <div className="px-4 pb-3">
-                <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden mb-1">
-                  <div className="h-full bg-orange-500 transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
+                <div className="w-full bg-border-default h-2 rounded-full overflow-hidden mb-1">
+                  <div className="h-full bg-brand transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
                 </div>
                 <div className="flex justify-between text-xs font-bold">
-                  <span className="text-green-600">Diya: {formatCurrency(totalPaid)}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">Diya: {formatCurrency(totalPaid)}</span>
                   <span className="text-red-500">Baaki: {formatCurrency(remaining)}</span>
                 </div>
               </div>
               {theka.payments.length > 0 && (
-                <div className="border-t border-slate-50 px-4 py-2 space-y-2">
+                <div className="border-t border-border-default px-4 py-2 space-y-2">
                   {[...theka.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
                     <div key={payment.id} className="flex justify-between items-center text-sm">
                       <div>
-                        <p className="font-bold text-slate-700">{formatCurrency(payment.amount)}</p>
-                        <p className="text-[10px] text-slate-400 uppercase font-bold">
+                        <p className="font-bold text-text-primary">{formatCurrency(payment.amount)}</p>
+                        <p className="text-[10px] text-text-subdued uppercase font-bold">
                           {format(new Date(payment.date), 'dd MMM yyyy')}{payment.note && ` • ${payment.note}`}
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => openEditPay(theka, payment)} className="p-1 text-slate-400 hover:text-orange-500">
+                        <button onClick={() => openEditPay(theka, payment)} className="p-1 text-text-secondary hover:text-brand transition-colors">
                           <Pencil size={12} />
                         </button>
-                        <button onClick={() => deletePayment(theka.id, payment.id)} className="p-1 text-red-300 hover:text-red-500">
+                        <button onClick={() => deletePayment(theka.id, payment.id)} className="p-1 text-red-500/50 hover:text-red-500 transition-colors">
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -206,10 +206,10 @@ export default function DemolitionThekaSection() {
                   ))}
                 </div>
               )}
-              <div className="border-t border-slate-50 p-3">
+              <div className="border-t border-border-default p-3">
                 <button
                   onClick={() => openAddPay(theka)}
-                  className="w-full py-2 bg-orange-50 text-orange-600 rounded-xl text-xs font-bold border border-orange-100 hover:bg-orange-100"
+                  className="w-full py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
                 >
                   + Payment Add Karo
                 </button>
@@ -223,35 +223,35 @@ export default function DemolitionThekaSection() {
       {/* Theka Form — bottom sheet on mobile, centered modal on desktop */}
       {thekaForm && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closeThekaForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">{thekaEditId ? 'Theka Edit' : 'Naya Demolition Theka'}</h3>
-                <button onClick={closeThekaForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">{thekaEditId ? 'Theka Edit' : 'Naya Demolition Theka'}</h3>
+                <button onClick={closeThekaForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Thekedar Naam</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Thekedar Naam</label>
                 <input type="text" autoFocus value={thekaForm.name}
                   onChange={e => setThekaForm(f => f ? { ...f, name: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g. Salim Mistri" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Kaam ka Type</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-2">Kaam ka Type</label>
                 <div className="flex flex-wrap gap-2">
                   {WORK_TYPES.map(t => (
                     <button key={t} onClick={() => setThekaForm(f => f ? { ...f, workType: t } : f)}
                       className={cn('px-3 py-1.5 rounded-full text-xs font-bold border transition-all',
-                        thekaForm.workType === t ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-slate-50 text-slate-500 border-slate-100')}>
+                        thekaForm.workType === t ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default')}>
                       {t}
                     </button>
                   ))}
@@ -259,32 +259,32 @@ export default function DemolitionThekaSection() {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Total Amount (₹)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Total Amount (₹)</label>
                 <input type="number" inputMode="numeric" value={thekaForm.totalAmount}
                   onChange={e => setThekaForm(f => f ? { ...f, totalAmount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
                   placeholder="0" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Start Date</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Start Date</label>
                 <input type="date" value={thekaForm.startDate}
                   onChange={e => setThekaForm(f => f ? { ...f, startDate: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500" />
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Notes (optional)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Notes (optional)</label>
                 <input type="text" value={thekaForm.notes}
                   onChange={e => setThekaForm(f => f ? { ...f, notes: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="Kaam ka detail" />
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closeThekaForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={closeThekaForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={saveTheka} disabled={!thekaForm.name || Number(thekaForm.totalAmount) <= 0}
-                  className="flex-1 py-3.5 bg-orange-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-orange-200 hover:bg-orange-700">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {thekaEditId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
@@ -296,47 +296,47 @@ export default function DemolitionThekaSection() {
       {/* Payment Form — bottom sheet on mobile, centered modal on desktop */}
       {payForm && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closePayForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">{payForm.paymentId ? 'Payment Edit' : 'Naya Payment'}</h3>
-                <button onClick={closePayForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">{payForm.paymentId ? 'Payment Edit' : 'Naya Payment'}</h3>
+                <button onClick={closePayForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Amount (₹)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Amount (₹)</label>
                 <input type="number" inputMode="numeric" autoFocus value={payForm.amount}
                   onChange={e => setPayForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500 font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
                   placeholder="0" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Date</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Date</label>
                 <input type="date" value={payForm.date}
                   onChange={e => setPayForm(f => f ? { ...f, date: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500" />
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Note (optional)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Note (optional)</label>
                 <input type="text" value={payForm.note}
                   onChange={e => setPayForm(f => f ? { ...f, note: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="Cash / UPI / cheque?" />
               </div>
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closePayForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={closePayForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={savePay} disabled={!payForm.amount || Number(payForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-orange-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-orange-200 hover:bg-orange-700">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {payForm.paymentId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>

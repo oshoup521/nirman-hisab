@@ -12,7 +12,7 @@ export const formatNumber = (num: number) => {
 
 export const getStatusColor = (spent: number, budget: number) => {
   const ratio = spent / budget;
-  if (ratio > 1) return 'text-red-600 bg-red-50 border-red-200';
-  if (ratio > 0.8) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-  return 'text-green-600 bg-green-50 border-green-200';
+  if (ratio > 1) return 'text-red-600 dark:text-red-400 bg-red-500/10 border-red-500/20';
+  if (ratio > 0.8) return 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20';
+  return 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20';
 };

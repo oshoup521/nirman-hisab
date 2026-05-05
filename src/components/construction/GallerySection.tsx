@@ -17,9 +17,9 @@ type LightboxState = {
 };
 
 const STATUS_CFG = {
-  completed:    { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-600 border-emerald-100', label: 'Done' },
-  'in-progress':{ dot: 'bg-indigo-500',  badge: 'bg-indigo-50 text-indigo-600 border-indigo-100',   label: 'Active' },
-  pending:      { dot: 'bg-slate-300',   badge: 'bg-slate-50 text-slate-400 border-slate-100',      label: 'Pending' },
+  completed:    { dot: 'bg-emerald-500', badge: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20', label: 'Done' },
+  'in-progress':{ dot: 'bg-brand',  badge: 'bg-brand/10 text-brand border-brand/20',   label: 'Active' },
+  pending:      { dot: 'bg-border-subdued',   badge: 'bg-surface-subdued text-text-secondary border-border-default',      label: 'Pending' },
 } as const;
 
 export default function GallerySection() {
@@ -61,13 +61,13 @@ export default function GallerySection() {
   if (milestonesWithPhotos.length === 0) {
     return (
       <div className="space-y-4">
-        <h3 className="font-bold text-slate-900">Site Gallery</h3>
-        <div className="bg-white rounded-2xl border border-slate-100 p-12 text-center">
-          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Images size={28} className="text-slate-300" />
+        <h3 className="font-bold text-text-primary">Site Gallery</h3>
+        <div className="bg-surface rounded-2xl border border-border-default p-12 text-center">
+          <div className="w-16 h-16 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Images size={28} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-slate-600 text-sm">Abhi koi photo nahi</p>
-          <p className="text-xs text-slate-400 mt-1">Timeline tab mein phases mein photos add karo</p>
+          <p className="font-bold text-text-secondary text-sm">Abhi koi photo nahi</p>
+          <p className="text-xs text-text-subdued mt-1">Timeline tab mein phases mein photos add karo</p>
         </div>
       </div>
     );
@@ -77,8 +77,8 @@ export default function GallerySection() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex justify-between items-end">
-        <h3 className="font-bold text-slate-900">Site Gallery</h3>
-        <p className="text-xs text-slate-400 font-bold">
+        <h3 className="font-bold text-text-primary">Site Gallery</h3>
+        <p className="text-xs text-text-subdued font-bold">
           {totalPhotos} photos • {milestonesWithPhotos.length} phases
         </p>
       </div>
@@ -87,15 +87,15 @@ export default function GallerySection() {
       {milestonesWithPhotos.map(milestone => {
         const cfg = STATUS_CFG[milestone.status] ?? STATUS_CFG.pending;
         return (
-          <div key={milestone.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div key={milestone.id} className="bg-surface rounded-2xl border border-border-default shadow-sm overflow-hidden">
             {/* Phase header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-50">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border-default">
               <div className="flex items-center gap-2.5">
                 <div className={cn('w-2.5 h-2.5 rounded-full shrink-0', cfg.dot)} />
-                <p className="font-bold text-slate-900 text-sm">{milestone.phase}</p>
+                <p className="font-bold text-text-primary text-sm">{milestone.phase}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-400 font-bold">{milestone.photos!.length} photos</span>
+                <span className="text-[10px] text-text-subdued font-bold">{milestone.photos!.length} photos</span>
                 <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', cfg.badge)}>
                   {cfg.label}
                 </span>
@@ -123,7 +123,7 @@ export default function GallerySection() {
                   {overflow && (
                     <button
                       onClick={() => setSheetMilestoneId(milestone.id)}
-                      className="aspect-square rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 text-white flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform shadow-sm"
+                      className="aspect-square rounded-xl bg-surface-subdued border border-border-default text-text-primary flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform shadow-sm"
                     >
                       <ImageIcon size={20} className="opacity-80" />
                       <span className="text-base font-bold leading-none">+{hiddenCount}</span>

@@ -24,8 +24,8 @@ export default function DemolitionTab() {
   return (
     <div className="space-y-6 pb-28">
       <header>
-        <h1 className="text-2xl font-bold text-slate-900">Tod-Phod</h1>
-        <p className="text-slate-500 text-sm">Demolition Tracker</p>
+        <h1 className="text-2xl font-bold text-text-primary">Tod-Phod</h1>
+        <p className="text-text-subdued text-sm">Demolition Tracker</p>
       </header>
 
       <div
@@ -43,8 +43,8 @@ export default function DemolitionTab() {
             className={cn(
               'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shrink-0',
               subTab === id
-                ? 'bg-orange-600 text-white shadow-md shadow-orange-100'
-                : 'bg-white text-slate-600 border border-slate-100'
+                ? 'bg-brand text-surface shadow-md shadow-brand/20'
+                : 'bg-surface text-text-secondary border border-border-default hover:bg-surface-subdued'
             )}
           >
             <Icon size={16} />

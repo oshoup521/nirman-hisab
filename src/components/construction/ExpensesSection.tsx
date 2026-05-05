@@ -17,12 +17,12 @@ const CAT_CFG: Record<Expense['category'], {
   iconBg: string; iconText: string;
   badge: string; pill: string;
 }> = {
-  Material:  { Icon: Package,  iconBg: 'bg-blue-50',   iconText: 'text-blue-500',   badge: 'bg-blue-100 text-blue-700',   pill: 'bg-blue-50 text-blue-600 border-blue-200'   },
-  Labour:    { Icon: Users,    iconBg: 'bg-orange-50',  iconText: 'text-orange-500', badge: 'bg-orange-100 text-orange-700', pill: 'bg-orange-50 text-orange-600 border-orange-200' },
-  Theka:     { Icon: Hammer,   iconBg: 'bg-purple-50',  iconText: 'text-purple-500', badge: 'bg-purple-100 text-purple-700', pill: 'bg-purple-50 text-purple-600 border-purple-200' },
-  Equipment: { Icon: Wrench,   iconBg: 'bg-yellow-50',  iconText: 'text-yellow-600', badge: 'bg-yellow-100 text-yellow-700', pill: 'bg-yellow-50 text-yellow-600 border-yellow-200' },
-  Transport: { Icon: Truck,    iconBg: 'bg-teal-50',    iconText: 'text-teal-500',   badge: 'bg-teal-100 text-teal-700',   pill: 'bg-teal-50 text-teal-600 border-teal-200'   },
-  Misc:      { Icon: Tag,      iconBg: 'bg-slate-50',   iconText: 'text-slate-400',  badge: 'bg-slate-100 text-slate-600', pill: 'bg-slate-50 text-slate-500 border-slate-200'  },
+  Material:  { Icon: Package,  iconBg: 'bg-blue-500/10',   iconText: 'text-blue-500',   badge: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',   pill: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'   },
+  Labour:    { Icon: Users,    iconBg: 'bg-orange-500/10',  iconText: 'text-orange-500', badge: 'bg-orange-500/20 text-orange-700 dark:text-orange-400', pill: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
+  Theka:     { Icon: Hammer,   iconBg: 'bg-purple-500/10',  iconText: 'text-purple-500', badge: 'bg-purple-500/20 text-purple-700 dark:text-purple-400', pill: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20' },
+  Equipment: { Icon: Wrench,   iconBg: 'bg-amber-500/10',  iconText: 'text-amber-500', badge: 'bg-amber-500/20 text-amber-700 dark:text-amber-400', pill: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
+  Transport: { Icon: Truck,    iconBg: 'bg-emerald-500/10',    iconText: 'text-emerald-500',   badge: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',   pill: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'   },
+  Misc:      { Icon: Tag,      iconBg: 'bg-surface-subdued',   iconText: 'text-text-secondary',  badge: 'bg-border-default text-text-secondary', pill: 'bg-surface-subdued text-text-secondary border-border-default'  },
 };
 
 type FormState = { amount: string; category: Expense['category']; notes: string; date: string };
@@ -85,12 +85,12 @@ export default function ExpensesSection() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-slate-900">Kharcha Paani</h3>
-          <p className="text-xs text-slate-400 mt-0.5">{state.expenses.length} entries</p>
+          <h3 className="font-bold text-text-primary">Kharcha Paani</h3>
+          <p className="text-xs text-text-subdued mt-0.5">{state.expenses.length} entries</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-indigo-100"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
@@ -98,20 +98,20 @@ export default function ExpensesSection() {
 
       {/* Summary Card */}
       {state.expenses.length > 0 && (
-        <div className="bg-indigo-600 rounded-2xl p-4 space-y-3">
+        <div className="bg-brand text-surface rounded-2xl p-4 space-y-3">
           <div>
-            <p className="text-indigo-200 text-[10px] font-bold uppercase tracking-wide">Total Construction Kharcha</p>
-            <p className="text-white text-2xl font-bold mt-0.5">{formatCurrency(total)}</p>
+            <p className="opacity-80 text-[10px] font-bold uppercase tracking-wide">Total Construction Kharcha</p>
+            <p className="text-surface text-2xl font-bold mt-0.5">{formatCurrency(total)}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             {categoryTotals.map(({ cat, total: catTotal }) => {
-              const { Icon, iconText } = CAT_CFG[cat];
+              const { Icon } = CAT_CFG[cat];
               return (
-                <div key={cat} className="flex items-center gap-1.5 bg-white/15 rounded-xl px-2.5 py-1.5">
-                  <Icon size={11} className="text-indigo-200" />
+                <div key={cat} className="flex items-center gap-1.5 bg-black/10 dark:bg-white/10 rounded-xl px-2.5 py-1.5">
+                  <Icon size={11} className="opacity-80" />
                   <div>
-                    <p className="text-[9px] text-indigo-300 font-bold uppercase leading-none">{cat}</p>
-                    <p className="text-[11px] text-white font-bold leading-tight">{formatCurrency(catTotal)}</p>
+                    <p className="text-[9px] opacity-80 font-bold uppercase leading-none">{cat}</p>
+                    <p className="text-[11px] font-bold leading-tight">{formatCurrency(catTotal)}</p>
                   </div>
                 </div>
               );
@@ -122,15 +122,15 @@ export default function ExpensesSection() {
 
       {/* Expense Cards (mobile) / Table (desktop) */}
       {sorted.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <Package size={26} className="text-slate-300" />
+        <div className="bg-surface rounded-2xl border border-border-default p-10 text-center">
+          <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Package size={26} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-slate-600 text-sm">Koi kharcha nahi abhi tak</p>
-          <p className="text-slate-400 text-xs mt-1">Pehla kharcha add karo</p>
+          <p className="font-bold text-text-secondary text-sm">Koi kharcha nahi abhi tak</p>
+          <p className="text-text-subdued text-xs mt-1">Pehla kharcha add karo</p>
           <button
             onClick={openAdd}
-            className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100"
+            className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
           >
             + Kharcha Add Karein
           </button>
@@ -138,17 +138,17 @@ export default function ExpensesSection() {
       ) : (
         <>
         {/* Desktop: table */}
-        <div className="hidden md:block bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="hidden md:block bg-surface rounded-2xl border border-border-default shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-surface-subdued border-b border-border-default">
                 <tr>
-                  <th className="py-2.5 px-4 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Date</th>
-                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Category</th>
-                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wide">Notes</th>
-                  <th className="py-2.5 px-3 text-center text-[10px] font-bold text-slate-500 uppercase tracking-wide">Photos</th>
-                  <th className="py-2.5 px-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wide">Amount</th>
-                  <th className="py-2.5 px-4 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wide">Actions</th>
+                  <th className="py-2.5 px-4 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Date</th>
+                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Category</th>
+                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Notes</th>
+                  <th className="py-2.5 px-3 text-center text-[10px] font-bold text-text-subdued uppercase tracking-wide">Photos</th>
+                  <th className="py-2.5 px-3 text-right text-[10px] font-bold text-text-subdued uppercase tracking-wide">Amount</th>
+                  <th className="py-2.5 px-4 text-right text-[10px] font-bold text-text-subdued uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -157,8 +157,8 @@ export default function ExpensesSection() {
                   const photoCount = expense.photos?.length ?? 0;
                   const isUploading = photoUploading === `expense:${expense.id}`;
                   return (
-                    <tr key={expense.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
-                      <td className="py-2.5 px-4 text-xs text-slate-500 font-bold whitespace-nowrap">
+                    <tr key={expense.id} className="border-b border-border-subdued last:border-0 hover:bg-surface-subdued/50 transition-colors">
+                      <td className="py-2.5 px-4 text-xs text-text-secondary font-bold whitespace-nowrap">
                         {format(new Date(expense.date), 'dd MMM yyyy')}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
@@ -166,28 +166,28 @@ export default function ExpensesSection() {
                           <Icon size={10} className={iconText} /> {expense.category}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-slate-700 max-w-[320px] truncate">
+                      <td className="py-2.5 px-3 text-text-primary max-w-[320px] truncate">
                         {expense.notes || '—'}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         {photoCount > 0 ? (
                           <button
                             onClick={() => setSheetExpId(expense.id)}
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 hover:text-indigo-800"
+                            className="inline-flex items-center gap-1 text-[10px] font-bold text-brand hover:opacity-80 transition-opacity"
                           >
                             <Paperclip size={10} /> {photoCount}
                           </button>
                         ) : (
-                          <span className="text-slate-300 text-[10px]">—</span>
+                          <span className="text-text-subdued opacity-50 text-[10px]">—</span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-bold text-slate-900 whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-right font-bold text-text-primary whitespace-nowrap">
                         {formatCurrency(expense.amount)}
                       </td>
                       <td className="py-2.5 px-4 text-right whitespace-nowrap">
                         <label className={cn(
                           'w-7 h-7 rounded-lg inline-flex items-center justify-center cursor-pointer transition-colors mr-0.5',
-                          isUploading ? 'bg-indigo-100 text-indigo-500' : 'text-slate-400 hover:bg-slate-100'
+                          isUploading ? 'bg-brand/10 text-brand' : 'text-text-secondary hover:bg-border-default'
                         )}>
                           <ImageIcon size={12} />
                           <input
@@ -207,7 +207,7 @@ export default function ExpensesSection() {
                         </label>
                         <button
                           onClick={() => openEdit(expense)}
-                          className="w-7 h-7 inline-flex items-center justify-center text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100"
+                          className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors"
                         >
                           <Pencil size={12} />
                         </button>
@@ -216,7 +216,7 @@ export default function ExpensesSection() {
                             'Is kharche ko delete kar dein?',
                             () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
                           )}
-                          className="w-7 h-7 inline-flex items-center justify-center text-red-400 hover:text-red-600 rounded-lg hover:bg-red-50 ml-0.5"
+                          className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
                         >
                           <Trash2 size={12} />
                         </button>
@@ -227,11 +227,11 @@ export default function ExpensesSection() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-            <span className="text-[11px] text-slate-500 font-bold">
+          <div className="px-4 py-2 bg-surface-subdued border-t border-border-default flex justify-between items-center">
+            <span className="text-[11px] text-text-subdued font-bold">
               {sorted.length} {sorted.length === 1 ? 'entry' : 'entries'}
             </span>
-            <span className="text-[11px] text-slate-700 font-bold">
+            <span className="text-[11px] text-text-secondary font-bold">
               Total: {formatCurrency(total)}
             </span>
           </div>
@@ -244,7 +244,7 @@ export default function ExpensesSection() {
             const photoCount = expense.photos?.length ?? 0;
             const isUploading = photoUploading === `expense:${expense.id}`;
             return (
-              <div key={expense.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3.5">
+              <div key={expense.id} className="bg-surface rounded-2xl border border-border-default shadow-sm p-3.5">
                 <div className="flex items-start gap-3">
                   {/* Icon */}
                   <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5', iconBg)}>
@@ -253,19 +253,19 @@ export default function ExpensesSection() {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 text-sm leading-snug break-words">
+                    <p className="font-bold text-text-primary text-sm leading-snug break-words">
                       {expense.notes || expense.category}
                     </p>
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                       <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', badge)}>
                         {expense.category}
                       </span>
-                      <span className="text-[10px] text-slate-400">•</span>
-                      <span className="text-[10px] text-slate-400 font-bold">
+                      <span className="text-[10px] text-text-subdued">•</span>
+                      <span className="text-[10px] text-text-subdued font-bold">
                         {format(new Date(expense.date), 'dd MMM yyyy')}
                       </span>
                       {photoCount > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-indigo-500">
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-brand">
                           <Paperclip size={9} /> {photoCount}
                         </span>
                       )}
@@ -274,11 +274,11 @@ export default function ExpensesSection() {
 
                   {/* Amount + Actions */}
                   <div className="shrink-0 flex flex-col items-end gap-2">
-                    <p className="font-bold text-slate-900 text-sm">{formatCurrency(expense.amount)}</p>
+                    <p className="font-bold text-text-primary text-sm">{formatCurrency(expense.amount)}</p>
                     <div className="flex items-center gap-1">
                       <label className={cn(
                         'w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors',
-                        isUploading ? 'bg-indigo-100 text-indigo-500' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 active:bg-slate-200'
+                        isUploading ? 'bg-brand/10 text-brand' : 'bg-surface-subdued text-text-secondary hover:bg-border-default active:bg-border-subdued'
                       )}>
                         <ImageIcon size={12} />
                         <input
@@ -298,7 +298,7 @@ export default function ExpensesSection() {
                       </label>
                       <button
                         onClick={() => openEdit(expense)}
-                        className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                        className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default active:bg-border-subdued transition-colors"
                       >
                         <Pencil size={12} />
                       </button>
@@ -307,7 +307,7 @@ export default function ExpensesSection() {
                           'Is kharche ko delete kar dein?',
                           () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
                         )}
-                        className="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-100 active:bg-red-200 transition-colors"
+                        className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 active:bg-red-500/30 transition-colors"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -337,30 +337,30 @@ export default function ExpensesSection() {
       {/* Form — bottom sheet on mobile, centered modal on desktop */}
       {form && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closeForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-5">
               {/* Drag Handle */}
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto -mt-1 mb-1 md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto -mt-1 mb-1 md:hidden" />
 
               {/* Title */}
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">
+                <h3 className="font-bold text-text-primary text-lg">
                   {editId ? 'Kharcha Edit Karein' : 'Naya Kharcha'}
                 </h3>
-                <button onClick={closeForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                <button onClick={closeForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
                   <X size={16} />
                 </button>
               </div>
 
               {/* Category Chips */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Category</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-2">Category</label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map(cat => {
                     const { Icon, pill } = CAT_CFG[cat];
@@ -371,7 +371,7 @@ export default function ExpensesSection() {
                         onClick={() => setForm(f => f ? { ...f, category: cat } : f)}
                         className={cn(
                           'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all',
-                          selected ? pill : 'bg-slate-50 text-slate-400 border-slate-100'
+                          selected ? pill : 'bg-surface-subdued text-text-secondary border-border-default'
                         )}
                       >
                         <Icon size={11} /> {cat}
@@ -383,13 +383,13 @@ export default function ExpensesSection() {
 
               {/* Amount */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Amount (₹)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Amount (₹)</label>
                 <input
                   type="number"
                   inputMode="numeric"
                   value={form.amount}
                   onChange={e => setForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold text-lg text-slate-900 placeholder-slate-300"
+                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-lg text-text-primary placeholder-text-subdued"
                   placeholder="0"
                   autoFocus
                 />
@@ -397,24 +397,24 @@ export default function ExpensesSection() {
 
               {/* Notes */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Notes (optional)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Notes (optional)</label>
                 <input
                   type="text"
                   value={form.notes}
                   onChange={e => setForm(f => f ? { ...f, notes: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 text-sm text-slate-900"
+                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary placeholder-text-subdued"
                   placeholder="e.g. Sand aur cement liya"
                 />
               </div>
 
               {/* Date */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Date</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Date</label>
                 <input
                   type="date"
                   value={form.date}
                   onChange={e => setForm(f => f ? { ...f, date: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 text-sm text-slate-900"
+                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary dark:[color-scheme:dark]"
                 />
               </div>
 
@@ -422,14 +422,14 @@ export default function ExpensesSection() {
               <div className="flex gap-3 pt-1">
                 <button
                   onClick={closeForm}
-                  className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm"
+                  className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={save}
                   disabled={!form.amount || Number(form.amount) <= 0}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700"
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity"
                 >
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>

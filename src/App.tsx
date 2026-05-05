@@ -127,7 +127,7 @@ export default function App() {
       exportToCSV, shareOnWhatsApp,
       showAllMisc, setShowAllMisc,
     }}>
-      <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
+      <div className="min-h-screen bg-app font-sans text-text-primary transition-colors duration-200">
         <PullToRefreshIndicator
           pullY={pullY}
           isPulling={isPulling}

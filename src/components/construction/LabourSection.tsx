@@ -61,24 +61,24 @@ export default function LabourSection() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-slate-900">Mazdoor & Theka</h3>
-          <p className="text-xs text-slate-400 mt-0.5">{state.labours.length} workers</p>
+          <h3 className="font-bold text-text-primary">Mazdoor & Theka</h3>
+          <p className="text-xs text-text-subdued mt-0.5">{state.labours.length} workers</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-bold shadow-sm shadow-indigo-100"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
       </div>
 
       {state.labours.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-            <Users size={26} className="text-slate-300" />
+        <div className="bg-surface rounded-2xl border border-border-default p-10 text-center">
+          <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Users size={26} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-slate-600 text-sm">Koi mazdoor nahi abhi tak</p>
-          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold border border-indigo-100">
+          <p className="font-bold text-text-secondary text-sm">Koi mazdoor nahi abhi tak</p>
+          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
             + Mazdoor Add Karein
           </button>
         </div>
@@ -88,30 +88,30 @@ export default function LabourSection() {
             const { fullDays, halfDays, wages } = getMonthStats(labour);
             const todayStatus = labour.attendance[today];
             return (
-              <div key={labour.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-3">
+              <div key={labour.id} className="bg-surface rounded-2xl border border-border-default shadow-sm p-4 space-y-3">
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="font-bold text-slate-900">{labour.type}</h4>
-                    <p className="text-xs text-slate-400 mt-0.5">{formatCurrency(labour.dailyWage)}/day</p>
+                    <h4 className="font-bold text-text-primary">{labour.type}</h4>
+                    <p className="text-xs text-text-subdued mt-0.5">{formatCurrency(labour.dailyWage)}/day</p>
                   </div>
                   <div className="flex items-center gap-1.5">
                     {todayStatus && (
                       <span className={cn(
                         'text-[10px] font-bold px-2.5 py-1 rounded-full',
-                        todayStatus === 'present' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'
+                        todayStatus === 'present' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-500'
                       )}>
                         {todayStatus === 'present' ? '✓ Aaj Full' : '½ Aaj Half'}
                       </span>
                     )}
-                    <button onClick={() => openEdit(labour)} className="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100">
+                    <button onClick={() => openEdit(labour)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
                       <Pencil size={12} />
                     </button>
                     <button
                       onClick={() => askConfirm(`"${labour.type}" ko delete kar dein?`, () =>
                         setState(prev => ({ ...prev, labours: prev.labours.filter(l => l.id !== labour.id) }))
                       )}
-                      className="w-7 h-7 bg-red-50 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-100"
+                      className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -120,17 +120,17 @@ export default function LabourSection() {
 
                 {/* This month mini stats */}
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-green-50 rounded-xl p-2.5 text-center">
-                    <p className="text-xl font-bold text-green-600 leading-none">{fullDays}</p>
-                    <p className="text-[9px] text-green-500 font-bold uppercase mt-1">Full Days</p>
+                  <div className="bg-emerald-500/10 rounded-xl p-2.5 text-center">
+                    <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 leading-none">{fullDays}</p>
+                    <p className="text-[9px] text-emerald-600 dark:text-emerald-500 font-bold uppercase mt-1">Full Days</p>
                   </div>
-                  <div className="bg-yellow-50 rounded-xl p-2.5 text-center">
-                    <p className="text-xl font-bold text-yellow-500 leading-none">{halfDays}</p>
-                    <p className="text-[9px] text-yellow-500 font-bold uppercase mt-1">Half Days</p>
+                  <div className="bg-amber-500/10 rounded-xl p-2.5 text-center">
+                    <p className="text-xl font-bold text-amber-500 leading-none">{halfDays}</p>
+                    <p className="text-[9px] text-amber-500 font-bold uppercase mt-1">Half Days</p>
                   </div>
-                  <div className="bg-indigo-50 rounded-xl p-2.5 text-center">
-                    <p className="text-sm font-bold text-indigo-600 leading-tight">{formatCurrency(wages)}</p>
-                    <p className="text-[9px] text-indigo-500 font-bold uppercase mt-1">This Month</p>
+                  <div className="bg-brand/10 rounded-xl p-2.5 text-center">
+                    <p className="text-sm font-bold text-brand leading-tight">{formatCurrency(wages)}</p>
+                    <p className="text-[9px] text-brand font-bold uppercase mt-1">This Month</p>
                   </div>
                 </div>
 
@@ -141,8 +141,8 @@ export default function LabourSection() {
                     className={cn(
                       'flex-1 py-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all',
                       todayStatus === 'present'
-                        ? 'bg-green-500 text-white border-green-500 shadow-sm shadow-green-200'
-                        : 'bg-green-50 text-green-600 border-green-100'
+                        ? 'bg-emerald-600 text-surface border-emerald-600 shadow-sm shadow-emerald-600/20'
+                        : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
                     )}
                   >
                     <CheckCircle size={14} /> Present Today
@@ -152,8 +152,8 @@ export default function LabourSection() {
                     className={cn(
                       'flex-1 py-2.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all',
                       todayStatus === 'half'
-                        ? 'bg-yellow-400 text-white border-yellow-400 shadow-sm shadow-yellow-200'
-                        : 'bg-yellow-50 text-yellow-600 border-yellow-100'
+                        ? 'bg-amber-500 text-surface border-amber-500 shadow-sm shadow-amber-500/20'
+                        : 'bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20'
                     )}
                   >
                     <Clock size={14} /> Half Day
@@ -168,35 +168,35 @@ export default function LabourSection() {
       {/* Add / Edit Form — bottom sheet on mobile, centered modal on desktop */}
       {form && (
         <div
-          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
           onClick={closeForm}
         >
           <div
             onClick={e => e.stopPropagation()}
-            className="bg-white w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
           >
             <div className="p-6 space-y-4">
-              <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto md:hidden" />
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-900 text-lg">{editId ? 'Mazdoor Edit' : 'Naya Mazdoor'}</h3>
-                <button onClick={closeForm} className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-200"><X size={16} /></button>
+                <h3 className="font-bold text-text-primary text-lg">{editId ? 'Mazdoor Edit' : 'Naya Mazdoor'}</h3>
+                <button onClick={closeForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Labour Type</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Labour Type</label>
                 <input type="text" autoFocus value={form.type} onChange={e => setForm(f => f ? { ...f, type: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g. Mistri, Beldar, Plumber" />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Daily Wage (₹)</label>
+                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Daily Wage (₹)</label>
                 <input type="number" inputMode="numeric" value={form.dailyWage} onChange={e => setForm(f => f ? { ...f, dailyWage: e.target.value } : f)}
-                  className="w-full p-3.5 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-indigo-500 font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
                   placeholder="0" />
               </div>
               <div className="flex gap-3 pt-1">
-                <button onClick={closeForm} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200">Cancel</button>
+                <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={save} disabled={!form.type}
-                  className="flex-1 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm shadow-indigo-200 hover:bg-indigo-700">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>

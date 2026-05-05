@@ -60,10 +60,14 @@ function installIOSZoomSnapBack() {
 
 installIOSZoomSnapBack();
 
+import { ThemeProvider } from './context/ThemeContext';
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <AuthWrapper>
-      <App />
-    </AuthWrapper>
+    <ThemeProvider>
+      <AuthWrapper>
+        <App />
+      </AuthWrapper>
+    </ThemeProvider>
   </StrictMode>
 );

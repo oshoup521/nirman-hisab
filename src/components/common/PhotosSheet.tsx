@@ -35,22 +35,22 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
     <>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={onClose} />
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl max-w-md mx-auto flex flex-col"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-surface rounded-t-3xl shadow-2xl max-w-md mx-auto flex flex-col border-t border-border-default"
         style={{ maxHeight: '85vh' }}
       >
         {/* Header */}
-        <div className="px-5 pt-4 pb-3 border-b border-slate-100 shrink-0">
-          <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-3" />
+        <div className="px-5 pt-4 pb-3 border-b border-border-subdued shrink-0">
+          <div className="w-10 h-1 bg-border-default rounded-full mx-auto mb-3" />
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-bold text-slate-900 text-base truncate">{title}</h3>
-              <p className="text-[10px] font-bold text-slate-400 uppercase">
+              <h3 className="font-bold text-text-primary text-base truncate">{title}</h3>
+              <p className="text-[10px] font-bold text-text-subdued uppercase">
                 {photos.length} photo{photos.length === 1 ? '' : 's'}{subtitle ? ` • ${subtitle}` : ''}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 shrink-0"
+              className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary shrink-0"
               aria-label="Close"
             >
               <X size={16} />
@@ -62,12 +62,12 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
         <div className="flex-1 overflow-y-auto overscroll-contain p-3" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
           {photos.length === 0 ? (
             <div className="py-12 text-center">
-              <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                <ImageIcon size={26} className="text-slate-300" />
+              <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <ImageIcon size={26} className="text-border-default" />
               </div>
-              <p className="font-bold text-slate-600 text-sm">Koi photo nahi abhi tak</p>
+              <p className="font-bold text-text-secondary text-sm">Koi photo nahi abhi tak</p>
               {onAdd && (
-                <p className="text-xs text-slate-400 mt-1">Niche "Photo Add" se shuru karo</p>
+                <p className="text-xs text-text-subdued mt-1">Niche "Photo Add" se shuru karo</p>
               )}
             </div>
           ) : (
@@ -89,14 +89,14 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
         {/* Footer add button */}
         {onAdd && (
           <div
-            className="absolute bottom-0 inset-x-0 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-white via-white to-white/0"
+            className="absolute bottom-0 inset-x-0 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-surface via-surface to-transparent"
           >
             {uploading ? (
-              <div className="w-full py-3.5 bg-slate-100 text-slate-500 rounded-2xl font-bold text-sm text-center">
+              <div className="w-full py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm text-center">
                 Uploading…
               </div>
             ) : (
-              <label className="w-full flex items-center justify-center gap-2 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-sm shadow-indigo-200 cursor-pointer active:scale-[0.99] transition-transform">
+              <label className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand text-white rounded-2xl font-bold text-sm shadow-sm shadow-brand/20 cursor-pointer active:scale-[0.99] transition-transform">
                 <ImageIcon size={16} />
                 Photo Add Karein
                 <input
