@@ -180,7 +180,7 @@ export default function DiaryTab() {
 
       {/* Auto summary card */}
       <div className="bg-brand dark:bg-brand-subdued dark:border dark:border-brand/20 rounded-2xl p-4 text-surface dark:text-brand-text shadow-sm shadow-brand/20">
-        <p className="text-[10px] font-bold uppercase tracking-wide text-brand-subdued dark:text-brand-text/70">Is din ka auto-hisaab</p>
+        <p className="text-caption font-bold uppercase tracking-wide text-brand-subdued dark:text-brand-text/70">Is din ka auto-hisaab</p>
         <div className="grid grid-cols-3 gap-2 mt-3">
           <SummaryStat Icon={IndianRupee} label="Kharcha" value={formatCurrency(summary.totalKharcha)} sub={`${summary.expenseCount} entries`} />
           <SummaryStat Icon={Users} label="Labour" value={summary.labourPresent ? `${summary.labourPresent}` : '—'} sub="present" />
@@ -198,7 +198,7 @@ export default function DiaryTab() {
                 key={id}
                 onClick={() => setWeather(id)}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all',
+                  'flex items-center gap-1.5 px-3 py-2 rounded-xl text-body-sm font-bold border transition-all',
                   sel ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default'
                 )}
               >
@@ -261,9 +261,9 @@ export default function DiaryTab() {
       <Section icon={<ImageIcon size={14} />} title={`Photos ${entry?.photos?.length ? `(${entry.photos.length})` : ''}`}>
         <div className="flex items-center justify-end mb-2">
           {photoUploading === `diary:${entry?.id ?? ''}` ? (
-            <span className="text-xs text-text-subdued font-bold">Uploading…</span>
+            <span className="text-body-sm text-text-subdued font-bold">Uploading…</span>
           ) : (
-            <label className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer bg-border-default text-text-secondary active:bg-border-subdued hover:bg-border-subdued transition-colors">
+            <label className="flex items-center gap-1 text-body-sm font-bold px-3 py-1.5 rounded-lg cursor-pointer bg-border-default text-text-secondary active:bg-border-subdued hover:bg-border-subdued transition-colors">
               <ImageIcon size={12} /> Photo Add
               <input
                 type="file"
@@ -299,7 +299,7 @@ export default function DiaryTab() {
             onDelete={(path) => askConfirm('Is photo ko delete karein?', () => deletePhoto('diary', entry.id, path))}
           />
         ) : (
-          <p className="text-xs text-text-subdued text-center py-3">Koi photo nahi — site ki tasveer add karo</p>
+          <p className="text-body-sm text-text-subdued text-center py-3">Koi photo nahi — site ki tasveer add karo</p>
         )}
       </Section>
     </>
@@ -309,13 +309,13 @@ export default function DiaryTab() {
       {/* Header */}
       <div className="pt-2 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-text-primary flex items-center gap-2">
+          <h2 className="font-heading text-display font-bold text-text-primary flex items-center gap-2">
             <NotebookPen size={22} className="text-brand" /> Site Diary
           </h2>
-          <p className="text-xs text-text-subdued font-bold mt-0.5">Aaj kya hua — roz ka record</p>
+          <p className="text-body-sm text-text-subdued font-bold mt-0.5">Aaj kya hua — roz ka record</p>
         </div>
         {savedFlash && (
-          <span className="text-[10px] font-bold text-brand bg-brand/10 px-2 py-1 rounded-full border border-brand/20">
+          <span className="text-caption font-bold text-brand bg-brand/10 px-2 py-1 rounded-full border border-brand/20">
             Saved ✓
           </span>
         )}
@@ -334,7 +334,7 @@ export default function DiaryTab() {
               key={id}
               onClick={() => { flushNow(); setView(id); }}
               className={cn(
-                'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all',
+                'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-body-sm font-bold transition-all',
                 active ? 'bg-brand/10 text-brand' : 'text-text-subdued'
               )}
             >
@@ -366,7 +366,7 @@ export default function DiaryTab() {
                 key={id}
                 onClick={() => setView(id)}
                 className={cn(
-                  'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all',
+                  'flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-body-sm font-bold transition-all',
                   active ? 'bg-brand/10 text-brand' : 'text-text-subdued hover:text-text-primary'
                 )}
               >
@@ -400,7 +400,7 @@ export default function DiaryTab() {
           <div className="bg-surface rounded-2xl border border-border-default shadow-sm p-3">
             <div className="grid grid-cols-7 gap-1 mb-1">
               {['S','M','T','W','T','F','S'].map((d, i) => (
-                <div key={i} className="text-[10px] font-bold text-text-subdued text-center py-1">{d}</div>
+                <div key={i} className="text-caption font-bold text-text-subdued text-center py-1">{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 gap-1">
@@ -427,7 +427,7 @@ export default function DiaryTab() {
                       !inMonth && 'opacity-30',
                     )}
                   >
-                    <span className="text-xs">{day.getDate()}</span>
+                    <span className="text-body-sm">{day.getDate()}</span>
                     {has && (
                       <div className="flex items-center gap-0.5 mt-0.5">
                         <span className="w-1 h-1 rounded-full bg-brand" />
@@ -438,7 +438,7 @@ export default function DiaryTab() {
                 );
               })}
             </div>
-            <div className="flex items-center justify-center gap-3 mt-3 text-[10px] text-text-subdued font-bold">
+            <div className="flex items-center justify-center gap-3 mt-3 text-caption text-text-subdued font-bold">
               <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-brand" /> Entry</div>
               <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Photo</div>
             </div>
@@ -447,12 +447,12 @@ export default function DiaryTab() {
           {/* Stats strip */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-surface rounded-2xl border border-border-default p-3 text-center">
-              <p className="text-[10px] font-bold text-text-subdued uppercase">Total Entries</p>
-              <p className="text-2xl font-bold text-text-primary">{diary.length}</p>
+              <p className="text-caption font-bold text-text-subdued uppercase">Total Entries</p>
+              <p className="text-display font-bold text-text-primary">{diary.length}</p>
             </div>
             <div className="bg-surface rounded-2xl border border-border-default p-3 text-center">
-              <p className="text-[10px] font-bold text-text-subdued uppercase">With Photos</p>
-              <p className="text-2xl font-bold text-text-primary">{diary.filter(d => d.photos?.length).length}</p>
+              <p className="text-caption font-bold text-text-subdued uppercase">With Photos</p>
+              <p className="text-display font-bold text-text-primary">{diary.filter(d => d.photos?.length).length}</p>
             </div>
           </div>
         </div>
@@ -471,7 +471,7 @@ export default function DiaryTab() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="kuch bhi search karo — vendor, kaam, problem"
-              className="flex-1 bg-transparent text-sm text-text-primary focus:outline-none placeholder-text-subdued"
+              className="flex-1 bg-transparent text-body-sm text-text-primary focus:outline-none placeholder-text-subdued"
             />
             {search && (
               <button onClick={() => setSearch('')} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-subdued">
@@ -482,19 +482,19 @@ export default function DiaryTab() {
 
           {!search && (
             <div className="bg-surface rounded-2xl border border-border-default p-8 text-center">
-              <p className="text-sm font-bold text-text-secondary">Purani diary entries mein khojo</p>
-              <p className="text-xs text-text-subdued mt-1">"6 mahine pehle yeh kab hua tha?" wala sawal yahan se hal hoga</p>
+              <p className="text-body-sm font-bold text-text-secondary">Purani diary entries mein khojo</p>
+              <p className="text-caption text-text-subdued mt-1">"6 mahine pehle yeh kab hua tha?" wala sawal yahan se hal hoga</p>
             </div>
           )}
 
           {search && searchResults.length === 0 && (
             <div className="bg-surface rounded-2xl border border-border-default p-8 text-center">
-              <p className="text-sm font-bold text-text-secondary">Koi entry nahi mili</p>
+              <p className="text-body-sm font-bold text-text-secondary">Koi entry nahi mili</p>
             </div>
           )}
 
           {searchResults.length > 0 && (
-            <p className="text-xs font-bold text-text-subdued px-1">{searchResults.length} entr{searchResults.length === 1 ? 'y' : 'ies'} mile</p>
+            <p className="text-caption font-bold text-text-subdued px-1">{searchResults.length} entr{searchResults.length === 1 ? 'y' : 'ies'} mile</p>
           )}
 
           {searchResults.map(d => (
@@ -511,8 +511,8 @@ export default function DiaryTab() {
               )}
             >
               <div className="flex items-center justify-between mb-1.5">
-                <p className="font-bold text-text-primary text-sm">{format(parseISO(d.date), 'dd MMM yyyy, EEE')}</p>
-                {d.photos?.length ? <span className="text-[10px] font-bold text-amber-600 dark:text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">{d.photos.length} 📷</span> : null}
+                <p className="font-bold text-text-primary text-body-sm">{format(parseISO(d.date), 'dd MMM yyyy, EEE')}</p>
+                {d.photos?.length ? <span className="text-caption font-bold text-amber-600 dark:text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded-full">{d.photos.length} 📷</span> : null}
               </div>
               <SearchSnippet entry={d} query={search} />
             </button>
@@ -566,7 +566,7 @@ export default function DiaryTab() {
 function Section({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
     <div className="bg-surface rounded-2xl border border-border-default shadow-sm p-4 space-y-2">
-      <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-subdued uppercase">
+      <div className="flex items-center gap-1.5 text-caption font-bold text-text-subdued uppercase">
         {icon} {title}
       </div>
       {children}
@@ -577,11 +577,11 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
 function SummaryStat({ Icon, label, value, sub }: { Icon: React.ElementType; label: string; value: string; sub: string }) {
   return (
     <div className="bg-black/10 dark:bg-white/10 rounded-xl p-2.5">
-      <div className="flex items-center gap-1 text-surface/80 dark:text-brand-text/80 text-[9px] font-bold uppercase">
+      <div className="flex items-center gap-1 text-surface/80 dark:text-brand-text/80 text-caption font-bold uppercase">
         <Icon size={10} /> {label}
       </div>
-      <p className="text-surface dark:text-brand-text text-sm font-bold mt-1 leading-tight truncate">{value}</p>
-      <p className="text-surface/60 dark:text-brand-text/60 text-[9px] font-bold">{sub}</p>
+      <p className="text-surface dark:text-brand-text text-title font-bold mt-1 leading-tight truncate">{value}</p>
+      <p className="text-surface/60 dark:text-brand-text/60 text-caption font-bold">{sub}</p>
     </div>
   );
 }
@@ -603,7 +603,7 @@ function SearchSnippet({ entry, query }: { entry: DiaryEntry; query: string }) {
         const end = Math.min(text.length, idx + q.length + 40);
         const snip = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
         return (
-          <p key={label} className="text-xs text-text-subdued leading-snug">
+          <p key={label} className="text-caption text-text-subdued leading-snug">
             <span className="font-bold text-text-secondary">{label}:</span> {snip}
           </p>
         );

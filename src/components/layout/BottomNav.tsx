@@ -32,7 +32,7 @@ export default function BottomNav() {
               <Icon size={18} />
             </div>
             <span className={cn(
-              'text-[9px] font-bold uppercase tracking-tight transition-colors truncate max-w-full px-0.5',
+              'text-[10px] font-bold uppercase tracking-tight transition-colors truncate max-w-full px-0.5',
               active ? color : 'text-text-subdued'
             )}>
               {label}

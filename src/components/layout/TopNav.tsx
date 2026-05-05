@@ -20,10 +20,10 @@ export default function TopNav() {
     <nav className="hidden md:block sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-border-default shadow-sm">
       <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-6">
         <div className="flex items-center gap-2 shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-black text-sm">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-heading font-black text-body-sm">
             NH
           </div>
-          <span className="font-black text-text-primary text-base truncate max-w-[200px]">{projectName}</span>
+          <span className="font-heading font-black text-text-primary text-title truncate max-w-[200px]">{projectName}</span>
         </div>
 
         <div className="flex items-center gap-1 flex-1">
@@ -34,7 +34,7 @@ export default function TopNav() {
                 key={id}
                 onClick={() => { setActiveTab(id); setSubTab('overview'); }}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all',
+                  'flex items-center gap-2 px-3 py-2 rounded-xl text-body-sm font-bold transition-all',
                   active ? cn(pill, color) : 'text-text-secondary hover:text-text-primary hover:bg-surface-subdued'
                 )}
               >

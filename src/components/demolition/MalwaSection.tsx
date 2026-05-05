@@ -71,12 +71,12 @@ export default function MalwaSection() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-text-primary">Malwa Report</h3>
-          <p className="text-xs text-text-subdued mt-0.5">{state.malwa.length} entries</p>
+          <h3 className="font-heading text-title font-bold text-text-primary">Malwa Report</h3>
+          <p className="text-caption text-text-subdued mt-0.5">{state.malwa.length} entries</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
@@ -87,8 +87,8 @@ export default function MalwaSection() {
           <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Truck size={26} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-text-secondary text-sm">Koi malwa entry nahi abhi tak</p>
-          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+          <p className="font-bold text-text-secondary text-body-sm">Koi malwa entry nahi abhi tak</p>
+          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
             + Pehli Entry Add Karo
           </button>
         </div>
@@ -99,11 +99,11 @@ export default function MalwaSection() {
             {sorted.map(entry => (
               <div key={entry.id} className="bg-surface p-4 rounded-2xl border border-border-default shadow-sm flex justify-between items-center">
                 <div>
-                  <h4 className="font-bold text-text-primary">{entry.disposed} Trolleys</h4>
-                  <p className="text-xs text-text-subdued">{format(new Date(entry.date), 'dd MMM yyyy')}{entry.vendor ? ` • ${entry.vendor}` : ''}</p>
+                  <h4 className="font-heading text-title font-bold text-text-primary">{entry.disposed} Trolleys</h4>
+                  <p className="text-caption text-text-subdued">{format(new Date(entry.date), 'dd MMM yyyy')}{entry.vendor ? ` • ${entry.vendor}` : ''}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <p className="font-bold text-red-500">-{formatCurrency(entry.disposed * entry.costPerTrip)}</p>
+                  <p className="font-bold text-title-lg text-red-500">-{formatCurrency(entry.disposed * entry.costPerTrip)}</p>
                   <button onClick={() => openEdit(entry)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
                     <Pencil size={14} />
                   </button>
@@ -122,21 +122,21 @@ export default function MalwaSection() {
 
           {/* Desktop: table */}
           <div className="hidden md:block bg-surface rounded-2xl border border-border-default shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
+            <table className="w-full text-body-sm">
               <thead className="bg-surface-subdued border-b border-border-default">
                 <tr>
-                  <th className="py-2.5 px-4 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Date</th>
-                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Trolleys</th>
-                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Vendor / Driver</th>
-                  <th className="py-2.5 px-3 text-right text-[10px] font-bold text-text-subdued uppercase tracking-wide">Cost / Trip</th>
-                  <th className="py-2.5 px-3 text-right text-[10px] font-bold text-text-subdued uppercase tracking-wide">Total</th>
-                  <th className="py-2.5 px-4 text-right text-[10px] font-bold text-text-subdued uppercase tracking-wide">Actions</th>
+                  <th className="py-2.5 px-4 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Date</th>
+                  <th className="py-2.5 px-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Trolleys</th>
+                  <th className="py-2.5 px-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Vendor / Driver</th>
+                  <th className="py-2.5 px-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Cost / Trip</th>
+                  <th className="py-2.5 px-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Total</th>
+                  <th className="py-2.5 px-4 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {sorted.map(entry => (
                   <tr key={entry.id} className="border-b border-border-subdued last:border-0 hover:bg-surface-subdued/50 transition-colors">
-                    <td className="py-2.5 px-4 text-xs text-text-subdued font-bold whitespace-nowrap">
+                    <td className="py-2.5 px-4 text-body-sm text-text-subdued font-bold whitespace-nowrap">
                       {format(new Date(entry.date), 'dd MMM yyyy')}
                     </td>
                     <td className="py-2.5 px-3 font-bold text-text-primary">{entry.disposed}</td>
@@ -177,29 +177,29 @@ export default function MalwaSection() {
             <div className="p-6 space-y-4">
               <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-text-primary text-lg">{editId ? 'Malwa Entry Edit' : 'Naya Malwa Entry'}</h3>
+                <h3 className="font-heading text-title font-bold text-text-primary">{editId ? 'Malwa Entry Edit' : 'Naya Malwa Entry'}</h3>
                 <button onClick={closeForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Trolley / Trips</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Trolley / Trips</label>
                   <input type="number" inputMode="numeric" autoFocus value={form.trips}
                     onChange={e => setForm(f => f ? { ...f, trips: e.target.value } : f)}
-                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg"
                     placeholder="0" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Cost / Trip (₹)</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Cost / Trip (₹)</label>
                   <input type="number" inputMode="numeric" value={form.costPerTrip}
                     onChange={e => setForm(f => f ? { ...f, costPerTrip: e.target.value } : f)}
-                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg"
                     placeholder="0" />
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Vendor / Driver</label>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Vendor / Driver</label>
                 <input type="text" value={form.vendor}
                   onChange={e => setForm(f => f ? { ...f, vendor: e.target.value } : f)}
                   className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
@@ -207,7 +207,7 @@ export default function MalwaSection() {
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Date</label>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Date</label>
                 <input type="date" value={form.date}
                   onChange={e => setForm(f => f ? { ...f, date: e.target.value } : f)}
                   className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
@@ -215,15 +215,15 @@ export default function MalwaSection() {
 
               {Number(form.trips) > 0 && Number(form.costPerTrip) > 0 && (
                 <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2 text-center">
-                  <p className="text-[10px] text-red-500 font-bold uppercase">Total Cost (auto-logged as expense)</p>
-                  <p className="text-lg font-bold text-red-500">-{formatCurrency(Number(form.trips) * Number(form.costPerTrip))}</p>
+                  <p className="text-caption text-red-500 font-bold uppercase">Total Cost (auto-logged as expense)</p>
+                  <p className="text-title-lg font-bold text-red-500">-{formatCurrency(Number(form.trips) * Number(form.costPerTrip))}</p>
                 </div>
               )}
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
+                <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={save} disabled={Number(form.trips) <= 0}
-                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>

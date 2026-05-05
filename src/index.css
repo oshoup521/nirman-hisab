@@ -2,7 +2,20 @@
 @import "tailwindcss";
 
 @theme {
+  /* Font Families */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-primary: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Semantic Fluid Font Sizes */
+  --text-display: clamp(1.75rem, 5vw, 2.5rem);    /* 28px -> 40px */
+  --text-title-lg: clamp(1.25rem, 4vw, 1.75rem);  /* 20px -> 28px */
+  --text-title: clamp(1.125rem, 3vw, 1.25rem);    /* 18px -> 20px */
+  --text-body: 1rem;                              /* 16px FIXED */
+  --text-body-sm: 0.875rem;                       /* 14px FIXED */
+  --text-caption: 0.75rem;                        /* 12px FIXED */
+
   --color-app: var(--theme-app);
   --color-surface: var(--theme-surface);
   --color-surface-subdued: var(--theme-surface-subdued);

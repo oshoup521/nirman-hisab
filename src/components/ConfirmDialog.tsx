@@ -34,23 +34,23 @@ export default function ConfirmDialog({ open, title, message, confirmText, onCon
             <div className="w-10 h-10 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
               <AlertTriangle size={18} className="text-red-500" />
             </div>
-            <p className="text-base font-bold text-text-primary">{title ?? 'Delete karna chahte hain?'}</p>
+            <p className="font-heading text-title font-bold text-text-primary">{title ?? 'Delete karna chahte hain?'}</p>
           </div>
 
           {/* Message */}
-          <p className="text-sm text-text-secondary mb-6 pl-1">{message}</p>
+          <p className="text-body-sm text-text-secondary mb-6 pl-1">{message}</p>
 
           {/* Buttons */}
           <div className="flex gap-3">
             <button
               onClick={onCancel}
-              className="flex-1 py-3 rounded-2xl bg-surface-subdued text-text-secondary font-bold text-sm hover:bg-border-default hover:text-text-primary transition-colors"
+              className="flex-1 py-3 rounded-2xl bg-surface-subdued text-text-secondary font-bold text-body-sm hover:bg-border-default hover:text-text-primary transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={() => { onConfirm(); onCancel(); }}
-              className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-sm flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
+              className="flex-1 py-3 rounded-2xl bg-red-500 text-white font-bold text-body-sm flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
               autoFocus
             >
               {!confirmText && <Trash2 size={14} />}

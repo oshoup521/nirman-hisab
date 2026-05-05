@@ -43,8 +43,8 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
           <div className="w-10 h-1 bg-border-default rounded-full mx-auto mb-3" />
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-bold text-text-primary text-base truncate">{title}</h3>
-              <p className="text-[10px] font-bold text-text-subdued uppercase">
+              <h3 className="font-heading font-bold text-text-primary text-title truncate">{title}</h3>
+              <p className="text-caption font-bold text-text-subdued uppercase">
                 {photos.length} photo{photos.length === 1 ? '' : 's'}{subtitle ? ` • ${subtitle}` : ''}
               </p>
             </div>
@@ -65,9 +65,9 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
               <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
                 <ImageIcon size={26} className="text-border-default" />
               </div>
-              <p className="font-bold text-text-secondary text-sm">Koi photo nahi abhi tak</p>
+              <p className="font-bold text-text-secondary text-body-sm">Koi photo nahi abhi tak</p>
               {onAdd && (
-                <p className="text-xs text-text-subdued mt-1">Niche "Photo Add" se shuru karo</p>
+                <p className="text-caption text-text-subdued mt-1">Niche "Photo Add" se shuru karo</p>
               )}
             </div>
           ) : (
@@ -92,11 +92,11 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
             className="absolute bottom-0 inset-x-0 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-surface via-surface to-transparent"
           >
             {uploading ? (
-              <div className="w-full py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm text-center">
+              <div className="w-full py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm text-center">
                 Uploading…
               </div>
             ) : (
-              <label className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand text-white rounded-2xl font-bold text-sm shadow-sm shadow-brand/20 cursor-pointer active:scale-[0.99] transition-transform">
+              <label className="w-full flex items-center justify-center gap-2 py-3.5 bg-brand text-white rounded-2xl font-bold text-body-sm shadow-sm shadow-brand/20 cursor-pointer active:scale-[0.99] transition-transform">
                 <ImageIcon size={16} />
                 Photo Add Karein
                 <input

@@ -69,12 +69,12 @@ export default function BrickRecoverySection() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-text-primary">Eent Bachao Counter</h3>
-          <p className="text-xs text-text-subdued mt-0.5">{state.brickRecovery.length} entries</p>
+          <h3 className="font-heading text-title font-bold text-text-primary">Eent Bachao Counter</h3>
+          <p className="text-caption text-text-subdued mt-0.5">{state.brickRecovery.length} entries</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
@@ -83,27 +83,27 @@ export default function BrickRecoverySection() {
       {state.brickRecovery.length > 0 && (
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-emerald-500/10 p-3 rounded-2xl border border-emerald-500/20 text-center">
-            <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-0.5">Bachao</p>
-            <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">{formatNumber(totalRecovered)}</p>
-            <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70 font-bold">pcs</p>
+            <p className="text-caption font-bold text-emerald-600 dark:text-emerald-400 uppercase mb-0.5">Bachao</p>
+            <p className="text-title-lg font-bold text-emerald-600 dark:text-emerald-400">{formatNumber(totalRecovered)}</p>
+            <p className="text-caption text-emerald-600/70 dark:text-emerald-400/70 font-bold">pcs</p>
           </div>
           <div className="bg-red-500/10 p-3 rounded-2xl border border-red-500/20 text-center">
-            <p className="text-[10px] font-bold text-red-500 uppercase mb-0.5">Tooti</p>
-            <p className="text-lg font-bold text-red-500">{formatNumber(totalBroken)}</p>
-            <p className="text-[10px] text-red-500/70 font-bold">pcs</p>
+            <p className="text-caption font-bold text-red-500 uppercase mb-0.5">Tooti</p>
+            <p className="text-title-lg font-bold text-red-500">{formatNumber(totalBroken)}</p>
+            <p className="text-caption text-red-500/70 font-bold">pcs</p>
           </div>
           <div className="bg-surface-subdued p-3 rounded-2xl border border-border-default text-center">
-            <p className="text-[10px] font-bold text-text-subdued uppercase mb-0.5">Kul</p>
-            <p className="text-lg font-bold text-text-primary">{formatNumber(totalEstimated)}</p>
-            <p className="text-[10px] text-text-subdued font-bold">pcs</p>
+            <p className="text-caption font-bold text-text-subdued uppercase mb-0.5">Kul</p>
+            <p className="text-title-lg font-bold text-text-primary">{formatNumber(totalEstimated)}</p>
+            <p className="text-caption text-text-subdued font-bold">pcs</p>
           </div>
         </div>
       )}
 
       {sorted.length === 0 ? (
         <div className="bg-surface rounded-2xl border border-border-default p-10 text-center">
-          <p className="font-bold text-text-secondary text-sm">Koi entry nahi abhi tak</p>
-          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+          <p className="font-bold text-text-secondary text-body-sm">Koi entry nahi abhi tak</p>
+          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
             + Pehli Entry Add Karo
           </button>
         </div>
@@ -113,13 +113,13 @@ export default function BrickRecoverySection() {
           <div key={entry.id} className="bg-surface p-4 rounded-2xl border border-border-default shadow-sm">
             <div className="flex justify-between items-start mb-2">
               <div>
-                <h4 className="font-bold text-text-primary">{format(new Date(entry.date), 'dd MMM yyyy')}</h4>
-                <p className="text-xs text-text-subdued">
+                <h4 className="font-heading text-title font-bold text-text-primary">{format(new Date(entry.date), 'dd MMM yyyy')}</h4>
+                <p className="text-caption text-text-subdued">
                   Recovery Rate: {((entry.recovered / Math.max(1, entry.recovered + entry.broken)) * 100).toFixed(1)}%
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <p className="font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(entry.recovered * entry.ratePerBrick)}</p>
+                <p className="text-title-lg font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(entry.recovered * entry.ratePerBrick)}</p>
                 <button onClick={() => openEdit(entry)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
                   <Pencil size={14} />
                 </button>
@@ -133,13 +133,13 @@ export default function BrickRecoverySection() {
                 </button>
               </div>
             </div>
-            <div className="flex gap-4 text-sm">
+            <div className="flex gap-4 text-body-sm">
               <div className="flex-1 bg-emerald-500/10 border border-emerald-500/20 p-2 rounded-xl text-center">
-                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase">Recovered</p>
+                <p className="text-caption font-bold text-emerald-600 dark:text-emerald-400 uppercase">Recovered</p>
                 <p className="font-bold text-emerald-600 dark:text-emerald-400">{entry.recovered}</p>
               </div>
               <div className="flex-1 bg-red-500/10 border border-red-500/20 p-2 rounded-xl text-center">
-                <p className="text-[10px] font-bold text-red-500 uppercase">Broken</p>
+                <p className="text-caption font-bold text-red-500 uppercase">Broken</p>
                 <p className="font-bold text-red-500">{entry.broken}</p>
               </div>
             </div>
@@ -161,37 +161,37 @@ export default function BrickRecoverySection() {
             <div className="p-6 space-y-4">
               <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-text-primary text-lg">{editId ? 'Entry Edit' : 'Naya Brick Entry'}</h3>
+                <h3 className="font-heading text-title font-bold text-text-primary">{editId ? 'Entry Edit' : 'Naya Brick Entry'}</h3>
                 <button onClick={closeForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Recovered (pcs)</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Recovered (pcs)</label>
                   <input type="number" inputMode="numeric" autoFocus value={form.recovered}
                     onChange={e => setForm(f => f ? { ...f, recovered: e.target.value } : f)}
-                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg"
                     placeholder="0" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Broken (pcs)</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Broken (pcs)</label>
                   <input type="number" inputMode="numeric" value={form.broken}
                     onChange={e => setForm(f => f ? { ...f, broken: e.target.value } : f)}
-                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg"
                     placeholder="0" />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Rate / Brick (₹)</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Rate / Brick (₹)</label>
                   <input type="number" inputMode="numeric" value={form.ratePerBrick}
                     onChange={e => setForm(f => f ? { ...f, ratePerBrick: e.target.value } : f)}
-                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold"
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg"
                     placeholder="7" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Date</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Date</label>
                   <input type="date" value={form.date}
                     onChange={e => setForm(f => f ? { ...f, date: e.target.value } : f)}
                     className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
@@ -200,15 +200,15 @@ export default function BrickRecoverySection() {
 
               {Number(form.recovered) > 0 && Number(form.ratePerBrick) > 0 && (
                 <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-3 py-2 text-center">
-                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase">Recovery Value</p>
-                  <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(Number(form.recovered) * Number(form.ratePerBrick))}</p>
+                  <p className="text-caption text-emerald-600 dark:text-emerald-400 font-bold uppercase">Recovery Value</p>
+                  <p className="text-title-lg font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(Number(form.recovered) * Number(form.ratePerBrick))}</p>
                 </div>
               )}
 
               <div className="flex gap-3 pt-1">
-                <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
+                <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={save} disabled={Number(form.recovered) <= 0 && Number(form.broken) <= 0}
-                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>

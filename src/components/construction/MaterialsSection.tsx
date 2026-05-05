@@ -81,16 +81,16 @@ export default function MaterialsSection() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-text-primary">Samaan ka Stock</h3>
+          <h3 className="font-heading text-title font-bold text-text-primary">Samaan ka Stock</h3>
           {lowCount > 0 && (
-            <p className="text-[10px] font-bold text-red-500 mt-0.5 flex items-center gap-1">
+            <p className="text-caption font-bold text-red-500 mt-0.5 flex items-center gap-1">
               <AlertTriangle size={10} /> {lowCount} item{lowCount > 1 ? 's' : ''} low stock
             </p>
           )}
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
@@ -102,8 +102,8 @@ export default function MaterialsSection() {
           <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Package size={26} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-text-secondary text-sm">Koi material nahi abhi tak</p>
-          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+          <p className="font-bold text-text-secondary text-body-sm">Koi material nahi abhi tak</p>
+          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
             + Material Add Karein
           </button>
         </div>
@@ -119,26 +119,26 @@ export default function MaterialsSection() {
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="font-bold text-text-primary">{material.name}</h4>
+                      <h4 className="font-heading text-title font-bold text-text-primary">{material.name}</h4>
                       {isLow && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 bg-red-500/10 text-red-500 rounded-full border border-red-500/20">
+                        <span className="inline-flex items-center gap-1 text-caption font-bold px-2 py-0.5 bg-red-500/10 text-red-500 rounded-full border border-red-500/20">
                           <AlertTriangle size={9} /> Low
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-text-subdued mt-0.5">
+                    <p className="text-caption text-text-subdued mt-0.5">
                       {material.purchased} {material.unit} bought • {formatCurrency(material.rate)}/{material.unit}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className={cn('text-2xl font-bold leading-none', isLow ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>{stock}</p>
-                    <p className="text-[10px] text-text-subdued font-bold mt-0.5">{material.unit} left</p>
+                    <p className={cn('text-title-lg font-bold leading-none', isLow ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>{stock}</p>
+                    <p className="text-caption text-text-subdued font-bold mt-0.5">{material.unit} left</p>
                   </div>
                 </div>
 
                 {/* Usage bar */}
                 <div className="mb-3">
-                  <div className="flex justify-between text-[10px] text-text-subdued font-bold mb-1">
+                  <div className="flex justify-between text-caption text-text-subdued font-bold mb-1">
                     <span>Used: {material.used} {material.unit}</span>
                     <span>{usedPct.toFixed(0)}% consumed</span>
                   </div>
@@ -154,7 +154,7 @@ export default function MaterialsSection() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setUsageForm({ materialId: material.id, materialName: material.name, unit: material.unit, amount: '' })}
-                    className="flex-1 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
+                    className="flex-1 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
                   >
                     Update Usage
                   </button>
@@ -174,13 +174,13 @@ export default function MaterialsSection() {
                 {/* Photos: bill / samaan ki tasveer */}
                 <div className="mt-3 border-t border-border-subdued pt-3">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold text-text-subdued uppercase flex items-center gap-1">
+                    <p className="text-caption font-bold text-text-subdued uppercase flex items-center gap-1">
                       <ImageIcon size={11} /> Bill / Photos {material.photos?.length ? `(${material.photos.length})` : ''}
                     </p>
                     {photoUploading === `material:${material.id}` ? (
-                      <span className="text-xs text-text-subdued font-bold">Uploading…</span>
+                      <span className="text-caption text-text-subdued font-bold">Uploading…</span>
                     ) : (
-                      <label className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg cursor-pointer bg-surface-subdued text-text-secondary active:bg-border-default transition-colors">
+                      <label className="flex items-center gap-1 text-caption font-bold px-2 py-1 rounded-lg cursor-pointer bg-surface-subdued text-text-secondary active:bg-border-default transition-colors">
                         <ImageIcon size={12} /> Add
                         <input
                           type="file"
@@ -225,49 +225,49 @@ export default function MaterialsSection() {
             <div className="p-6 space-y-4">
               <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-text-primary text-lg">{editId ? 'Material Edit' : 'Naya Material'}</h3>
+                <h3 className="font-heading text-title font-bold text-text-primary">{editId ? 'Material Edit' : 'Naya Material'}</h3>
                 <button onClick={closeForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Material Name</label>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Material Name</label>
                 <input type="text" autoFocus value={form.name} onChange={e => setForm(f => f ? { ...f, name: e.target.value } : f)}
                   className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                   placeholder="e.g. Cement, Sand, Sariya" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Unit</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Unit</label>
                   <input type="text" value={form.unit} onChange={e => setForm(f => f ? { ...f, unit: e.target.value } : f)}
                     className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
                     placeholder="bags / tons" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Quantity</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Quantity</label>
                   <input type="number" inputMode="numeric" value={form.purchased} onChange={e => setForm(f => f ? { ...f, purchased: e.target.value } : f)}
                     className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="0" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Rate / Unit (₹)</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Rate / Unit (₹)</label>
                   <input type="number" inputMode="numeric" value={form.rate} onChange={e => setForm(f => f ? { ...f, rate: e.target.value } : f)}
                     className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="0" />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Low Stock Alert</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Low Stock Alert</label>
                   <input type="number" inputMode="numeric" value={form.minStock} onChange={e => setForm(f => f ? { ...f, minStock: e.target.value } : f)}
                     className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="0" />
                 </div>
               </div>
               {!editId && form.purchased && form.rate && (
                 <div className="bg-brand/10 border border-brand/20 rounded-xl px-3 py-2 text-center">
-                  <p className="text-[10px] text-brand font-bold uppercase">Total Cost (auto-logged as expense)</p>
-                  <p className="text-lg font-bold text-brand">{formatCurrency(Number(form.purchased) * Number(form.rate))}</p>
+                  <p className="text-caption text-brand font-bold uppercase">Total Cost (auto-logged as expense)</p>
+                  <p className="text-title-lg font-bold text-brand">{formatCurrency(Number(form.purchased) * Number(form.rate))}</p>
                 </div>
               )}
               <div className="flex gap-3 pt-1">
-                <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
-                <button onClick={save} disabled={!form.name} className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
+                <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors">Cancel</button>
+                <button onClick={save} disabled={!form.name} className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
@@ -313,21 +313,21 @@ export default function MaterialsSection() {
             <div className="p-6 space-y-4">
               <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-text-primary text-lg">Usage Update</h3>
+                <h3 className="font-heading text-title font-bold text-text-primary">Usage Update</h3>
                 <button onClick={() => setUsageForm(null)} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
               </div>
-              <p className="text-text-secondary text-sm font-medium">{usageForm.materialName} — Kitna use hua aaj?</p>
+              <p className="text-text-secondary text-body-sm font-medium">{usageForm.materialName} — Kitna use hua aaj?</p>
               <div>
-                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Quantity ({usageForm.unit})</label>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Quantity ({usageForm.unit})</label>
                 <input type="number" inputMode="numeric" autoFocus value={usageForm.amount}
                   onChange={e => setUsageForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-xl"
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg"
                   placeholder="0" />
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setUsageForm(null)} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors">Cancel</button>
+                <button onClick={() => setUsageForm(null)} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={submitUsage} disabled={!usageForm.amount || Number(usageForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-brand text-surface rounded-2xl font-bold text-sm disabled:opacity-40 hover:opacity-90 transition-opacity">
+                  className="flex-1 py-3.5 bg-brand text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 hover:opacity-90 transition-opacity">
                   Update Karo
                 </button>
               </div>

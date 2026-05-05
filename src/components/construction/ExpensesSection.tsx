@@ -85,12 +85,12 @@ export default function ExpensesSection() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-bold text-text-primary">Kharcha Paani</h3>
-          <p className="text-xs text-text-subdued mt-0.5">{state.expenses.length} entries</p>
+          <h3 className="font-heading text-title font-bold text-text-primary">Kharcha Paani</h3>
+          <p className="text-caption text-text-subdued mt-0.5">{state.expenses.length} entries</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
         >
           <Plus size={16} /> Add
         </button>
@@ -100,8 +100,8 @@ export default function ExpensesSection() {
       {state.expenses.length > 0 && (
         <div className="bg-brand text-surface rounded-2xl p-4 space-y-3">
           <div>
-            <p className="opacity-80 text-[10px] font-bold uppercase tracking-wide">Total Construction Kharcha</p>
-            <p className="text-surface text-2xl font-bold mt-0.5">{formatCurrency(total)}</p>
+            <p className="opacity-80 text-caption font-bold uppercase tracking-wide">Total Construction Kharcha</p>
+            <p className="text-surface text-title-lg font-bold mt-0.5">{formatCurrency(total)}</p>
           </div>
           <div className="flex gap-2 flex-wrap">
             {categoryTotals.map(({ cat, total: catTotal }) => {
@@ -110,8 +110,8 @@ export default function ExpensesSection() {
                 <div key={cat} className="flex items-center gap-1.5 bg-black/10 dark:bg-white/10 rounded-xl px-2.5 py-1.5">
                   <Icon size={11} className="opacity-80" />
                   <div>
-                    <p className="text-[9px] opacity-80 font-bold uppercase leading-none">{cat}</p>
-                    <p className="text-[11px] font-bold leading-tight">{formatCurrency(catTotal)}</p>
+                    <p className="text-caption opacity-80 font-bold uppercase leading-none">{cat}</p>
+                    <p className="text-body-sm font-bold leading-tight">{formatCurrency(catTotal)}</p>
                   </div>
                 </div>
               );
@@ -126,11 +126,11 @@ export default function ExpensesSection() {
           <div className="w-14 h-14 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-3">
             <Package size={26} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-text-secondary text-sm">Koi kharcha nahi abhi tak</p>
-          <p className="text-text-subdued text-xs mt-1">Pehla kharcha add karo</p>
+          <p className="font-bold text-text-secondary text-body-sm">Koi kharcha nahi abhi tak</p>
+          <p className="text-text-subdued text-caption mt-1">Pehla kharcha add karo</p>
           <button
             onClick={openAdd}
-            className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-xs font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
+            className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
           >
             + Kharcha Add Karein
           </button>
@@ -143,12 +143,12 @@ export default function ExpensesSection() {
             <table className="w-full text-sm">
               <thead className="bg-surface-subdued border-b border-border-default">
                 <tr>
-                  <th className="py-2.5 px-4 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Date</th>
-                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Category</th>
-                  <th className="py-2.5 px-3 text-left text-[10px] font-bold text-text-subdued uppercase tracking-wide">Notes</th>
-                  <th className="py-2.5 px-3 text-center text-[10px] font-bold text-text-subdued uppercase tracking-wide">Photos</th>
-                  <th className="py-2.5 px-3 text-right text-[10px] font-bold text-text-subdued uppercase tracking-wide">Amount</th>
-                  <th className="py-2.5 px-4 text-right text-[10px] font-bold text-text-subdued uppercase tracking-wide">Actions</th>
+                  <th className="py-2.5 px-4 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Date</th>
+                  <th className="py-2.5 px-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Category</th>
+                  <th className="py-2.5 px-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Notes</th>
+                  <th className="py-2.5 px-3 text-center text-caption font-bold text-text-subdued uppercase tracking-wide">Photos</th>
+                  <th className="py-2.5 px-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Amount</th>
+                  <th className="py-2.5 px-4 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -158,11 +158,11 @@ export default function ExpensesSection() {
                   const isUploading = photoUploading === `expense:${expense.id}`;
                   return (
                     <tr key={expense.id} className="border-b border-border-subdued last:border-0 hover:bg-surface-subdued/50 transition-colors">
-                      <td className="py-2.5 px-4 text-xs text-text-secondary font-bold whitespace-nowrap">
+                      <td className="py-2.5 px-4 text-body-sm text-text-secondary font-bold whitespace-nowrap">
                         {format(new Date(expense.date), 'dd MMM yyyy')}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className={cn('inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full', badge)}>
+                        <span className={cn('inline-flex items-center gap-1 text-caption font-bold px-2 py-0.5 rounded-full', badge)}>
                           <Icon size={10} className={iconText} /> {expense.category}
                         </span>
                       </td>
@@ -173,15 +173,15 @@ export default function ExpensesSection() {
                         {photoCount > 0 ? (
                           <button
                             onClick={() => setSheetExpId(expense.id)}
-                            className="inline-flex items-center gap-1 text-[10px] font-bold text-brand hover:opacity-80 transition-opacity"
+                            className="inline-flex items-center gap-1 text-caption font-bold text-brand hover:opacity-80 transition-opacity"
                           >
                             <Paperclip size={10} /> {photoCount}
                           </button>
                         ) : (
-                          <span className="text-text-subdued opacity-50 text-[10px]">—</span>
+                          <span className="text-text-subdued opacity-50 text-caption">—</span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-bold text-text-primary whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-right font-mono font-bold text-text-primary whitespace-nowrap">
                         {formatCurrency(expense.amount)}
                       </td>
                       <td className="py-2.5 px-4 text-right whitespace-nowrap">
@@ -228,10 +228,10 @@ export default function ExpensesSection() {
             </table>
           </div>
           <div className="px-4 py-2 bg-surface-subdued border-t border-border-default flex justify-between items-center">
-            <span className="text-[11px] text-text-subdued font-bold">
+            <span className="text-caption text-text-subdued font-bold">
               {sorted.length} {sorted.length === 1 ? 'entry' : 'entries'}
             </span>
-            <span className="text-[11px] text-text-secondary font-bold">
+            <span className="text-body-sm font-mono font-bold text-text-secondary">
               Total: {formatCurrency(total)}
             </span>
           </div>
@@ -253,19 +253,19 @@ export default function ExpensesSection() {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-text-primary text-sm leading-snug break-words">
+                    <p className="font-bold text-text-primary text-body-sm leading-snug break-words">
                       {expense.notes || expense.category}
                     </p>
                     <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                      <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', badge)}>
+                      <span className={cn('text-caption font-bold px-2 py-0.5 rounded-full', badge)}>
                         {expense.category}
                       </span>
-                      <span className="text-[10px] text-text-subdued">•</span>
-                      <span className="text-[10px] text-text-subdued font-bold">
+                      <span className="text-caption text-text-subdued">•</span>
+                      <span className="text-caption text-text-subdued font-bold">
                         {format(new Date(expense.date), 'dd MMM yyyy')}
                       </span>
                       {photoCount > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-caption font-bold text-brand">
                           <Paperclip size={9} /> {photoCount}
                         </span>
                       )}
@@ -274,7 +274,7 @@ export default function ExpensesSection() {
 
                   {/* Amount + Actions */}
                   <div className="shrink-0 flex flex-col items-end gap-2">
-                    <p className="font-bold text-text-primary text-sm">{formatCurrency(expense.amount)}</p>
+                    <p className="font-mono text-title font-bold text-text-primary">{formatCurrency(expense.amount)}</p>
                     <div className="flex items-center gap-1">
                       <label className={cn(
                         'w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors',
@@ -350,7 +350,7 @@ export default function ExpensesSection() {
 
               {/* Title */}
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-text-primary text-lg">
+                <h3 className="font-heading text-title font-bold text-text-primary">
                   {editId ? 'Kharcha Edit Karein' : 'Naya Kharcha'}
                 </h3>
                 <button onClick={closeForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
@@ -360,7 +360,7 @@ export default function ExpensesSection() {
 
               {/* Category Chips */}
               <div>
-                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-2">Category</label>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-2">Category</label>
                 <div className="flex flex-wrap gap-2">
                   {CATEGORIES.map(cat => {
                     const { Icon, pill } = CAT_CFG[cat];
@@ -370,7 +370,7 @@ export default function ExpensesSection() {
                         key={cat}
                         onClick={() => setForm(f => f ? { ...f, category: cat } : f)}
                         className={cn(
-                          'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all',
+                          'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-body-sm font-bold border transition-all',
                           selected ? pill : 'bg-surface-subdued text-text-secondary border-border-default'
                         )}
                       >
@@ -383,13 +383,13 @@ export default function ExpensesSection() {
 
               {/* Amount */}
               <div>
-                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Amount (₹)</label>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Amount (₹)</label>
                 <input
                   type="number"
                   inputMode="numeric"
                   value={form.amount}
                   onChange={e => setForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-lg text-text-primary placeholder-text-subdued"
+                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg text-text-primary placeholder-text-subdued"
                   placeholder="0"
                   autoFocus
                 />
@@ -397,24 +397,24 @@ export default function ExpensesSection() {
 
               {/* Notes */}
               <div>
-                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Notes (optional)</label>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Notes (optional)</label>
                 <input
                   type="text"
                   value={form.notes}
                   onChange={e => setForm(f => f ? { ...f, notes: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary placeholder-text-subdued"
+                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand text-body-sm text-text-primary placeholder-text-subdued"
                   placeholder="e.g. Sand aur cement liya"
                 />
               </div>
 
               {/* Date */}
               <div>
-                <label className="text-[10px] font-bold text-text-subdued uppercase block mb-1.5">Date</label>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Date</label>
                 <input
                   type="date"
                   value={form.date}
                   onChange={e => setForm(f => f ? { ...f, date: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary dark:[color-scheme:dark]"
+                  className="w-full p-3.5 bg-surface-subdued rounded-2xl border-none focus:ring-2 focus:ring-brand text-body-sm text-text-primary dark:[color-scheme:dark]"
                 />
               </div>
 
@@ -422,14 +422,14 @@ export default function ExpensesSection() {
               <div className="flex gap-3 pt-1">
                 <button
                   onClick={closeForm}
-                  className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm hover:bg-border-default transition-colors"
+                  className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={save}
                   disabled={!form.amount || Number(form.amount) <= 0}
-                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity"
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity"
                 >
                   {editId ? 'Update Karein' : 'Save Karo'}
                 </button>
