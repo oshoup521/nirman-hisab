@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, ImageIcon } from 'lucide-react';
 import PhotoThumb from './PhotoThumb';
 
@@ -20,6 +20,15 @@ interface PhotosSheetProps {
 const PhotosSheet: React.FC<PhotosSheetProps> = ({
   open, title, subtitle, photos, uploading, getSignedUrl, onClose, onOpenAt, onDelete, onAdd,
 }) => {
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -50,7 +59,7 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
         </div>
 
         {/* Grid */}
-        <div className="flex-1 overflow-y-auto p-3" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
+        <div className="flex-1 overflow-y-auto overscroll-contain p-3" style={{ paddingBottom: 'calc(5.5rem + env(safe-area-inset-bottom))' }}>
           {photos.length === 0 ? (
             <div className="py-12 text-center">
               <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
