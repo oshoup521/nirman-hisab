@@ -20,9 +20,7 @@ export default function TopNav() {
     <nav className="hidden md:block sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-border-default shadow-sm">
       <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-6">
         <div className="flex items-center gap-2 shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-heading font-black text-body-sm">
-            NH
-          </div>
+          <img src="/pwa-64x64.png" alt="Nirman Hisab" className="w-9 h-9 rounded-xl object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
           <span className="font-heading font-black text-text-primary text-title truncate max-w-[200px]">{projectName}</span>
         </div>
 
