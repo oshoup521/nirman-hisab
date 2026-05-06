@@ -18,13 +18,13 @@ export default function TopNav() {
 
   return (
     <nav className="hidden md:block sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-border-default shadow-sm">
-      <div className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-6">
-        <div className="flex items-center gap-2 shrink-0">
-          <img src="/pwa-64x64.png" alt="Nirman Hisab" className="w-9 h-9 rounded-xl object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
-          <span className="font-heading font-black text-text-primary text-title truncate max-w-[200px]">{projectName}</span>
+      <div className="max-w-6xl mx-auto px-6 flex items-center gap-6 h-16">
+        <div className="flex items-center gap-4 shrink-0">
+          <img src="/pwa-192x192.png" alt="Nirman Hisab" className="w-12 h-12 rounded-2xl object-cover shadow-sm" />
+          <span className="font-heading font-black text-text-primary text-2xl tracking-tighter">Nirman Hisab</span>
         </div>
 
-        <div className="flex items-center gap-1 flex-1">
+        <div className="flex items-center gap-1 flex-1 h-full">
           {tabs.map(({ id, label, Icon, color, pill }) => {
             const active = activeTab === id;
             return (
@@ -32,12 +32,22 @@ export default function TopNav() {
                 key={id}
                 onClick={() => { setActiveTab(id); setSubTab('overview'); }}
                 className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-xl text-body-sm font-bold transition-all',
-                  active ? cn(pill, color) : 'text-text-secondary hover:text-text-primary hover:bg-surface-subdued'
+                  'relative h-full flex items-center gap-2 px-5 py-2 text-sm font-bold transition-all group',
+                  active ? color : 'text-text-secondary hover:text-text-primary'
                 )}
               >
-                <Icon size={16} />
+                <Icon size={18} className={cn('transition-transform', active ? 'scale-110' : 'group-hover:scale-110')} />
                 <span>{label}</span>
+                
+                {/* Active Indicator Line */}
+                {active && (
+                  <div className={cn('absolute bottom-0 left-0 right-0 h-1 rounded-t-full', color.replace('text-', 'bg-'))} />
+                )}
+                
+                {/* Hover state */}
+                {!active && (
+                  <div className="absolute inset-0 bg-surface-subdued opacity-0 group-hover:opacity-100 rounded-xl transition-opacity -z-10 m-1" />
+                )}
               </button>
             );
           })}

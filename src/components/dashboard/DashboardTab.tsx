@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Package, Clock, Home, Hammer, Plus, Pencil, Trash2, X, Wallet } from 'lucide-react';
+import { Download, Package, Clock, Home, Hammer, Plus, Pencil, Trash2, X, Wallet, TrendingDown, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
@@ -159,46 +159,228 @@ export default function DashboardTab() {
         </div>
       </header>
 
-      {/* Master Budget Hero + Kharcha Breakdown — side by side on desktop */}
-      <div className="lg:grid lg:grid-cols-2 lg:gap-5 space-y-5 lg:space-y-0">
-      {/* Master Budget Hero */}
+      {/* ═══ DESKTOP LAYOUT ═══ */}
+      <div className="hidden md:block space-y-6">
+        {/* 3 Budget Stat Cards */}
+        {masterBudget > 0 ? (
+          <div className="grid grid-cols-3 gap-4">
+            <div className="bg-surface rounded-2xl border border-border-default p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                  <Wallet size={16} className="text-indigo-500" />
+                </div>
+                <p className="text-caption font-bold text-text-subdued uppercase tracking-wide">Master Budget</p>
+              </div>
+              <p className="text-display font-bold text-text-primary leading-none">{formatCurrency(masterBudget)}</p>
+              <div className="mt-3 w-full bg-surface-subdued h-1.5 rounded-full overflow-hidden border border-border-subdued">
+                <div
+                  className={cn('h-full rounded-full transition-all duration-700', budgetStatus === 'danger' ? 'bg-red-500' : budgetStatus === 'warning' ? 'bg-amber-500' : 'bg-indigo-500')}
+                  style={{ width: `${Math.min(100, masterBurnRate)}%` }}
+                />
+              </div>
+              <p className="text-caption text-text-subdued font-bold mt-1.5">{masterBurnRate.toFixed(0)}% used
+                <span className={cn('ml-2 px-1.5 py-0.5 rounded text-caption font-bold', budgetStatus === 'danger' ? 'bg-red-500/10 text-red-500' : budgetStatus === 'warning' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400')}>
+                  {budgetStatus === 'danger' ? 'Over!' : budgetStatus === 'warning' ? 'Tight' : 'On Track'}
+                </span>
+              </p>
+            </div>
+            <div className="bg-surface rounded-2xl border border-border-default p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+                  <TrendingDown size={16} className="text-red-500" />
+                </div>
+                <p className="text-caption font-bold text-text-subdued uppercase tracking-wide">Total Kharcha</p>
+              </div>
+              <p className="text-display font-bold text-red-500 leading-none">{formatCurrency(totalKharcha)}</p>
+              <p className="text-caption text-text-subdued font-bold mt-3">across {breakdownRows.length} categories</p>
+            </div>
+            <div className="bg-surface rounded-2xl border border-border-default p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', masterRemaining < 0 ? 'bg-red-500/10' : 'bg-emerald-500/10')}>
+                  <TrendingUp size={16} className={masterRemaining < 0 ? 'text-red-500' : 'text-emerald-500'} />
+                </div>
+                <p className="text-caption font-bold text-text-subdued uppercase tracking-wide">Bacha Hua</p>
+              </div>
+              <p className={cn('text-display font-bold leading-none', masterRemaining < 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>{formatCurrency(masterRemaining)}</p>
+              <p className="text-caption text-text-subdued font-bold mt-3">{masterRemaining > 0 ? 'remaining budget' : 'over budget'}</p>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-surface-subdued border-2 border-dashed border-border-default p-8 rounded-2xl text-center">
+            <Wallet size={32} className="text-text-secondary mx-auto mb-3" />
+            <p className="text-text-secondary text-body-sm font-bold">Master budget set nahi hai</p>
+            <button onClick={() => setActiveTab('settings')} className="mt-2 text-body-sm text-brand font-bold hover:opacity-80 transition-opacity">Settings mein set karo →</button>
+          </div>
+        )}
+
+        {/* Quick Stats — single row */}
+        <div className="flex gap-3">
+          <button onClick={() => { setActiveTab('construction'); setSubTab('materials'); }} className="flex-1 bg-surface p-4 rounded-2xl border border-border-default shadow-sm text-left hover:shadow-md transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center shrink-0"><Package size={18} className="text-brand" /></div>
+              <div>
+                <p className="text-title-lg font-bold text-text-primary leading-none">{state.materials.filter((m: Material) => m.purchased - m.used <= m.minStock).length}</p>
+                <p className="text-caption font-bold text-text-subdued uppercase mt-0.5">Low Stock</p>
+              </div>
+            </div>
+          </button>
+          <button onClick={() => { setActiveTab('construction'); setSubTab('timeline'); }} className="flex-1 bg-surface p-4 rounded-2xl border border-border-default shadow-sm text-left hover:shadow-md transition-all">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center shrink-0"><Clock size={18} className="text-brand" /></div>
+              <div>
+                <p className="text-title-lg font-bold text-text-primary leading-none">{state.milestones.filter(m => m.status === 'in-progress').length}</p>
+                <p className="text-caption font-bold text-text-subdued uppercase mt-0.5">Active Phases</p>
+              </div>
+            </div>
+          </button>
+          {currentMonthRent > 0 && (
+            <button onClick={() => setActiveTab('kiraya')} className="flex-1 bg-orange-500/10 p-4 rounded-2xl border border-orange-500/20 text-left hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-orange-500/15 rounded-xl flex items-center justify-center shrink-0"><Home size={18} className="text-orange-600 dark:text-orange-400" /></div>
+                <div>
+                  <p className="text-title-lg font-bold text-orange-600 dark:text-orange-400 leading-none">{formatCurrency(currentMonthRent)}</p>
+                  <p className="text-caption font-bold text-orange-600/70 dark:text-orange-400/70 uppercase mt-0.5">Rent Baaki</p>
+                </div>
+              </div>
+            </button>
+          )}
+          {depositPending > 0 && (
+            <button onClick={() => setActiveTab('kiraya')} className="flex-1 bg-violet-500/10 p-4 rounded-2xl border border-violet-500/20 text-left hover:shadow-md transition-all">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-violet-500/15 rounded-xl flex items-center justify-center shrink-0"><Home size={18} className="text-violet-600 dark:text-violet-400" /></div>
+                <div>
+                  <p className="text-title-lg font-bold text-violet-600 dark:text-violet-400 leading-none">{formatCurrency(depositPending)}</p>
+                  <p className="text-caption font-bold text-violet-600/70 dark:text-violet-400/70 uppercase mt-0.5">Deposit Baaki</p>
+                </div>
+              </div>
+            </button>
+          )}
+        </div>
+
+        {/* Tod-Phod Net — full width */}
+        {(totalRecovery > 0 || demolitionThekaCost > 0 || malwaCost > 0) && (
+          <div className="bg-surface-subdued border border-border-default p-5 rounded-2xl shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Hammer size={16} className="text-orange-500" />
+              <h3 className="font-heading font-bold text-title text-text-primary">Tod-Phod Net Bachat</h3>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex-1 bg-surface border border-border-subdued rounded-xl p-3">
+                <p className="text-text-subdued text-caption uppercase font-bold mb-1">Scrap + Bricks</p>
+                <p className="text-title font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(totalRecovery)}</p>
+              </div>
+              <div className="flex-1 bg-surface border border-border-subdued rounded-xl p-3">
+                <p className="text-text-subdued text-caption uppercase font-bold mb-1">Malwa + Theka</p>
+                <p className="text-title font-bold text-red-600 dark:text-red-400">−{formatCurrency(malwaCost + demolitionThekaCost)}</p>
+              </div>
+              <div className="flex-1 text-right px-3">
+                <p className="text-text-subdued text-caption uppercase font-bold mb-1">Net</p>
+                <p className={cn('text-title-lg font-bold', demolitionNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>{formatCurrency(demolitionNet)}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Breakdown + Misc side-by-side */}
+        <div className="grid grid-cols-5 gap-5 items-stretch">
+          {/* Left: Breakdown */}
+          <div className="col-span-2">
+            {breakdownRows.length > 0 && (
+              <div className="bg-surface p-5 rounded-2xl border border-border-default shadow-sm space-y-3 h-full">
+                <h3 className="font-heading text-title font-bold text-text-primary">Kharcha Breakdown</h3>
+                <div className="space-y-3">
+                  {breakdownRows.map(row => (
+                    <div key={row.label}>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-body-sm text-text-secondary font-medium">{row.label}</span>
+                        <span className="text-body-sm font-bold text-text-primary">{formatCurrency(row.value)}</span>
+                      </div>
+                      <div className="w-full bg-surface-subdued h-1.5 rounded-full overflow-hidden border border-border-subdued">
+                        <div className={cn('h-full rounded-full transition-all', row.color)} style={{ width: masterBudget > 0 ? `${Math.min(100, (row.value / masterBudget) * 100)}%` : '0%' }} />
+                      </div>
+                    </div>
+                  ))}
+                  {(totalRentPaid - totalCashRentPaid) > 0 && (
+                    <div className="bg-violet-500/10 rounded-xl px-3 py-2 flex justify-between items-center">
+                      <span className="text-caption text-violet-600 dark:text-violet-400 font-bold">+ Deposit Se Kata Rent</span>
+                      <span className="text-caption font-bold text-violet-600 dark:text-violet-400">{formatCurrency(totalRentPaid - totalCashRentPaid)}</span>
+                    </div>
+                  )}
+                  <div className="pt-2 border-t border-border-subdued flex justify-between items-center">
+                    <span className="text-body-sm font-bold text-text-secondary uppercase">Total</span>
+                    <span className="font-bold text-text-primary">{formatCurrency(totalKharcha)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right: Misc table */}
+          <div className="col-span-3">
+            <div className="bg-surface p-5 rounded-2xl border border-border-default shadow-sm h-full flex flex-col">
+              <div className="flex justify-between items-center mb-3">
+                <div>
+                  <h3 className="font-heading text-title font-bold text-text-primary">Miscellaneous</h3>
+                  {totalMisc > 0 && <p className="text-caption text-text-subdued font-bold mt-0.5">{formatCurrency(totalMisc)} total</p>}
+                </div>
+                <button onClick={openAddMisc} className="flex items-center gap-1.5 px-3 py-2 bg-text-primary text-surface rounded-xl text-body-sm font-bold hover:opacity-90 transition-opacity"><Plus size={14} /> Add</button>
+              </div>
+              {sortedMisc.length === 0 ? (
+                <p className="text-text-secondary text-body-sm text-center py-3 flex-1 flex items-center justify-center">Koi misc kharcha nahi</p>
+              ) : (
+                <div className="flex-1 overflow-y-auto max-h-[420px]">
+                  <table className="w-full">
+                    <thead className="sticky top-0 bg-surface z-10 shadow-sm shadow-black/5">
+                      <tr className="border-b border-border-subdued">
+                        <th className="py-2 pr-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Date</th>
+                        <th className="py-2 pr-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Category</th>
+                        <th className="py-2 pr-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Notes</th>
+                        <th className="py-2 pr-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Amount</th>
+                        <th className="py-2 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>{sortedMisc.map(renderMiscTableRow)}</tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══ MOBILE LAYOUT ═══ */}
+      <div className="md:hidden space-y-5">
+      {/* Mobile Budget Hero */}
       {masterBudget > 0 ? (
         <div className={cn(
-          'rounded-3xl p-5',
+          'rounded-3xl overflow-hidden',
           budgetStatus === 'danger' ? 'bg-gradient-to-br from-red-500 to-rose-600'
             : budgetStatus === 'warning' ? 'bg-gradient-to-br from-amber-500 to-orange-500'
             : 'bg-gradient-to-br from-indigo-600 to-violet-600'
         )}>
-          <div className="flex justify-between items-start mb-4">
-            <div>
-              <p className="text-white/70 text-caption font-bold uppercase tracking-wide">Master Budget</p>
-              <p className="text-white text-display font-bold mt-0.5 leading-none">{formatCurrency(masterBudget)}</p>
+          <div className="px-5 pt-5 pb-3">
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-white/50 text-caption font-bold uppercase tracking-wide">{masterBurnRate.toFixed(0)}% budget used</p>
+              <span className={cn('px-2 py-0.5 rounded-lg text-caption font-bold', budgetStatus === 'danger' ? 'bg-red-400/40 text-red-100' : budgetStatus === 'warning' ? 'bg-amber-400/40 text-amber-100' : 'bg-white/15 text-white/70')}>
+                {budgetStatus === 'danger' ? 'Over Budget!' : budgetStatus === 'warning' ? 'Budget Tight' : 'On Track'}
+              </span>
             </div>
-            <span className={cn(
-              'px-2.5 py-1 rounded-xl text-caption font-bold',
-              budgetStatus === 'danger' ? 'bg-red-400/40 text-red-100'
-                : budgetStatus === 'warning' ? 'bg-amber-400/40 text-amber-100'
-                : 'bg-white/20 text-white'
-            )}>
-              {masterBurnRate.toFixed(0)}% used
-            </span>
-          </div>
-          <div className="w-full bg-black/20 h-2 rounded-full overflow-hidden mb-3">
-            <div
-              className="h-full bg-white/80 rounded-full transition-all duration-700"
-              style={{ width: `${Math.min(100, masterBurnRate)}%` }}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-black/15 rounded-xl px-3 py-2">
-              <p className="text-white/60 text-caption font-bold uppercase">Kharcha</p>
-              <p className="text-white font-bold text-title leading-tight">{formatCurrency(totalKharcha)}</p>
+            <div className="w-full bg-black/20 h-2 rounded-full overflow-hidden">
+              <div className="h-full bg-white/80 rounded-full transition-all duration-700" style={{ width: `${Math.min(100, masterBurnRate)}%` }} />
             </div>
-            <div className="bg-black/15 rounded-xl px-3 py-2">
-              <p className="text-white/60 text-caption font-bold uppercase">Bacha Hua</p>
-              <p className={cn('font-bold text-title leading-tight', masterRemaining < 0 ? 'text-red-200' : 'text-white')}>
-                {formatCurrency(masterRemaining)}
-              </p>
+          </div>
+          <div className="grid grid-cols-3 border-t border-white/10">
+            <div className="px-3 py-4 text-center border-r border-white/10">
+              <p className="text-white/50 text-caption font-bold uppercase tracking-wide mb-1">Budget</p>
+              <p className="text-white text-title font-bold leading-tight">{formatCurrency(masterBudget)}</p>
+            </div>
+            <div className="px-3 py-4 text-center border-r border-white/10">
+              <p className="text-white/50 text-caption font-bold uppercase tracking-wide mb-1">Kharcha</p>
+              <p className="text-white text-title font-bold leading-tight">{formatCurrency(totalKharcha)}</p>
+            </div>
+            <div className="px-3 py-4 text-center">
+              <p className="text-white/50 text-caption font-bold uppercase tracking-wide mb-1">Bacha Hua</p>
+              <p className={cn('text-title font-bold leading-tight', masterRemaining < 0 ? 'text-red-200' : 'text-white')}>{formatCurrency(masterRemaining)}</p>
             </div>
           </div>
         </div>
@@ -206,13 +388,11 @@ export default function DashboardTab() {
         <div className="bg-surface-subdued border-2 border-dashed border-border-default p-5 rounded-3xl text-center">
           <Wallet size={28} className="text-text-secondary mx-auto mb-2" />
           <p className="text-text-secondary text-body-sm font-bold">Master budget set nahi hai</p>
-          <button onClick={() => setActiveTab('settings')} className="mt-2 text-caption text-brand font-bold">
-            Settings mein set karo →
-          </button>
+          <button onClick={() => setActiveTab('settings')} className="mt-2 text-caption text-brand font-bold">Settings mein set karo →</button>
         </div>
       )}
 
-      {/* Kharcha Breakdown */}
+      {/* Mobile Kharcha Breakdown */}
       {breakdownRows.length > 0 && (
         <div className="bg-surface p-5 rounded-3xl border border-border-default shadow-sm space-y-3">
           <h3 className="font-heading text-title font-bold text-text-primary">Kharcha Breakdown</h3>
@@ -224,10 +404,7 @@ export default function DashboardTab() {
                   <span className="text-body-sm font-bold text-text-primary">{formatCurrency(row.value)}</span>
                 </div>
                 <div className="w-full bg-surface-subdued h-1.5 rounded-full overflow-hidden border border-border-subdued">
-                  <div
-                    className={cn('h-full rounded-full transition-all', row.color)}
-                    style={{ width: masterBudget > 0 ? `${Math.min(100, (row.value / masterBudget) * 100)}%` : '0%' }}
-                  />
+                  <div className={cn('h-full rounded-full transition-all', row.color)} style={{ width: masterBudget > 0 ? `${Math.min(100, (row.value / masterBudget) * 100)}%` : '0%' }} />
                 </div>
               </div>
             ))}
@@ -244,67 +421,37 @@ export default function DashboardTab() {
           </div>
         </div>
       )}
-      </div>{/* end hero + breakdown grid */}
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <button
-          onClick={() => { setActiveTab('construction'); setSubTab('materials'); }}
-          className="bg-surface p-4 rounded-2xl border border-border-default shadow-sm text-left active:scale-95 hover:shadow-md transition-all"
-        >
-          <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center mb-2">
-            <Package size={18} className="text-brand" />
-          </div>
-          <p className="text-title-lg font-bold text-text-primary leading-none">
-            {state.materials.filter((m: Material) => m.purchased - m.used <= m.minStock).length}
-          </p>
+      {/* Mobile Quick Stats */}
+      <div className="grid grid-cols-2 gap-3">
+        <button onClick={() => { setActiveTab('construction'); setSubTab('materials'); }} className="bg-surface p-4 rounded-2xl border border-border-default shadow-sm text-left active:scale-95 transition-all">
+          <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center mb-2"><Package size={18} className="text-brand" /></div>
+          <p className="text-title-lg font-bold text-text-primary leading-none">{state.materials.filter((m: Material) => m.purchased - m.used <= m.minStock).length}</p>
           <p className="text-caption font-bold text-text-subdued uppercase mt-1">Low Stock Items</p>
         </button>
-        <button
-          onClick={() => { setActiveTab('construction'); setSubTab('timeline'); }}
-          className="bg-surface p-4 rounded-2xl border border-border-default shadow-sm text-left active:scale-95 hover:shadow-md transition-all"
-        >
-          <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center mb-2">
-            <Clock size={18} className="text-brand" />
-          </div>
-          <p className="text-title-lg font-bold text-text-primary leading-none">
-            {state.milestones.filter(m => m.status === 'in-progress').length}
-          </p>
+        <button onClick={() => { setActiveTab('construction'); setSubTab('timeline'); }} className="bg-surface p-4 rounded-2xl border border-border-default shadow-sm text-left active:scale-95 transition-all">
+          <div className="w-9 h-9 bg-brand/10 rounded-xl flex items-center justify-center mb-2"><Clock size={18} className="text-brand" /></div>
+          <p className="text-title-lg font-bold text-text-primary leading-none">{state.milestones.filter(m => m.status === 'in-progress').length}</p>
           <p className="text-caption font-bold text-text-subdued uppercase mt-1">Active Phases</p>
         </button>
         {currentMonthRent > 0 && (
-          <button
-            onClick={() => setActiveTab('kiraya')}
-            className="bg-orange-500/10 p-4 rounded-2xl border border-orange-500/20 text-left active:scale-95 hover:shadow-md transition-all col-span-2 lg:col-span-1"
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <Home size={14} className="text-orange-600 dark:text-orange-400" />
-              <span className="text-caption font-bold uppercase text-orange-600 dark:text-orange-400">Is Mahine Rent Baaki</span>
-            </div>
+          <button onClick={() => setActiveTab('kiraya')} className="bg-orange-500/10 p-4 rounded-2xl border border-orange-500/20 text-left active:scale-95 transition-all col-span-2">
+            <div className="flex items-center gap-1.5 mb-1"><Home size={14} className="text-orange-600 dark:text-orange-400" /><span className="text-caption font-bold uppercase text-orange-600 dark:text-orange-400">Is Mahine Rent Baaki</span></div>
             <p className="text-title-lg font-bold text-orange-600 dark:text-orange-400">{formatCurrency(currentMonthRent)}</p>
           </button>
         )}
         {depositPending > 0 && (
-          <button
-            onClick={() => setActiveTab('kiraya')}
-            className="bg-violet-500/10 p-4 rounded-2xl border border-violet-500/20 text-left active:scale-95 hover:shadow-md transition-all col-span-2 lg:col-span-1"
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <Home size={14} className="text-violet-600 dark:text-violet-400" />
-              <span className="text-caption font-bold uppercase text-violet-600 dark:text-violet-400">Deposit Dena Baaki</span>
-            </div>
+          <button onClick={() => setActiveTab('kiraya')} className="bg-violet-500/10 p-4 rounded-2xl border border-violet-500/20 text-left active:scale-95 transition-all col-span-2">
+            <div className="flex items-center gap-1.5 mb-1"><Home size={14} className="text-violet-600 dark:text-violet-400" /><span className="text-caption font-bold uppercase text-violet-600 dark:text-violet-400">Deposit Dena Baaki</span></div>
             <p className="text-title-lg font-bold text-violet-600 dark:text-violet-400">{formatCurrency(depositPending)}</p>
           </button>
         )}
       </div>
 
-      {/* Tod-Phod Net */}
+      {/* Mobile Tod-Phod Net */}
       {(totalRecovery > 0 || demolitionThekaCost > 0 || malwaCost > 0) && (
         <div className="bg-surface-subdued border border-border-default p-5 rounded-3xl shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <Hammer size={16} className="text-orange-500" />
-            <h3 className="font-heading font-bold text-title text-text-primary">Tod-Phod Net Bachat</h3>
-          </div>
+          <div className="flex items-center gap-2 mb-4"><Hammer size={16} className="text-orange-500" /><h3 className="font-heading font-bold text-title text-text-primary">Tod-Phod Net Bachat</h3></div>
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-surface border border-border-subdued rounded-2xl p-3">
               <p className="text-text-subdued text-caption uppercase font-bold mb-1">Scrap + Bricks</p>
@@ -317,68 +464,32 @@ export default function DashboardTab() {
           </div>
           <div className="mt-3 pt-3 border-t border-border-subdued flex justify-between items-center">
             <span className="text-text-secondary text-body-sm font-bold uppercase">Net</span>
-            <span className={cn('text-title-lg font-bold', demolitionNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
-              {formatCurrency(demolitionNet)}
-            </span>
+            <span className={cn('text-title-lg font-bold', demolitionNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>{formatCurrency(demolitionNet)}</span>
           </div>
         </div>
       )}
 
-      {/* Misc Expenses */}
+      {/* Mobile Misc Expenses */}
       <div className="bg-surface p-5 rounded-3xl border border-border-default shadow-sm">
         <div className="flex justify-between items-center mb-3">
           <div>
             <h3 className="font-heading text-title font-bold text-text-primary">Miscellaneous</h3>
             {totalMisc > 0 && <p className="text-caption text-text-subdued font-bold mt-0.5"><span>{formatCurrency(totalMisc)}</span> total</p>}
           </div>
-          <button
-            onClick={openAddMisc}
-            className="flex items-center gap-1.5 px-3 py-2 bg-text-primary text-surface rounded-xl text-body-sm font-bold hover:opacity-90 transition-opacity"
-          >
-            <Plus size={14} /> Add
-          </button>
+          <button onClick={openAddMisc} className="flex items-center gap-1.5 px-3 py-2 bg-text-primary text-surface rounded-xl text-body-sm font-bold hover:opacity-90 transition-opacity"><Plus size={14} /> Add</button>
         </div>
         {sortedMisc.length === 0 ? (
           <p className="text-text-secondary text-body-sm text-center py-3">Koi misc kharcha nahi</p>
         ) : (
-          <>
-            {/* Mobile: card-style list (top 5, then "Sab Dekho" sheet) */}
-            <div className="md:hidden">
-              {sortedMisc.slice(0, 5).map(renderMiscRow)}
-              {sortedMisc.length > 5 && (
-                <button onClick={() => setShowAllMisc(true)} className="w-full pt-3 text-body-sm font-bold text-brand text-center">
-                  Sab Dekho ({sortedMisc.length} entries)
-                </button>
-              )}
-            </div>
-
-            {/* Desktop: full table */}
-            <div className="hidden md:block">
-              <div className="max-h-[420px] overflow-y-auto">
-                <table className="w-full">
-                  <thead className="sticky top-0 bg-surface z-10 shadow-sm shadow-black/5">
-                    <tr className="border-b border-border-subdued">
-                      <th className="py-2 pr-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Date</th>
-                      <th className="py-2 pr-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Category</th>
-                      <th className="py-2 pr-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Notes</th>
-                      <th className="py-2 pr-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Amount</th>
-                      <th className="py-2 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedMisc.map(renderMiscTableRow)}
-                  </tbody>
-                </table>
-              </div>
-              {sortedMisc.length > 0 && (
-                <p className="text-caption text-text-subdued font-bold mt-2 text-right">
-                  {sortedMisc.length} {sortedMisc.length === 1 ? 'entry' : 'entries'}
-                </p>
-              )}
-            </div>
-          </>
+          <div>
+            {sortedMisc.slice(0, 5).map(renderMiscRow)}
+            {sortedMisc.length > 5 && (
+              <button onClick={() => setShowAllMisc(true)} className="w-full pt-3 text-body-sm font-bold text-brand text-center">Sab Dekho ({sortedMisc.length} entries)</button>
+            )}
+          </div>
         )}
       </div>
+      </div>{/* end mobile layout */}
 
       {/* All Misc Bottom Sheet — mobile only */}
       {showAllMisc && (
@@ -388,31 +499,19 @@ export default function DashboardTab() {
             <div className="flex justify-between items-center px-5 pt-5 pb-3 border-b border-border-subdued">
               <div>
                 <h3 className="font-heading text-title font-bold text-text-primary">Miscellaneous Kharcha</h3>
-                <p className="text-caption text-text-subdued font-bold uppercase mt-0.5">
-                  {sortedMisc.length} entries • {formatCurrency(totalMisc)}
-                </p>
+                <p className="text-caption text-text-subdued font-bold uppercase mt-0.5">{sortedMisc.length} entries • {formatCurrency(totalMisc)}</p>
               </div>
-              <button onClick={() => setShowAllMisc(false)} className="w-9 h-9 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary">
-                <X size={18} />
-              </button>
+              <button onClick={() => setShowAllMisc(false)} className="w-9 h-9 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary"><X size={18} /></button>
             </div>
-            <div className="overflow-y-auto flex-1 min-h-0 px-5 py-2 overscroll-contain">
-              {sortedMisc.map(renderMiscRow)}
-            </div>
+            <div className="overflow-y-auto flex-1 min-h-0 px-5 py-2 overscroll-contain">{sortedMisc.map(renderMiscRow)}</div>
           </div>
         </div>
       )}
 
       {/* Misc Form — bottom sheet on mobile, centered modal on desktop */}
       {miscForm && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
-          onClick={closeMiscForm}
-        >
-          <div
-            onClick={e => e.stopPropagation()}
-            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
-          >
+        <div className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center" onClick={closeMiscForm}>
+          <div onClick={e => e.stopPropagation()} className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0">
             <div className="p-6 space-y-4">
               <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
               <div className="flex items-center justify-between">
@@ -421,37 +520,23 @@ export default function DashboardTab() {
               </div>
               <div>
                 <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Amount (₹)</label>
-                <input type="number" inputMode="numeric" autoFocus value={miscForm.amount}
-                  onChange={e => setMiscForm(f => f ? { ...f, amount: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg"
-                  placeholder="0" />
+                <input type="number" inputMode="numeric" autoFocus value={miscForm.amount} onChange={e => setMiscForm(f => f ? { ...f, amount: e.target.value } : f)} className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg" placeholder="0" />
               </div>
               <div>
                 <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Category</label>
-                <input type="text" value={miscForm.category}
-                  onChange={e => setMiscForm(f => f ? { ...f, category: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
-                  placeholder="e.g. Bijli, Paani, Tools" />
+                <input type="text" value={miscForm.category} onChange={e => setMiscForm(f => f ? { ...f, category: e.target.value } : f)} className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="e.g. Bijli, Paani, Tools" />
               </div>
               <div>
                 <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Notes (optional)</label>
-                <input type="text" value={miscForm.notes}
-                  onChange={e => setMiscForm(f => f ? { ...f, notes: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
-                  placeholder="Kuch aur batana hai?" />
+                <input type="text" value={miscForm.notes} onChange={e => setMiscForm(f => f ? { ...f, notes: e.target.value } : f)} className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="Kuch aur batana hai?" />
               </div>
               <div>
                 <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Date</label>
-                <input type="date" value={miscForm.date}
-                  onChange={e => setMiscForm(f => f ? { ...f, date: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
+                <input type="date" value={miscForm.date} onChange={e => setMiscForm(f => f ? { ...f, date: e.target.value } : f)} className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
               </div>
               <div className="flex gap-3 pt-1">
                 <button onClick={closeMiscForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default">Cancel</button>
-                <button onClick={saveMisc} disabled={!miscForm.amount || Number(miscForm.amount) <= 0}
-                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 hover:opacity-90">
-                  {miscEditId ? 'Update Karein' : 'Save Karo'}
-                </button>
+                <button onClick={saveMisc} disabled={!miscForm.amount || Number(miscForm.amount) <= 0} className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 hover:opacity-90">{miscEditId ? 'Update Karein' : 'Save Karo'}</button>
               </div>
             </div>
           </div>
