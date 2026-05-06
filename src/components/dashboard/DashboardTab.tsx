@@ -292,18 +292,23 @@ export default function DashboardTab() {
               <Hammer size={16} className="text-orange-500" />
               <h3 className="font-heading font-bold text-title text-text-primary">Tod-Phod Net Bachat</h3>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex-1 bg-surface border border-border-subdued rounded-xl p-3">
-                <p className="text-text-subdued text-caption uppercase font-bold mb-1">Scrap + Bricks</p>
-                <p className="text-title font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(totalRecovery)}</p>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-surface border border-border-subdued rounded-xl p-3.5">
+                <p className="text-text-subdued text-[10px] uppercase font-bold mb-1 tracking-wider">Scrap + Bricks</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">+{formatCurrency(totalRecovery)}</p>
               </div>
-              <div className="flex-1 bg-surface border border-border-subdued rounded-xl p-3">
-                <p className="text-text-subdued text-caption uppercase font-bold mb-1">Malwa + Theka</p>
-                <p className="text-title font-bold text-red-600 dark:text-red-400">−{formatCurrency(malwaCost + demolitionThekaCost)}</p>
+              <div className="bg-surface border border-border-subdued rounded-xl p-3.5">
+                <p className="text-text-subdued text-[10px] uppercase font-bold mb-1 tracking-wider">Malwa + Theka</p>
+                <p className="text-2xl font-bold text-red-600 dark:text-red-400 tracking-tight">−{formatCurrency(malwaCost + demolitionThekaCost)}</p>
               </div>
-              <div className="flex-1 text-right px-3">
-                <p className="text-text-subdued text-caption uppercase font-bold mb-1">Net</p>
-                <p className={cn('text-title-lg font-bold', demolitionNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>{formatCurrency(demolitionNet)}</p>
+              <div className={cn(
+                'bg-surface border rounded-xl p-3.5 transition-all',
+                demolitionNet >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'
+              )}>
+                <p className={cn('text-[10px] uppercase font-bold mb-1 tracking-wider', demolitionNet >= 0 ? 'text-emerald-600/70' : 'text-red-600/70')}>Net Bachat</p>
+                <p className={cn('text-2xl font-bold tracking-tight', demolitionNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
+                  {formatCurrency(demolitionNet)}
+                </p>
               </div>
             </div>
           </div>
@@ -481,18 +486,23 @@ export default function DashboardTab() {
         <div className="bg-surface-subdued border border-border-default p-5 rounded-3xl shadow-sm">
           <div className="flex items-center gap-2 mb-4"><Hammer size={16} className="text-orange-500" /><h3 className="font-heading font-bold text-title text-text-primary">Tod-Phod Net Bachat</h3></div>
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-surface border border-border-subdued rounded-2xl p-3">
-              <p className="text-text-subdued text-caption uppercase font-bold mb-1">Scrap + Bricks</p>
-              <p className="text-title font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(totalRecovery)}</p>
+            <div className="bg-surface border border-border-subdued rounded-2xl p-3.5">
+              <p className="text-text-subdued text-[10px] uppercase font-bold mb-1 tracking-wider">Scrap + Bricks</p>
+              <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight">+{formatCurrency(totalRecovery)}</p>
             </div>
-            <div className="bg-surface border border-border-subdued rounded-2xl p-3">
-              <p className="text-text-subdued text-caption uppercase font-bold mb-1">Malwa + Theka</p>
-              <p className="text-title font-bold text-red-600 dark:text-red-400">−{formatCurrency(malwaCost + demolitionThekaCost)}</p>
+            <div className="bg-surface border border-border-subdued rounded-2xl p-3.5">
+              <p className="text-text-subdued text-[10px] uppercase font-bold mb-1 tracking-wider">Malwa + Theka</p>
+              <p className="text-xl font-bold text-red-600 dark:text-red-400 tracking-tight">−{formatCurrency(malwaCost + demolitionThekaCost)}</p>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-border-subdued flex justify-between items-center">
-            <span className="text-text-secondary text-body-sm font-bold uppercase">Net</span>
-            <span className={cn('text-title-lg font-bold', demolitionNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>{formatCurrency(demolitionNet)}</span>
+          <div className={cn(
+            'mt-2 bg-surface border rounded-2xl p-3.5 flex justify-between items-center transition-all',
+            demolitionNet >= 0 ? 'border-emerald-500/30' : 'border-red-500/30'
+          )}>
+            <p className={cn('text-[10px] uppercase font-bold tracking-wider', demolitionNet >= 0 ? 'text-emerald-600/70' : 'text-red-600/70')}>Net Bachat</p>
+            <p className={cn('text-xl font-bold tracking-tight', demolitionNet >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400')}>
+              {formatCurrency(demolitionNet)}
+            </p>
           </div>
         </div>
       )}

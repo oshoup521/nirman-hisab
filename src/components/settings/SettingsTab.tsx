@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Wallet, Ruler, Calendar, Cloud, User, AlertTriangle, RefreshCw, ChevronRight, Moon, Sun, Monitor } from 'lucide-react';
+import { Building2, Wallet, Ruler, Calendar, Cloud, User, AlertTriangle, RefreshCw, ChevronRight, Moon, Sun, Monitor, Images, Trash2, ExternalLink, FileText, Plus } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
@@ -34,9 +34,10 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
 }
 
 export default function SettingsTab() {
-  const { state, setState, calcs, askConfirm, sync, pwForm, setPwForm, handleChangePassword, handleLogout } = useAppContext();
+  const { state, setState, calcs, askConfirm, sync, pwForm, setPwForm, handleChangePassword, handleLogout, photos } = useAppContext();
   const { theme, setTheme } = useTheme();
   const { masterBudget, masterBurnRate, masterRemaining, totalKharcha } = calcs;
+  const { uploadPhoto, deletePhoto, getSignedUrl, photoUploading, setLightboxPhoto } = photos;
 
   const project = state.project;
 
@@ -56,6 +57,34 @@ export default function SettingsTab() {
   const costPerSqFt = project?.totalArea && project?.masterBudget
     ? Math.round(project.masterBudget / project.totalArea)
     : null;
+
+  const [signedNakshas, setSignedNakshas] = React.useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    if (project?.sitePlans) {
+      project.sitePlans.forEach(async (p) => {
+        if (!signedNakshas[p.path]) {
+          const url = await getSignedUrl(p.path);
+          if (url) setSignedNakshas(prev => ({ ...prev, [p.path]: url }));
+        }
+      });
+    }
+  }, [project?.sitePlans, getSignedUrl, signedNakshas]);
+
+  const handleNakshaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const caption = prompt('Naksha ka naam (e.g. Ground Floor, Revised Plan):') || 'Untitled Plan';
+      uploadPhoto('project', 'main', file, caption);
+    }
+    e.target.value = '';
+  };
+
+  const handleNakshaDelete = (path: string) => {
+    askConfirm('Kya aap ye Naksha delete karna chahte hain?', () => {
+      deletePhoto('project', 'main', path);
+    });
+  };
 
   return (
     <div className="space-y-5 pb-28 md:pb-6">
@@ -266,6 +295,83 @@ export default function SettingsTab() {
                 Area auto-calculate hoga
               </div>
             )}
+
+            {/* Site Plan / Naksha Section */}
+            <div className="pt-4 border-t border-border-subdued space-y-4">
+              <div className="flex items-center justify-between">
+                 <label className={lbl}>Site Plans (Naksha Gallery)</label>
+                 {project?.sitePlans && project.sitePlans.length > 0 && (
+                   <label className="text-[10px] font-bold text-brand uppercase tracking-widest cursor-pointer hover:opacity-80 flex items-center gap-1">
+                     <Plus size={12} /> Add More
+                     <input type="file" className="hidden" accept="image/*,.pdf" onChange={handleNakshaUpload} />
+                   </label>
+                 )}
+              </div>
+              
+              <div className="space-y-3">
+                {project?.sitePlans && project.sitePlans.length > 0 ? (
+                  project.sitePlans.map((p) => {
+                    const url = signedNakshas[p.path];
+                    const isPdf = p.path.toLowerCase().endsWith('.pdf');
+                    return (
+                      <div key={p.id} className="bg-surface-subdued rounded-2xl p-4 border border-border-subdued flex items-center justify-between group">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-14 h-14 rounded-xl bg-surface border border-border-subdued flex items-center justify-center overflow-hidden shrink-0">
+                            {isPdf ? (
+                              <FileText className="text-red-500" size={24} />
+                            ) : url ? (
+                              <img 
+                                src={url} 
+                                alt={p.caption} 
+                                className="w-full h-full object-cover cursor-pointer hover:scale-110 transition-transform"
+                                onClick={() => setLightboxPhoto({ url, caption: p.caption })}
+                              />
+                            ) : (
+                              <RefreshCw className="animate-spin text-text-subdued" size={16} />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-text-primary truncate">{p.caption}</p>
+                            <p className="text-[10px] text-text-subdued font-bold uppercase">{isPdf ? 'PDF Document' : 'Image Plan'}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <a 
+                            href={url || '#'} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-2 bg-surface text-text-secondary rounded-lg border border-border-subdued hover:text-brand transition-colors"
+                          >
+                            <ExternalLink size={16} />
+                          </a>
+                          <button 
+                            onClick={() => handleNakshaDelete(p.path)}
+                            className="p-2 bg-surface text-red-500 rounded-lg border border-border-subdued hover:bg-red-50 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <label className="w-full flex flex-col items-center justify-center py-8 bg-surface-subdued border-2 border-dashed border-border-subdued rounded-2xl cursor-pointer hover:border-brand/40 transition-colors group">
+                    <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center text-brand mb-3 group-hover:scale-110 transition-transform">
+                      <Images size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-text-primary">Naksha Upload Karein</p>
+                    <p className="text-[10px] text-text-subdued font-bold uppercase mt-1">Ground Floor, 1st Floor, etc.</p>
+                    <input type="file" className="hidden" accept="image/*,.pdf" onChange={handleNakshaUpload} disabled={photoUploading === 'project:main'} />
+                    {photoUploading === 'project:main' && (
+                      <div className="absolute inset-0 bg-surface/60 flex items-center justify-center rounded-2xl">
+                         <RefreshCw className="animate-spin text-brand" size={20} />
+                      </div>
+                    )}
+                  </label>
+                )}
+              </div>
+            </div>
           </Section>
         </div>
 

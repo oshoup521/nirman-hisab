@@ -19,6 +19,7 @@ export interface Project {
   plotWidth?: number;
   floors?: number;
   totalArea?: number;
+  sitePlans?: { id: string; path: string; caption: string }[];
 }
 
 export interface Material {

@@ -2,9 +2,9 @@ import { useState, useCallback, Dispatch, SetStateAction } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { AppState } from '../types';
 
-export type PhotoEntity = 'milestone' | 'material' | 'expense' | 'diary';
+export type PhotoEntity = 'milestone' | 'material' | 'expense' | 'diary' | 'project';
 
-const ENTITY_KEY: Record<PhotoEntity, 'milestones' | 'materials' | 'expenses' | 'diary'> = {
+const ENTITY_KEY: Record<string, string> = {
   milestone: 'milestones',
   material: 'materials',
   expense: 'expenses',
@@ -12,6 +12,9 @@ const ENTITY_KEY: Record<PhotoEntity, 'milestones' | 'materials' | 'expenses' | 
 };
 
 function compressImage(file: File): Promise<Blob> {
+  // If not an image, return original file
+  if (!file.type.startsWith('image/')) return Promise.resolve(file);
+  
   return new Promise((resolve) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -58,25 +61,43 @@ export function usePhotoManager(setState: Dispatch<SetStateAction<AppState>>) {
     const uploadKey = `${entity}:${entityId}`;
     setPhotoUploading(uploadKey);
     try {
-      const compressed = await compressImage(file);
-      // Milestones keep legacy path shape ({uid}/{id}/...) so existing photos
-      // remain reachable. New entities are namespaced by type.
+      const isImage = file.type.startsWith('image/');
+      const ext = isImage ? 'jpg' : file.name.split('.').pop() || 'file';
+      const compressed = isImage ? await compressImage(file) : file;
+
+      // Path generation
       const path = entity === 'milestone'
-        ? `${session.user.id}/${entityId}/${Date.now()}.jpg`
-        : `${session.user.id}/${entity}/${entityId}/${Date.now()}.jpg`;
+        ? `${session.user.id}/${entityId}/${Date.now()}.${ext}`
+        : `${session.user.id}/${entity}/${entityId}/${Date.now()}.${ext}`;
+
       const { error } = await supabase.storage
         .from('phase-photos')
-        .upload(path, compressed, { upsert: false, contentType: 'image/jpeg' });
+        .upload(path, compressed, { 
+          upsert: false, 
+          contentType: isImage ? 'image/jpeg' : file.type 
+        });
+        
       if (error) throw error;
-      const key = ENTITY_KEY[entity];
-      setState(prev => ({
-        ...prev,
-        [key]: (prev[key] as { id: string; photos?: { path: string; caption?: string }[] }[]).map(item =>
-          item.id === entityId
-            ? { ...item, photos: [...(item.photos ?? []), { path, caption: caption || undefined }] }
-            : item
-        ),
-      }));
+
+      if (entity === 'project') {
+        setState(prev => ({
+          ...prev,
+          project: prev.project ? { 
+            ...prev.project, 
+            sitePlans: [...(prev.project.sitePlans || []), { id: Date.now().toString(), path, caption: caption || 'Untitled Plan' }] 
+          } : null
+        }));
+      } else {
+        const key = ENTITY_KEY[entity] as keyof AppState;
+        setState(prev => ({
+          ...prev,
+          [key]: (prev[key] as { id: string; photos?: { path: string; caption?: string }[] }[]).map(item =>
+            item.id === entityId
+              ? { ...item, photos: [...(item.photos ?? []), { path, caption: caption || undefined }] }
+              : item
+          ),
+        }));
+      }
     } finally {
       setPhotoUploading(null);
     }
@@ -85,15 +106,26 @@ export function usePhotoManager(setState: Dispatch<SetStateAction<AppState>>) {
   const deletePhoto = async (entity: PhotoEntity, entityId: string, path: string) => {
     await supabase.storage.from('phase-photos').remove([path]);
     setSignedUrls(prev => { const n = { ...prev }; delete n[path]; return n; });
-    const key = ENTITY_KEY[entity];
-    setState(prev => ({
-      ...prev,
-      [key]: (prev[key] as { id: string; photos?: { path: string; caption?: string }[] }[]).map(item =>
-        item.id === entityId
-          ? { ...item, photos: (item.photos ?? []).filter(p => p.path !== path) }
-          : item
-      ),
-    }));
+    
+    if (entity === 'project') {
+      setState(prev => ({
+        ...prev,
+        project: prev.project ? { 
+          ...prev.project, 
+          sitePlans: (prev.project.sitePlans || []).filter(p => p.path !== path) 
+        } : null
+      }));
+    } else {
+      const key = ENTITY_KEY[entity] as keyof AppState;
+      setState(prev => ({
+        ...prev,
+        [key]: (prev[key] as { id: string; photos?: { path: string; caption?: string }[] }[]).map(item =>
+          item.id === entityId
+            ? { ...item, photos: (item.photos ?? []).filter(p => p.path !== path) }
+            : item
+        ),
+      }));
+    }
   };
 
   return { photoUploading, lightboxPhoto, setLightboxPhoto, getSignedUrl, uploadPhoto, deletePhoto };
