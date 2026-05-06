@@ -98,19 +98,19 @@ export default function ExpensesSection() {
 
       {/* Summary Card */}
       {state.expenses.length > 0 && (
-        <div className="bg-brand text-surface rounded-2xl p-4 space-y-3">
+        <div className="bg-surface rounded-2xl border border-border-default shadow-sm p-4 space-y-3">
           <div>
-            <p className="opacity-80 text-caption font-bold uppercase tracking-wide">Total Construction Kharcha</p>
-            <p className="text-surface text-title-lg font-bold mt-0.5">{formatCurrency(total)}</p>
+            <p className="text-caption font-bold text-text-subdued uppercase tracking-wide">Total Construction Kharcha</p>
+            <p className="text-title-lg font-bold text-text-primary mt-0.5">{formatCurrency(total)}</p>
           </div>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 overflow-x-auto pb-0.5 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
             {categoryTotals.map(({ cat, total: catTotal }) => {
-              const { Icon } = CAT_CFG[cat];
+              const { Icon, pill } = CAT_CFG[cat];
               return (
-                <div key={cat} className="flex items-center gap-1.5 bg-black/10 dark:bg-white/10 rounded-xl px-2.5 py-1.5">
-                  <Icon size={11} className="opacity-80" />
+                <div key={cat} className={cn('flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 border shrink-0', pill)}>
+                  <Icon size={11} />
                   <div>
-                    <p className="text-caption opacity-80 font-bold uppercase leading-none">{cat}</p>
+                    <p className="text-[10px] font-bold uppercase leading-none">{cat}</p>
                     <p className="text-body-sm font-bold leading-tight">{formatCurrency(catTotal)}</p>
                   </div>
                 </div>

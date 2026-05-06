@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm run *)",
       "Bash(echo \"exit: $?\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\oshoupadhyay\\\\PROJECTS\\\\MY-PROJECTs\\\\nirman-hisab\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

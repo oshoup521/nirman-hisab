@@ -29,7 +29,9 @@ export default function OverviewSection() {
     );
   }
 
-  const { project, milestones, materials, labours } = state;
+  const { project, milestones, materials } = state;
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayWorkers = (state.labourDayEntries || []).filter(e => e.date === todayStr).reduce((sum, e) => sum + e.count, 0);
   const start = new Date(project.startDate).getTime();
   const end = new Date(project.endDate).getTime();
   const now = Date.now();
@@ -196,10 +198,10 @@ export default function OverviewSection() {
           <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-500" />
           <div className="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110"><Users size={28} className="text-emerald-600" /></div>
           <div>
-            <p className="text-display-sm font-bold text-text-primary tracking-tight">{labours.length}</p>
-            <p className="text-caption font-bold text-text-subdued uppercase tracking-widest mt-1">Mazdoor Database</p>
+            <p className="text-display-sm font-bold text-text-primary tracking-tight">{todayWorkers}</p>
+            <p className="text-caption font-bold text-text-subdued uppercase tracking-widest mt-1">Aaj Ke Mazdoor</p>
           </div>
-          <div className="mt-6 text-caption font-bold text-emerald-600 uppercase tracking-widest">Active Workforce ✓</div>
+          <div className="mt-6 text-caption font-bold text-emerald-600 uppercase tracking-widest">{todayWorkers > 0 ? 'Aaj kaam chal raha hai ✓' : 'Koi record nahi aaj ka'}</div>
         </button>
       </div>
     </div>
@@ -303,8 +305,8 @@ export default function OverviewSection() {
         </button>
         <button onClick={() => setSubTab('labour')} className="bg-surface p-4 rounded-2xl border border-border-default shadow-sm text-left active:scale-95 transition-transform">
           <Users size={18} className="text-brand mb-2" />
-          <p className="text-title-lg font-bold text-text-primary">{labours.length}</p>
-          <p className="text-caption font-bold text-text-subdued uppercase tracking-widest">Mazdoor</p>
+          <p className="text-title-lg font-bold text-text-primary">{todayWorkers}</p>
+          <p className="text-caption font-bold text-text-subdued uppercase tracking-widest">Aaj Mazdoor</p>
         </button>
       </div>
     </div>

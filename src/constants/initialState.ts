@@ -4,6 +4,7 @@ export const INITIAL_STATE: AppState = {
   project: null,
   materials: [],
   labours: [],
+  labourDayEntries: [],
   thekas: [],
   expenses: [],
   milestones: [

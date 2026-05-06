@@ -41,6 +41,19 @@ export interface Labour {
   type: string;
   dailyWage: number;
   attendance: { [date: string]: 'present' | 'absent' | 'half' };
+  paymentBy: 'self' | 'thekedar'; // 'self' = mujhe dena hai, 'thekedar' = theke me included
+}
+
+export interface LabourDayEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  workerType: string;
+  count: number;
+  dailyWage: number;
+  dayType: 'full' | 'half';
+  paymentBy: 'self' | 'thekedar';
+  notes?: string;
+  expenseId?: string; // linked expense entry id (only if paymentBy === 'self')
 }
 
 export interface ThekaPayment {
@@ -190,6 +203,7 @@ export interface AppState {
   project: Project | null;
   materials: Material[];
   labours: Labour[];
+  labourDayEntries: LabourDayEntry[];
   thekas: Theka[];
   expenses: Expense[];
   milestones: Milestone[];

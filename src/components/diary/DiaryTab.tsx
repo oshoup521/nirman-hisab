@@ -109,19 +109,16 @@ export default function DiaryTab() {
     const expensesToday = (state.expenses || []).filter(e => e.date.slice(0, 10) === date);
     const totalKharcha = expensesToday.reduce((s, e) => s + e.amount, 0);
 
-    const labourPresent = (state.labours || []).reduce((acc, l) => {
-      const att = l.attendance?.[date];
-      if (att === 'present') return acc + 1;
-      if (att === 'half') return acc + 0.5;
-      return acc;
-    }, 0);
+    const labourPresent = (state.labourDayEntries || [])
+      .filter(e => e.date === date)
+      .reduce((acc, e) => acc + (e.dayType === 'half' ? e.count * 0.5 : e.count), 0);
 
     const milestonesActive = (state.milestones || []).filter(m =>
       m.status === 'in-progress' || (m.status === 'completed' && m.endDate === date)
     );
 
     return { totalKharcha, expenseCount: expensesToday.length, labourPresent, milestonesActive };
-  }, [state.expenses, state.labours, state.milestones, date]);
+  }, [state.expenses, state.labourDayEntries, state.milestones, date]);
 
   // ---- Calendar grid ----
   const calendarDays = useMemo(() => {
