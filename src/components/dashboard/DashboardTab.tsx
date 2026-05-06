@@ -163,46 +163,74 @@ export default function DashboardTab() {
       <div className="hidden md:block space-y-6">
         {/* 3 Budget Stat Cards */}
         {masterBudget > 0 ? (
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-surface rounded-2xl border border-border-default p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                  <Wallet size={16} className="text-indigo-500" />
+          <div className="grid grid-cols-3 gap-5">
+            {/* Master Budget Card */}
+            <div className="bg-surface rounded-3xl border border-border-default p-6 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                    <Wallet size={16} className="text-indigo-500" />
+                  </div>
+                  <p className="text-[10px] font-black text-text-subdued uppercase tracking-widest">Master Budget</p>
                 </div>
-                <p className="text-caption font-bold text-text-subdued uppercase tracking-wide">Master Budget</p>
+                <p className="text-4xl font-black text-text-primary tracking-tighter leading-tight">{formatCurrency(masterBudget)}</p>
               </div>
-              <p className="text-display font-bold text-text-primary leading-none">{formatCurrency(masterBudget)}</p>
-              <div className="mt-3 w-full bg-surface-subdued h-1.5 rounded-full overflow-hidden border border-border-subdued">
-                <div
-                  className={cn('h-full rounded-full transition-all duration-700', budgetStatus === 'danger' ? 'bg-red-500' : budgetStatus === 'warning' ? 'bg-amber-500' : 'bg-indigo-500')}
-                  style={{ width: `${Math.min(100, masterBurnRate)}%` }}
-                />
+              <div className="mt-6">
+                <div className="w-full bg-surface-subdued h-2 rounded-full overflow-hidden border border-border-subdued">
+                  <div
+                    className={cn('h-full rounded-full transition-all duration-1000', budgetStatus === 'danger' ? 'bg-red-500' : budgetStatus === 'warning' ? 'bg-amber-500' : 'bg-indigo-500')}
+                    style={{ width: `${Math.min(100, masterBurnRate)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center mt-2.5">
+                  <p className="text-[10px] text-text-subdued font-bold uppercase">{masterBurnRate.toFixed(0)}% Utilized</p>
+                  <span className={cn('px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider', 
+                    budgetStatus === 'danger' ? 'bg-red-500/10 text-red-500' : 
+                    budgetStatus === 'warning' ? 'bg-amber-500/10 text-amber-600' : 
+                    'bg-emerald-500/10 text-emerald-600'
+                  )}>
+                    {budgetStatus === 'danger' ? 'Over Budget' : budgetStatus === 'warning' ? 'Budget Tight' : 'On Track'}
+                  </span>
+                </div>
               </div>
-              <p className="text-caption text-text-subdued font-bold mt-1.5">{masterBurnRate.toFixed(0)}% used
-                <span className={cn('ml-2 px-1.5 py-0.5 rounded text-caption font-bold', budgetStatus === 'danger' ? 'bg-red-500/10 text-red-500' : budgetStatus === 'warning' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400')}>
-                  {budgetStatus === 'danger' ? 'Over!' : budgetStatus === 'warning' ? 'Tight' : 'On Track'}
-                </span>
-              </p>
             </div>
-            <div className="bg-surface rounded-2xl border border-border-default p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center">
+
+            {/* Total Kharcha Card */}
+            <div className="bg-surface rounded-3xl border border-border-default p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-red-500/10 flex items-center justify-center">
                   <TrendingDown size={16} className="text-red-500" />
                 </div>
-                <p className="text-caption font-bold text-text-subdued uppercase tracking-wide">Total Kharcha</p>
+                <p className="text-[10px] font-black text-text-subdued uppercase tracking-widest">Total Kharcha</p>
               </div>
-              <p className="text-display font-bold text-red-500 leading-none">{formatCurrency(totalKharcha)}</p>
-              <p className="text-caption text-text-subdued font-bold mt-3">across {breakdownRows.length} categories</p>
+              <p className="text-4xl font-black text-red-500 tracking-tighter leading-tight">{formatCurrency(totalKharcha)}</p>
+              <div className="mt-6 p-3 bg-red-500/5 rounded-2xl border border-red-500/10">
+                 <p className="text-[10px] text-red-600/70 font-bold uppercase tracking-wide">Category Wise Split</p>
+                 <p className="text-xs font-bold text-red-600 mt-1">{breakdownRows.length} active spend categories</p>
+              </div>
             </div>
-            <div className="bg-surface rounded-2xl border border-border-default p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', masterRemaining < 0 ? 'bg-red-500/10' : 'bg-emerald-500/10')}>
+
+            {/* Bacha Hua Card */}
+            <div className="bg-surface rounded-3xl border border-border-default p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-4">
+                <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center', masterRemaining < 0 ? 'bg-red-500/10' : 'bg-emerald-500/10')}>
                   <TrendingUp size={16} className={masterRemaining < 0 ? 'text-red-500' : 'text-emerald-500'} />
                 </div>
-                <p className="text-caption font-bold text-text-subdued uppercase tracking-wide">Bacha Hua</p>
+                <p className="text-[10px] font-black text-text-subdued uppercase tracking-widest">Bacha Hua</p>
               </div>
-              <p className={cn('text-display font-bold leading-none', masterRemaining < 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>{formatCurrency(masterRemaining)}</p>
-              <p className="text-caption text-text-subdued font-bold mt-3">{masterRemaining > 0 ? 'remaining budget' : 'over budget'}</p>
+              <p className={cn('text-4xl font-black tracking-tighter leading-tight', masterRemaining < 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>
+                {formatCurrency(masterRemaining)}
+              </p>
+              <div className={cn('mt-6 p-3 rounded-2xl border', 
+                masterRemaining < 0 ? 'bg-red-500/5 border-red-500/10' : 'bg-emerald-500/5 border-emerald-500/10'
+              )}>
+                 <p className={cn('text-[10px] font-bold uppercase tracking-wide', masterRemaining < 0 ? 'text-red-600/70' : 'text-emerald-600/70')}>
+                   Current Status
+                 </p>
+                 <p className={cn('text-xs font-bold mt-1', masterRemaining < 0 ? 'text-red-600' : 'text-emerald-600')}>
+                   {masterRemaining > 0 ? 'Savings available' : 'Budget exceeded'}
+                 </p>
+              </div>
             </div>
           </div>
         ) : (
