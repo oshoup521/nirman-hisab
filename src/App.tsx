@@ -128,6 +128,12 @@ export default function App() {
       showAllMisc, setShowAllMisc,
     }}>
       <div className="min-h-screen bg-app font-sans text-text-primary transition-colors duration-200">
+        <div
+          aria-hidden="true"
+          className="md:hidden fixed top-0 inset-x-0 z-50 bg-app pointer-events-none"
+          style={{ height: 'env(safe-area-inset-top)' }}
+        />
+
         <PullToRefreshIndicator
           pullY={pullY}
           isPulling={isPulling}
