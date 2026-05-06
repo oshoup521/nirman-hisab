@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Package, Clock, Home, Hammer, Plus, Pencil, Trash2, X, Wallet, TrendingDown, TrendingUp } from 'lucide-react';
+import { Download, Package, Clock, Home, Hammer, Plus, Pencil, Trash2, X, Wallet, TrendingDown, TrendingUp, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
@@ -31,8 +31,12 @@ export default function DashboardTab() {
 
   useEffect(() => {
     document.body.style.overflow = (showAllMisc || !!miscForm) ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
   }, [showAllMisc, miscForm]);
+
+  useEffect(() => () => {
+    document.body.style.overflow = '';
+    setShowAllMisc(false);
+  }, []);
 
   const openAddMisc = () => { setMiscEditId(null); setMiscForm(blankMisc()); };
   const openEditMisc = (e: { id: string; amount: number; category: string; notes: string; date: string }) => {
@@ -68,12 +72,12 @@ export default function DashboardTab() {
   const budgetStatus = masterBurnRate > 90 ? 'danger' : masterBurnRate > 70 ? 'warning' : 'good';
 
   const breakdownRows = [
-    { label: 'Construction', value: totalSpent, color: 'bg-indigo-500' },
-    { label: 'Tod-Phod Theka', value: demolitionThekaCost, color: 'bg-orange-500' },
-    { label: 'Malwa Disposal', value: malwaCost, color: 'bg-amber-500' },
-    { label: 'Kiraya', value: totalCashRentPaid, color: 'bg-violet-500' },
-    { label: 'Security Deposit', value: depositPaid, color: 'bg-blue-400' },
-    { label: 'Miscellaneous', value: totalMisc, color: 'bg-slate-400 dark:bg-slate-500' },
+    { label: 'Construction', value: totalSpent, color: 'bg-indigo-500', navigate: () => { setActiveTab('construction'); setSubTab('expenses'); } },
+    { label: 'Tod-Phod Theka', value: demolitionThekaCost, color: 'bg-orange-500', navigate: () => setActiveTab('demolition') },
+    { label: 'Malwa Disposal', value: malwaCost, color: 'bg-amber-500', navigate: () => setActiveTab('demolition') },
+    { label: 'Kiraya', value: totalCashRentPaid, color: 'bg-violet-500', navigate: () => setActiveTab('kiraya') },
+    { label: 'Security Deposit', value: depositPaid, color: 'bg-blue-400', navigate: () => setActiveTab('kiraya') },
+    { label: 'Miscellaneous', value: totalMisc, color: 'bg-slate-400 dark:bg-slate-500', navigate: () => setShowAllMisc(true) },
   ].filter(r => r.value > 0);
 
   const renderMiscRow = (e: typeof sortedMisc[0]) => (
@@ -319,19 +323,26 @@ export default function DashboardTab() {
           {/* Left: Breakdown */}
           <div className="col-span-2">
             {breakdownRows.length > 0 && (
-              <div className="bg-surface p-5 rounded-2xl border border-border-default shadow-sm space-y-3 h-full">
-                <h3 className="font-heading text-title font-bold text-text-primary">Kharcha Breakdown</h3>
-                <div className="space-y-3">
+              <div className="bg-surface p-5 rounded-2xl border border-border-default shadow-sm space-y-2 h-full">
+                <h3 className="font-heading text-title font-bold text-text-primary mb-1">Kharcha Breakdown</h3>
+                <div className="space-y-1">
                   {breakdownRows.map(row => (
-                    <div key={row.label}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-body-sm text-text-secondary font-medium">{row.label}</span>
-                        <span className="text-body-sm font-bold text-text-primary">{formatCurrency(row.value)}</span>
+                    <button
+                      key={row.label}
+                      onClick={row.navigate}
+                      className="w-full text-left rounded-xl px-2 py-2 hover:bg-surface-subdued active:bg-border-default transition-colors group"
+                    >
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-body-sm text-text-secondary font-medium group-hover:text-text-primary transition-colors">{row.label}</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-body-sm font-bold text-text-primary">{formatCurrency(row.value)}</span>
+                          <ChevronRight size={13} className="text-text-subdued group-hover:text-text-secondary transition-colors" />
+                        </div>
                       </div>
                       <div className="w-full bg-surface-subdued h-1.5 rounded-full overflow-hidden border border-border-subdued">
                         <div className={cn('h-full rounded-full transition-all', row.color)} style={{ width: masterBudget > 0 ? `${Math.min(100, (row.value / masterBudget) * 100)}%` : '0%' }} />
                       </div>
-                    </div>
+                    </button>
                   ))}
                   {(totalRentPaid - totalCashRentPaid) > 0 && (
                     <div className="bg-violet-500/10 rounded-xl px-3 py-2 flex justify-between items-center">
@@ -339,7 +350,7 @@ export default function DashboardTab() {
                       <span className="text-caption font-bold text-violet-600 dark:text-violet-400">{formatCurrency(totalRentPaid - totalCashRentPaid)}</span>
                     </div>
                   )}
-                  <div className="pt-2 border-t border-border-subdued flex justify-between items-center">
+                  <div className="pt-2 border-t border-border-subdued flex justify-between items-center px-2">
                     <span className="text-body-sm font-bold text-text-secondary uppercase">Total</span>
                     <span className="font-bold text-text-primary">{formatCurrency(totalKharcha)}</span>
                   </div>
@@ -427,19 +438,26 @@ export default function DashboardTab() {
 
       {/* Mobile Kharcha Breakdown */}
       {breakdownRows.length > 0 && (
-        <div className="bg-surface p-5 rounded-3xl border border-border-default shadow-sm space-y-3">
-          <h3 className="font-heading text-title font-bold text-text-primary">Kharcha Breakdown</h3>
-          <div className="space-y-3">
+        <div className="bg-surface p-5 rounded-3xl border border-border-default shadow-sm space-y-2">
+          <h3 className="font-heading text-title font-bold text-text-primary mb-1">Kharcha Breakdown</h3>
+          <div className="space-y-1">
             {breakdownRows.map(row => (
-              <div key={row.label}>
-                <div className="flex justify-between items-center mb-1">
+              <button
+                key={row.label}
+                onClick={row.navigate}
+                className="w-full text-left rounded-xl px-2 py-2 hover:bg-surface-subdued active:bg-border-default transition-colors group"
+              >
+                <div className="flex justify-between items-center mb-1.5">
                   <span className="text-body-sm text-text-secondary font-medium">{row.label}</span>
-                  <span className="text-body-sm font-bold text-text-primary">{formatCurrency(row.value)}</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-body-sm font-bold text-text-primary">{formatCurrency(row.value)}</span>
+                    <ChevronRight size={13} className="text-text-subdued" />
+                  </div>
                 </div>
                 <div className="w-full bg-surface-subdued h-1.5 rounded-full overflow-hidden border border-border-subdued">
                   <div className={cn('h-full rounded-full transition-all', row.color)} style={{ width: masterBudget > 0 ? `${Math.min(100, (row.value / masterBudget) * 100)}%` : '0%' }} />
                 </div>
-              </div>
+              </button>
             ))}
             {(totalRentPaid - totalCashRentPaid) > 0 && (
               <div className="bg-violet-500/10 rounded-xl px-3 py-2 flex justify-between items-center">
@@ -447,7 +465,7 @@ export default function DashboardTab() {
                 <span className="text-caption font-bold text-violet-600 dark:text-violet-400">{formatCurrency(totalRentPaid - totalCashRentPaid)}</span>
               </div>
             )}
-            <div className="pt-2 border-t border-border-subdued flex justify-between items-center">
+            <div className="pt-2 border-t border-border-subdued flex justify-between items-center px-2">
               <span className="text-body-sm font-bold text-text-secondary uppercase">Total</span>
               <span className="font-bold text-text-primary">{formatCurrency(totalKharcha)}</span>
             </div>
