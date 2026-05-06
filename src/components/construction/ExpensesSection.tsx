@@ -256,16 +256,16 @@ export default function ExpensesSection() {
                     <p className="font-bold text-text-primary text-body-sm leading-snug break-words">
                       {expense.notes || expense.category}
                     </p>
-                    <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                      <span className={cn('text-caption font-bold px-2 py-0.5 rounded-full', badge)}>
+                    <div className="flex items-center gap-1.5 mt-1.5 overflow-hidden">
+                      <span className={cn('text-caption font-bold px-2 py-0.5 rounded-full shrink-0', badge)}>
                         {expense.category}
                       </span>
-                      <span className="text-caption text-text-subdued">•</span>
-                      <span className="text-caption text-text-subdued font-bold">
+                      <span className="text-caption text-text-subdued shrink-0">•</span>
+                      <span className="text-caption text-text-subdued font-bold whitespace-nowrap shrink-0">
                         {format(new Date(expense.date), 'dd MMM yyyy')}
                       </span>
                       {photoCount > 0 && (
-                        <span className="inline-flex items-center gap-0.5 text-caption font-bold text-brand">
+                        <span className="inline-flex items-center gap-0.5 text-caption font-bold text-brand shrink-0">
                           <Paperclip size={9} /> {photoCount}
                         </span>
                       )}

@@ -1,22 +1,28 @@
 import React, { useState } from 'react';
-import { Plus, Home, Pencil, Trash2, X, CheckCircle, Clock } from 'lucide-react';
+import { Plus, Home, Pencil, Trash2, X, CheckCircle, Clock, Zap } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
 import { genId } from '../../utils/helpers';
 import { useAppContext } from '../../context/AppContext';
-import { RentalProperty } from '../../types';
+import { RentalProperty, ElectricityReading } from '../../types';
 
 type PropForm = {
   name: string; type: RentalProperty['type'];
   monthlyRent: string; deposit: string; depositStatus: RentalProperty['depositStatus'];
   ownerName: string; ownerPhone: string;
   startDate: string; agreementEndDate: string; agreementNote: string;
+  hasElectricity: boolean; electricityRatePerUnit: string;
 };
 type PayForm = {
   rentalId: string; paymentId: string | null;
   amount: string; month: string; date: string; note: string;
   paidFromDeposit: boolean; isDepositMode: boolean; maxFromDeposit: number;
+};
+type ElecForm = {
+  rentalId: string; readingId: string | null;
+  date: string; currentReading: string; previousReading: string;
+  ratePerUnit: string; fixedCharge: string; note: string; paid: boolean;
 };
 
 const PROP_TYPES: RentalProperty['type'][] = ['Basement', '1BHK', '2BHK', 'Shop', 'Other'];
@@ -31,6 +37,7 @@ const blankProp = (): PropForm => ({
   name: '', type: 'Other', monthlyRent: '', deposit: '', depositStatus: 'pending',
   ownerName: '', ownerPhone: '', startDate: format(new Date(), 'yyyy-MM-dd'),
   agreementEndDate: '', agreementNote: '',
+  hasElectricity: false, electricityRatePerUnit: '',
 });
 
 export default function KirayaTab() {
@@ -44,6 +51,7 @@ export default function KirayaTab() {
   const [propForm, setPropForm] = useState<PropForm | null>(null);
   const [propEditId, setPropEditId] = useState<string | null>(null);
   const [payForm, setPayForm] = useState<PayForm | null>(null);
+  const [elecForm, setElecForm] = useState<ElecForm | null>(null);
 
   const openAddProp = () => { setPropEditId(null); setPropForm(blankProp()); };
   const openEditProp = (r: RentalProperty) => {
@@ -56,12 +64,15 @@ export default function KirayaTab() {
       startDate: r.startDate ? format(new Date(r.startDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
       agreementEndDate: r.agreementEndDate ? format(new Date(r.agreementEndDate), 'yyyy-MM-dd') : '',
       agreementNote: r.agreementNote || '',
+      hasElectricity: r.hasElectricity ?? false,
+      electricityRatePerUnit: String(r.electricityRatePerUnit ?? ''),
     });
   };
   const closePropForm = () => { setPropForm(null); setPropEditId(null); };
 
   const saveProp = () => {
     if (!propForm?.name) return;
+    const existing = propEditId ? rentals.find(r => r.id === propEditId) : null;
     const entry: RentalProperty = {
       id: propEditId || genId(),
       name: propForm.name, type: propForm.type,
@@ -72,7 +83,10 @@ export default function KirayaTab() {
       startDate: propForm.startDate ? new Date(propForm.startDate).toISOString() : new Date().toISOString(),
       agreementEndDate: propForm.agreementEndDate ? new Date(propForm.agreementEndDate).toISOString() : '',
       agreementNote: propForm.agreementNote,
-      payments: propEditId ? (rentals.find(r => r.id === propEditId)?.payments || []) : [],
+      payments: existing?.payments || [],
+      hasElectricity: propForm.hasElectricity,
+      electricityRatePerUnit: propForm.hasElectricity ? (Number(propForm.electricityRatePerUnit) || 0) : undefined,
+      electricityReadings: existing?.electricityReadings || [],
     };
     setState(prev => ({
       ...prev,
@@ -81,6 +95,77 @@ export default function KirayaTab() {
         : [...(prev.rentals || []), entry],
     }));
     closePropForm();
+  };
+
+  const openAddElec = (r: RentalProperty) => {
+    const readings = r.electricityReadings || [];
+    const lastReading = readings.length > 0
+      ? [...readings].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+      : null;
+    setElecForm({
+      rentalId: r.id, readingId: null,
+      date: format(new Date(), 'yyyy-MM-dd'),
+      currentReading: '',
+      previousReading: lastReading ? String(lastReading.currentReading) : '',
+      ratePerUnit: String(r.electricityRatePerUnit ?? ''),
+      fixedCharge: '', note: '', paid: false,
+    });
+  };
+  const openEditElec = (rentalId: string, reading: ElectricityReading) => {
+    const r = rentals.find(x => x.id === rentalId)!;
+    setElecForm({
+      rentalId, readingId: reading.id,
+      date: format(new Date(reading.date), 'yyyy-MM-dd'),
+      currentReading: String(reading.currentReading),
+      previousReading: String(reading.previousReading),
+      ratePerUnit: String(reading.ratePerUnit),
+      fixedCharge: reading.fixedCharge ? String(reading.fixedCharge) : '',
+      note: reading.note, paid: reading.paid,
+    });
+    void r;
+  };
+  const closeElecForm = () => setElecForm(null);
+
+  const saveElec = () => {
+    if (!elecForm) return;
+    const cur = Number(elecForm.currentReading);
+    const prev = Number(elecForm.previousReading);
+    const rate = Number(elecForm.ratePerUnit);
+    if (!cur || !rate) return;
+    const units = Math.max(0, cur - prev);
+    const entry: ElectricityReading = {
+      id: elecForm.readingId || genId(),
+      date: new Date(elecForm.date).toISOString(),
+      currentReading: cur, previousReading: prev,
+      ratePerUnit: rate, fixedCharge: Number(elecForm.fixedCharge) || 0,
+      note: elecForm.note.trim(), paid: elecForm.paid,
+    };
+    void units;
+    setState(prev => ({
+      ...prev,
+      rentals: (prev.rentals || []).map(r =>
+        r.id === elecForm.rentalId
+          ? {
+              ...r,
+              electricityReadings: elecForm.readingId
+                ? (r.electricityReadings || []).map(x => x.id === elecForm.readingId ? entry : x)
+                : [...(r.electricityReadings || []), entry],
+            }
+          : r
+      ),
+    }));
+    closeElecForm();
+  };
+
+  const toggleElecPaid = (rentalId: string, readingId: string, paid: boolean) => {
+    setState(prev => ({
+      ...prev,
+      rentals: (prev.rentals || []).map(r =>
+        r.id === rentalId
+          ? { ...r, electricityReadings: (r.electricityReadings || []).map(x => x.id === readingId ? { ...x, paid } : x) }
+          : r
+      ),
+    }));
   };
 
   const openAddPay = (r: RentalProperty, depositMode = false) => {
@@ -353,6 +438,105 @@ export default function KirayaTab() {
                     </button>
                   )}
                 </div>
+
+                {/* Electricity Section */}
+                {rental.hasElectricity && (() => {
+                  const readings = [...(rental.electricityReadings || [])]
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+                  const unpaidTotal = readings
+                    .filter(r => !r.paid)
+                    .reduce((s, r) => s + (Math.max(0, r.currentReading - r.previousReading) * r.ratePerUnit + r.fixedCharge), 0);
+                  return (
+                    <div className="border-t border-border-default">
+                      <div className="px-4 py-3 flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <Zap size={14} className="text-amber-500" />
+                          <span className="font-bold text-body-sm text-text-primary">Bijli Bill</span>
+                          {unpaidTotal > 0 && (
+                            <span className="text-caption font-bold px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-full border border-amber-500/20">
+                              Baaki: {formatCurrency(unpaidTotal)}
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => openAddElec(rental)}
+                          className="flex items-center gap-1 text-caption font-bold text-amber-600 dark:text-amber-400 hover:opacity-80 transition-opacity"
+                        >
+                          <Plus size={12} /> Reading
+                        </button>
+                      </div>
+                      {readings.length > 0 && (
+                        <div className="px-4 pb-3 space-y-2 max-h-52 overflow-y-auto">
+                          {readings.map(reading => {
+                            const units = Math.max(0, reading.currentReading - reading.previousReading);
+                            const bill = units * reading.ratePerUnit + reading.fixedCharge;
+                            return (
+                              <div key={reading.id} className={cn(
+                                'rounded-xl border p-3',
+                                reading.paid
+                                  ? 'bg-emerald-500/5 border-emerald-500/20'
+                                  : 'bg-amber-500/5 border-amber-500/20'
+                              )}>
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-bold text-body-sm text-text-primary">{formatCurrency(bill)}</span>
+                                      <span className="text-caption text-text-subdued">({units} units × ₹{reading.ratePerUnit})</span>
+                                      {reading.fixedCharge > 0 && (
+                                        <span className="text-caption text-text-subdued">+ ₹{reading.fixedCharge} fixed</span>
+                                      )}
+                                    </div>
+                                    <p className="text-caption text-text-subdued font-bold mt-0.5">
+                                      {format(new Date(reading.date), 'dd MMM yyyy')} • {reading.previousReading}→{reading.currentReading}
+                                      {reading.note ? ` • ${reading.note}` : ''}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-0.5 shrink-0 ml-2">
+                                    <button
+                                      onClick={() => toggleElecPaid(rental.id, reading.id, !reading.paid)}
+                                      className={cn(
+                                        'text-caption font-bold px-2 py-1 rounded-lg border transition-all',
+                                        reading.paid
+                                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                      )}
+                                    >
+                                      {reading.paid ? '✓ Diya' : 'Baaki'}
+                                    </button>
+                                    <button
+                                      onClick={() => openEditElec(rental.id, reading)}
+                                      className="w-7 h-7 flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg transition-colors"
+                                    >
+                                      <Pencil size={11} />
+                                    </button>
+                                    <button
+                                      onClick={() => askConfirm('Is reading ko delete karein?', () =>
+                                        setState(prev => ({
+                                          ...prev,
+                                          rentals: (prev.rentals || []).map(r =>
+                                            r.id === rental.id
+                                              ? { ...r, electricityReadings: (r.electricityReadings || []).filter(x => x.id !== reading.id) }
+                                              : r
+                                          ),
+                                        }))
+                                      )}
+                                      className="w-7 h-7 flex items-center justify-center text-red-500/50 hover:text-red-500 rounded-lg transition-colors"
+                                    >
+                                      <Trash2 size={11} />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {readings.length === 0 && (
+                        <p className="px-4 pb-3 text-caption text-text-subdued">Pehli reading add karein</p>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}
@@ -457,6 +641,46 @@ export default function KirayaTab() {
                   placeholder="e.g. 11 month, 1 month notice" />
               </div>
 
+              {/* Electricity toggle */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setPropForm(f => f ? { ...f, hasElectricity: !f.hasElectricity } : f)}
+                  className={cn(
+                    'w-full flex items-center justify-between px-4 py-3 rounded-2xl border transition-all',
+                    propForm.hasElectricity
+                      ? 'bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-400'
+                      : 'bg-surface-subdued border-border-default text-text-secondary'
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Zap size={15} className={propForm.hasElectricity ? 'text-amber-500' : ''} />
+                    <span className="font-bold text-body-sm">Bijli Track Karein</span>
+                  </div>
+                  <div className={cn(
+                    'w-10 h-5.5 rounded-full relative transition-colors',
+                    propForm.hasElectricity ? 'bg-amber-500' : 'bg-border-default'
+                  )}>
+                    <div className={cn(
+                      'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all',
+                      propForm.hasElectricity ? 'left-[22px]' : 'left-0.5'
+                    )} />
+                  </div>
+                </button>
+                {propForm.hasElectricity && (
+                  <div className="mt-2">
+                    <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Rate per Unit (₹)</label>
+                    <input
+                      type="number" inputMode="decimal"
+                      value={propForm.electricityRatePerUnit}
+                      onChange={e => setPropForm(f => f ? { ...f, electricityRatePerUnit: e.target.value } : f)}
+                      className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold"
+                      placeholder="e.g. 8.5"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="flex gap-3 pt-1">
                 <button onClick={closePropForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={saveProp} disabled={!propForm.name}
@@ -543,6 +767,141 @@ export default function KirayaTab() {
           </div>
         </div>
       )}
+
+      {/* Electricity Reading Form */}
+      {elecForm && (() => {
+        const cur = Number(elecForm.currentReading);
+        const prev = Number(elecForm.previousReading);
+        const rate = Number(elecForm.ratePerUnit);
+        const fixed = Number(elecForm.fixedCharge) || 0;
+        const units = cur > prev ? cur - prev : 0;
+        const bill = units * rate + fixed;
+        return (
+          <div
+            className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+            onClick={closeElecForm}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+            >
+              <div className="p-6 space-y-4">
+                <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Zap size={16} className="text-amber-500" />
+                    <h3 className="font-heading text-title font-bold text-text-primary">
+                      {elecForm.readingId ? 'Reading Edit' : 'Bijli Reading'}
+                    </h3>
+                  </div>
+                  <button onClick={closeElecForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
+                    <X size={16} />
+                  </button>
+                </div>
+
+                {/* Live bill preview */}
+                {units > 0 && rate > 0 && (
+                  <div className="bg-amber-500/10 rounded-2xl px-4 py-3 border border-amber-500/20">
+                    <p className="text-caption font-bold text-amber-600 dark:text-amber-400 uppercase">Bill Preview</p>
+                    <p className="text-title-lg font-bold text-text-primary mt-0.5">{formatCurrency(bill)}</p>
+                    <p className="text-caption text-text-subdued mt-0.5">
+                      {units} units × ₹{rate}{fixed > 0 ? ` + ₹${fixed} fixed` : ''}
+                    </p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Previous Reading</label>
+                    <input
+                      type="number" inputMode="numeric" autoFocus
+                      value={elecForm.previousReading}
+                      onChange={e => setElecForm(f => f ? { ...f, previousReading: e.target.value } : f)}
+                      className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Current Reading</label>
+                    <input
+                      type="number" inputMode="numeric"
+                      value={elecForm.currentReading}
+                      onChange={e => setElecForm(f => f ? { ...f, currentReading: e.target.value } : f)}
+                      className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Rate / Unit (₹)</label>
+                    <input
+                      type="number" inputMode="decimal"
+                      value={elecForm.ratePerUnit}
+                      onChange={e => setElecForm(f => f ? { ...f, ratePerUnit: e.target.value } : f)}
+                      className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold"
+                      placeholder="e.g. 8.5"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Fixed Charge (₹)</label>
+                    <input
+                      type="number" inputMode="numeric"
+                      value={elecForm.fixedCharge}
+                      onChange={e => setElecForm(f => f ? { ...f, fixedCharge: e.target.value } : f)}
+                      className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold"
+                      placeholder="0 (optional)"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Date</label>
+                  <input
+                    type="date" value={elecForm.date}
+                    onChange={e => setElecForm(f => f ? { ...f, date: e.target.value } : f)}
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Note (optional)</label>
+                  <input
+                    type="text" value={elecForm.note}
+                    onChange={e => setElecForm(f => f ? { ...f, note: e.target.value } : f)}
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
+                    placeholder="Kuch note?"
+                  />
+                </div>
+
+                <button
+                  onClick={() => setElecForm(f => f ? { ...f, paid: !f.paid } : f)}
+                  className={cn(
+                    'w-full py-2.5 rounded-xl text-body-sm font-bold border transition-all',
+                    elecForm.paid
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                      : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default'
+                  )}
+                >
+                  {elecForm.paid ? '✓ Bill Diya Ja Chuka Hai' : 'Bill Abhi Baaki Hai?'}
+                </button>
+
+                <div className="flex gap-3 pt-1">
+                  <button onClick={closeElecForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors">Cancel</button>
+                  <button
+                    onClick={saveElec}
+                    disabled={!elecForm.currentReading || !elecForm.ratePerUnit || Number(elecForm.ratePerUnit) <= 0}
+                    className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity"
+                  >
+                    {elecForm.readingId ? 'Update Karein' : 'Save Karo'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

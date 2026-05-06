@@ -150,6 +150,17 @@ export interface RentPayment {
   paidFromDeposit?: boolean; // true = deposit se kata, cash nahi gaya
 }
 
+export interface ElectricityReading {
+  id: string;
+  date: string;
+  currentReading: number;
+  previousReading: number;
+  ratePerUnit: number;
+  fixedCharge: number;
+  note: string;
+  paid: boolean;
+}
+
 export interface RentalProperty {
   id: string;
   name: string;
@@ -167,6 +178,9 @@ export interface RentalProperty {
   agreementEndDate: string;
   agreementNote: string;
   payments: RentPayment[];
+  hasElectricity?: boolean;
+  electricityRatePerUnit?: number;
+  electricityReadings?: ElectricityReading[];
 }
 
 export interface VendorPayment {
