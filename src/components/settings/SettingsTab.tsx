@@ -58,15 +58,20 @@ export default function SettingsTab() {
     : null;
 
   return (
-    <div className="space-y-5 pb-28">
+    <div className="space-y-5 pb-28 md:pb-6">
       {/* Header */}
       <header>
-        <h1 className="text-2xl font-bold text-text-primary">Settings</h1>
-        <p className="text-text-subdued text-sm">
+        <h1 className="font-heading text-display font-bold text-text-primary">Settings</h1>
+        <p className="text-text-subdued text-body-sm font-medium">
           {project?.name ? project.name : 'Project Taiyari'}
           {project?.type ? ` • ${project.type.charAt(0).toUpperCase()}${project.type.slice(1)}` : ''}
         </p>
       </header>
+
+      {/* 2-column grid on desktop */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-5 space-y-5 lg:space-y-0">
+      {/* Left Column */}
+      <div className="space-y-5">
 
       {/* ── 0. Display & Theme ── */}
       <Section icon={<Monitor size={16} />} title="Display & Theme">
@@ -277,6 +282,10 @@ export default function SettingsTab() {
           </div>
         )}
       </Section>
+      </div>{/* end left column */}
+
+      {/* Right Column */}
+      <div className="space-y-5">
 
       {/* ── 5. Cloud Sync ── */}
       <Section icon={<Cloud size={16} />} title="Cloud Sync">
@@ -418,6 +427,8 @@ export default function SettingsTab() {
           Reset All Data
         </button>
       </div>
+      </div>{/* end right column */}
+      </div>{/* end 2-col grid */}
     </div>
   );
 }

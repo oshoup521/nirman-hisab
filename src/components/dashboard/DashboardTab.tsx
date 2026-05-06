@@ -159,6 +159,8 @@ export default function DashboardTab() {
         </div>
       </header>
 
+      {/* Master Budget Hero + Kharcha Breakdown — side by side on desktop */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-5 space-y-5 lg:space-y-0">
       {/* Master Budget Hero */}
       {masterBudget > 0 ? (
         <div className={cn(
@@ -242,6 +244,7 @@ export default function DashboardTab() {
           </div>
         </div>
       )}
+      </div>{/* end hero + breakdown grid */}
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

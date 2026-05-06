@@ -61,13 +61,13 @@ export default function GallerySection() {
   if (milestonesWithPhotos.length === 0) {
     return (
       <div className="space-y-4">
-        <h3 className="font-bold text-text-primary">Site Gallery</h3>
+        <h3 className="font-heading text-title font-bold text-text-primary">Site Gallery</h3>
         <div className="bg-surface rounded-2xl border border-border-default p-12 text-center">
           <div className="w-16 h-16 bg-surface-subdued rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Images size={28} className="text-text-secondary" />
           </div>
-          <p className="font-bold text-text-secondary text-sm">Abhi koi photo nahi</p>
-          <p className="text-xs text-text-subdued mt-1">Timeline tab mein phases mein photos add karo</p>
+          <p className="font-bold text-text-secondary text-body-sm">Abhi koi photo nahi</p>
+          <p className="text-caption text-text-subdued mt-1">Timeline tab mein phases mein photos add karo</p>
         </div>
       </div>
     );
@@ -77,8 +77,8 @@ export default function GallerySection() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex justify-between items-end">
-        <h3 className="font-bold text-text-primary">Site Gallery</h3>
-        <p className="text-xs text-text-subdued font-bold">
+        <h3 className="font-heading text-title font-bold text-text-primary">Site Gallery</h3>
+        <p className="text-caption text-text-subdued font-bold">
           {totalPhotos} photos • {milestonesWithPhotos.length} phases
         </p>
       </div>
@@ -92,11 +92,11 @@ export default function GallerySection() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border-default">
               <div className="flex items-center gap-2.5">
                 <div className={cn('w-2.5 h-2.5 rounded-full shrink-0', cfg.dot)} />
-                <p className="font-bold text-text-primary text-sm">{milestone.phase}</p>
+                <p className="font-bold text-text-primary text-body-sm">{milestone.phase}</p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-text-subdued font-bold">{milestone.photos!.length} photos</span>
-                <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', cfg.badge)}>
+                <span className="text-caption text-text-subdued font-bold">{milestone.photos!.length} photos</span>
+                <span className={cn('text-caption font-bold px-2 py-0.5 rounded-full border', cfg.badge)}>
                   {cfg.label}
                 </span>
               </div>
@@ -109,7 +109,7 @@ export default function GallerySection() {
               const visible = overflow ? all.slice(0, PHASE_GRID_CAP - 1) : all;
               const hiddenCount = all.length - visible.length;
               return (
-                <div className="p-3 grid grid-cols-3 gap-2">
+                <div className="p-3 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                   {visible.map(photo => (
                     <PhotoThumb
                       key={photo.path}
@@ -126,8 +126,8 @@ export default function GallerySection() {
                       className="aspect-square rounded-xl bg-surface-subdued border border-border-default text-text-primary flex flex-col items-center justify-center gap-1 active:scale-95 transition-transform shadow-sm"
                     >
                       <ImageIcon size={20} className="opacity-80" />
-                      <span className="text-base font-bold leading-none">+{hiddenCount}</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wide opacity-70">More</span>
+                      <span className="text-body-sm font-bold leading-none">+{hiddenCount}</span>
+                      <span className="text-caption font-bold uppercase tracking-wide opacity-70">More</span>
                     </button>
                   )}
                 </div>
@@ -143,8 +143,8 @@ export default function GallerySection() {
           {/* Top bar */}
           <div className="flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 shrink-0">
             <div>
-              <p className="text-white font-bold text-sm leading-tight">{lightbox.phase}</p>
-              <p className="text-white/50 text-[10px] font-bold mt-0.5">
+              <p className="text-white font-bold text-body-sm leading-tight">{lightbox.phase}</p>
+              <p className="text-white/50 text-caption font-bold mt-0.5">
                 {lightbox.idx + 1} / {lightbox.photos.length}
               </p>
             </div>
@@ -199,7 +199,7 @@ export default function GallerySection() {
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)' }}
           >
             {currentPhoto?.caption && (
-              <p className="text-white text-sm font-medium mb-3">{currentPhoto.caption}</p>
+              <p className="text-white text-body-sm font-medium mb-3">{currentPhoto.caption}</p>
             )}
 
             {/* Dot strip */}

@@ -151,7 +151,61 @@ export default function VendorsSection() {
           </button>
         </div>
       ) : (
-        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
+        <>
+        {/* Desktop: table */}
+        <div className="hidden md:block bg-surface rounded-2xl border border-border-default shadow-sm overflow-hidden">
+          <table className="w-full text-body-sm">
+            <thead className="bg-surface-subdued border-b border-border-default">
+              <tr>
+                <th className="py-2.5 px-4 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Vendor</th>
+                <th className="py-2.5 px-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Type</th>
+                <th className="py-2.5 px-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Phone</th>
+                <th className="py-2.5 px-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Total Bill</th>
+                <th className="py-2.5 px-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Paid</th>
+                <th className="py-2.5 px-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Balance</th>
+                <th className="py-2.5 px-4 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendors.map(vendor => {
+                const totalPaid = vendor.payments.reduce((a, p) => a + p.amount, 0);
+                const balance = vendor.totalBilled - totalPaid;
+                return (
+                  <tr key={vendor.id} className="border-b border-border-subdued last:border-0 hover:bg-surface-subdued/50 transition-colors">
+                    <td className="py-2.5 px-4 font-bold text-text-primary">{vendor.name}</td>
+                    <td className="py-2.5 px-3 text-text-secondary">{vendor.type}</td>
+                    <td className="py-2.5 px-3 text-text-secondary">{vendor.phone || '—'}</td>
+                    <td className="py-2.5 px-3 text-right font-mono font-bold text-text-primary whitespace-nowrap">₹{formatNumber(vendor.totalBilled)}</td>
+                    <td className="py-2.5 px-3 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">₹{formatNumber(totalPaid)}</td>
+                    <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                      <span className={cn('font-mono font-bold', balance > 0 ? 'text-red-500' : 'text-emerald-500 dark:text-emerald-400')}>
+                        {balance > 0 ? `₹${formatNumber(balance)}` : balance < 0 ? `Adv ₹${formatNumber(Math.abs(balance))}` : '✓ Clear'}
+                      </span>
+                    </td>
+                    <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                      <button onClick={() => openAddPay(vendor)} className="text-caption font-bold text-emerald-600 dark:text-emerald-400 hover:opacity-80 transition-opacity mr-1">Pay</button>
+                      <button onClick={() => openAddBill(vendor)} className="text-caption font-bold text-brand hover:opacity-80 transition-opacity mr-1">Bill</button>
+                      <button onClick={() => openEditVendor(vendor)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors">
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() => askConfirm(`"${vendor.name}" vendor ko delete kar dein?`, () =>
+                          setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }))
+                        )}
+                        className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="md:hidden space-y-4">
         {vendors.map(vendor => {
           const totalPaid = vendor.payments.reduce((a, p) => a + p.amount, 0);
           const balance = vendor.totalBilled - totalPaid;
@@ -210,6 +264,7 @@ export default function VendorsSection() {
           );
         })}
         </div>
+        </>
       )}
 
       {/* Vendor Form — bottom sheet on mobile, centered modal on desktop */}

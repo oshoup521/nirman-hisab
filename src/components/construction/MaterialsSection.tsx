@@ -108,7 +108,101 @@ export default function MaterialsSection() {
           </button>
         </div>
       ) : (
-        <div className="space-y-3 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
+        <>
+        {/* Desktop: table */}
+        <div className="hidden md:block bg-surface rounded-2xl border border-border-default shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-surface-subdued border-b border-border-default">
+                <tr>
+                  <th className="py-2.5 px-4 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Material</th>
+                  <th className="py-2.5 px-3 text-center text-caption font-bold text-text-subdued uppercase tracking-wide">Purchased</th>
+                  <th className="py-2.5 px-3 text-center text-caption font-bold text-text-subdued uppercase tracking-wide">Used</th>
+                  <th className="py-2.5 px-3 text-center text-caption font-bold text-text-subdued uppercase tracking-wide">Stock</th>
+                  <th className="py-2.5 px-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Rate</th>
+                  <th className="py-2.5 px-3 text-center text-caption font-bold text-text-subdued uppercase tracking-wide">Status</th>
+                  <th className="py-2.5 px-3 text-center text-caption font-bold text-text-subdued uppercase tracking-wide">Photos</th>
+                  <th className="py-2.5 px-4 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map(material => {
+                  const stock = material.purchased - material.used;
+                  const isLow = stock <= material.minStock;
+                  const usedPct = material.purchased > 0 ? Math.min(100, (material.used / material.purchased) * 100) : 0;
+                  const photoCount = material.photos?.length ?? 0;
+                  return (
+                    <tr key={material.id} className={cn('border-b border-border-subdued last:border-0 hover:bg-surface-subdued/50 transition-colors', isLow && 'bg-red-500/5')}>
+                      <td className="py-2.5 px-4">
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-text-primary text-body-sm">{material.name}</p>
+                          {isLow && (
+                            <span className="inline-flex items-center gap-0.5 text-caption font-bold px-1.5 py-0.5 bg-red-500/10 text-red-500 rounded-full">
+                              <AlertTriangle size={8} /> Low
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-body-sm text-text-primary">{material.purchased} {material.unit}</td>
+                      <td className="py-2.5 px-3 text-center text-body-sm text-text-secondary">{material.used} {material.unit}</td>
+                      <td className="py-2.5 px-3 text-center">
+                        <span className={cn('font-bold text-body-sm', isLow ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>
+                          {stock} {material.unit}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-body-sm text-text-primary whitespace-nowrap">{formatCurrency(material.rate)}/{material.unit}</td>
+                      <td className="py-2.5 px-3 text-center">
+                        <div className="w-16 mx-auto">
+                          <div className="w-full bg-surface-subdued h-1.5 rounded-full overflow-hidden border border-border-subdued">
+                            <div
+                              className={cn('h-full rounded-full transition-all', isLow ? 'bg-red-400' : usedPct > 75 ? 'bg-amber-500' : 'bg-brand')}
+                              style={{ width: `${usedPct}%` }}
+                            />
+                          </div>
+                          <p className="text-caption text-text-subdued mt-0.5">{usedPct.toFixed(0)}%</p>
+                        </div>
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        {photoCount > 0 ? (
+                          <button
+                            onClick={() => setSheetMatId(material.id)}
+                            className="inline-flex items-center gap-1 text-caption font-bold text-brand hover:opacity-80 transition-opacity"
+                          >
+                            <ImageIcon size={10} /> {photoCount}
+                          </button>
+                        ) : (
+                          <span className="text-text-subdued opacity-50 text-caption">—</span>
+                        )}
+                      </td>
+                      <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => setUsageForm({ materialId: material.id, materialName: material.name, unit: material.unit, amount: '' })}
+                          className="text-caption font-bold text-brand hover:opacity-80 transition-opacity mr-1"
+                        >
+                          Use
+                        </button>
+                        <button onClick={() => openEdit(material)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors">
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={() => askConfirm(`"${material.name}" delete kar dein?`, () =>
+                            setState(prev => ({ ...prev, materials: prev.materials.filter(m => m.id !== material.id) }))
+                          )}
+                          className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Mobile: cards */}
+        <div className="md:hidden space-y-3">
           {sorted.map(material => {
             const stock = material.purchased - material.used;
             const isLow = stock <= material.minStock;
@@ -210,6 +304,7 @@ export default function MaterialsSection() {
             );
           })}
         </div>
+        </>
       )}
 
       {/* Add / Edit Form — bottom sheet on mobile, centered modal on desktop */}

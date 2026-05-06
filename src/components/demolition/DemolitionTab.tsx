@@ -22,10 +22,12 @@ export default function DemolitionTab() {
   const drag = useDragScroll();
 
   return (
-    <div className="space-y-6 pb-28">
-      <header>
-        <h1 className="text-2xl font-bold text-text-primary">Tod-Phod</h1>
-        <p className="text-text-subdued text-sm">Demolition Tracker</p>
+    <div className="space-y-6 pb-28 md:pb-6">
+      <header className="flex justify-between items-center">
+        <div>
+          <h1 className="font-heading text-display font-bold text-text-primary">Tod-Phod</h1>
+          <p className="text-text-subdued text-body-sm font-medium">Demolition Tracker</p>
+        </div>
       </header>
 
       <div
@@ -34,14 +36,17 @@ export default function DemolitionTab() {
         onMouseMove={drag.onMouseMove}
         onMouseUp={drag.onMouseUp}
         onMouseLeave={drag.onMouseLeave}
-        className="-mx-4 flex gap-2 overflow-x-auto pb-2 px-4 no-scrollbar cursor-grab"
+        className={cn(
+          'flex gap-2 overflow-x-auto pb-2 no-scrollbar cursor-grab',
+          '-mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible md:cursor-default'
+        )}
       >
         {tabs.map(({ id, label, Icon }) => (
           <button
             key={id}
             onClick={() => setSubTab(id)}
             className={cn(
-              'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all shrink-0',
+              'flex items-center gap-2 px-4 py-2 rounded-full text-body-sm font-bold whitespace-nowrap transition-all shrink-0 md:shrink md:rounded-xl',
               subTab === id
                 ? 'bg-brand text-surface shadow-md shadow-brand/20'
                 : 'bg-surface text-text-secondary border border-border-default hover:bg-surface-subdued'
@@ -51,7 +56,7 @@ export default function DemolitionTab() {
             {label}
           </button>
         ))}
-        <span className="shrink-0 w-4" />
+        <span className="shrink-0 w-4 md:hidden" />
       </div>
 
       {subTab === 'overview' && <DemolitionOverview />}
