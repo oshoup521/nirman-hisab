@@ -74,7 +74,8 @@ export default function TimelineSection() {
                     type="date"
                     value={milestone.startDate ?? ''}
                     onChange={e => updateDate(milestone.id, 'startDate', e.target.value)}
-                    className="w-full text-caption bg-surface-subdued border border-border-default rounded-lg px-2 py-1.5 text-text-primary dark:[color-scheme:dark]"
+                    disabled={isViewer}
+                    className="w-full text-caption bg-surface-subdued border border-border-default rounded-lg px-2 py-1.5 text-text-primary dark:[color-scheme:dark] disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -84,7 +85,7 @@ export default function TimelineSection() {
                   <input
                     type="date"
                     value={milestone.endDate ?? ''}
-                    disabled={milestone.status !== 'completed'}
+                    disabled={isViewer || milestone.status !== 'completed'}
                     onChange={e => updateDate(milestone.id, 'endDate', e.target.value)}
                     className={cn(
                       'w-full text-caption border rounded-lg px-2 py-1.5 dark:[color-scheme:dark]',

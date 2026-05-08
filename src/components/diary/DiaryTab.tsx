@@ -416,6 +416,7 @@ export default function DiaryTab() {
                 const photoCount = entryByDate[ds]?.photos?.length ?? 0;
                 const inMonth = isSameMonth(day, calMonth);
                 const today = isToday(day);
+                const selected = ds === date;
                 return (
                   <button
                     key={i}
@@ -427,16 +428,16 @@ export default function DiaryTab() {
                     disabled={!inMonth}
                     className={cn(
                       'aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all',
-                      today && 'ring-2 ring-brand',
-                      has ? 'bg-brand/10 text-brand font-bold' : 'bg-surface-subdued text-text-subdued',
+                      selected ? 'bg-brand text-white font-bold shadow-sm shadow-brand/30' : has ? 'bg-brand/10 text-brand font-bold' : 'bg-surface-subdued text-text-subdued',
+                      !selected && today && 'ring-2 ring-brand',
                       !inMonth && 'opacity-30',
                     )}
                   >
                     <span className="text-body-sm">{day.getDate()}</span>
                     {has && (
                       <div className="flex items-center gap-0.5 mt-0.5">
-                        <span className="w-1 h-1 rounded-full bg-brand" />
-                        {photoCount > 0 && <span className="w-1 h-1 rounded-full bg-amber-500" />}
+                        <span className={cn('w-1 h-1 rounded-full', selected ? 'bg-white/70' : 'bg-brand')} />
+                        {photoCount > 0 && <span className={cn('w-1 h-1 rounded-full', selected ? 'bg-white/70' : 'bg-amber-500')} />}
                       </div>
                     )}
                   </button>

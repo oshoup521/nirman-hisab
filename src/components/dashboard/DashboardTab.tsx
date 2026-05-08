@@ -16,13 +16,13 @@ export default function DashboardTab() {
     state, setState, calcs, askConfirm,
     setActiveTab, setSubTab,
     showAllMisc, setShowAllMisc,
-    shareOnWhatsApp,
+    shareOnWhatsApp, isViewer,
   } = useAppContext();
 
   const {
     totalKharcha, masterBudget, masterBurnRate, masterRemaining,
     totalSpent, demolitionThekaCost, malwaCost, totalCashRentPaid,
-    depositPaid, totalMisc, totalRentPaid, totalRecovery,
+    depositPaid, totalMisc, totalElecPaid, totalRentPaid, totalRecovery,
     currentMonthRent, depositPending,
   } = calcs;
 
@@ -77,6 +77,7 @@ export default function DashboardTab() {
     { label: 'Malwa Disposal', value: malwaCost, color: 'bg-amber-500', navigate: () => setActiveTab('demolition') },
     { label: 'Kiraya', value: totalCashRentPaid, color: 'bg-violet-500', navigate: () => setActiveTab('kiraya') },
     { label: 'Security Deposit', value: depositPaid, color: 'bg-blue-400', navigate: () => setActiveTab('kiraya') },
+    { label: 'Bijli Bill', value: totalElecPaid, color: 'bg-amber-400', navigate: () => setActiveTab('kiraya') },
     { label: 'Miscellaneous', value: totalMisc, color: 'bg-slate-400 dark:bg-slate-500', navigate: () => setShowAllMisc(true) },
   ].filter(r => r.value > 0);
 
@@ -89,14 +90,16 @@ export default function DashboardTab() {
         </p>
       </div>
       <p className="font-mono font-bold text-text-primary text-body-sm shrink-0">{formatCurrency(e.amount)}</p>
-      <div className="flex items-center gap-0.5 shrink-0">
-        <button onClick={() => openEditMisc(e)} className="w-7 h-7 flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-subdued transition-colors">
-          <Pencil size={12} />
-        </button>
-        <button onClick={() => deleteMisc(e.id)} className="w-7 h-7 flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors">
-          <Trash2 size={12} />
-        </button>
-      </div>
+      {!isViewer && (
+        <div className="flex items-center gap-0.5 shrink-0">
+          <button onClick={() => openEditMisc(e)} className="w-7 h-7 flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-subdued transition-colors">
+            <Pencil size={12} />
+          </button>
+          <button onClick={() => deleteMisc(e.id)} className="w-7 h-7 flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors">
+            <Trash2 size={12} />
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -110,14 +113,16 @@ export default function DashboardTab() {
       <td className="py-2.5 pr-3 text-body-sm font-mono font-bold text-text-primary text-right whitespace-nowrap">
         {formatCurrency(e.amount)}
       </td>
-      <td className="py-2.5 text-right whitespace-nowrap">
-        <button onClick={() => openEditMisc(e)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-subdued transition-colors">
-          <Pencil size={12} />
-        </button>
-        <button onClick={() => deleteMisc(e.id)} className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors">
-          <Trash2 size={12} />
-        </button>
-      </td>
+      {!isViewer && (
+        <td className="py-2.5 text-right whitespace-nowrap">
+          <button onClick={() => openEditMisc(e)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-surface-subdued transition-colors">
+            <Pencil size={12} />
+          </button>
+          <button onClick={() => deleteMisc(e.id)} className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors">
+            <Trash2 size={12} />
+          </button>
+        </td>
+      )}
     </tr>
   );
 
@@ -367,7 +372,7 @@ export default function DashboardTab() {
                   <h3 className="font-heading text-title font-bold text-text-primary">Miscellaneous</h3>
                   {totalMisc > 0 && <p className="text-caption text-text-subdued font-bold mt-0.5">{formatCurrency(totalMisc)} total</p>}
                 </div>
-                <button onClick={openAddMisc} className="flex items-center gap-1.5 px-3 py-2 bg-text-primary text-surface rounded-xl text-body-sm font-bold hover:opacity-90 transition-opacity"><Plus size={14} /> Add</button>
+                {!isViewer && <button onClick={openAddMisc} className="flex items-center gap-1.5 px-3 py-2 bg-text-primary text-surface rounded-xl text-body-sm font-bold hover:opacity-90 transition-opacity"><Plus size={14} /> Add</button>}
               </div>
               {sortedMisc.length === 0 ? (
                 <p className="text-text-secondary text-body-sm text-center py-3 flex-1 flex items-center justify-center">Koi misc kharcha nahi</p>
@@ -380,7 +385,7 @@ export default function DashboardTab() {
                         <th className="py-2 pr-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Category</th>
                         <th className="py-2 pr-3 text-left text-caption font-bold text-text-subdued uppercase tracking-wide">Notes</th>
                         <th className="py-2 pr-3 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Amount</th>
-                        <th className="py-2 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Actions</th>
+                        {!isViewer && <th className="py-2 text-right text-caption font-bold text-text-subdued uppercase tracking-wide">Actions</th>}
                       </tr>
                     </thead>
                     <tbody>{sortedMisc.map(renderMiscTableRow)}</tbody>

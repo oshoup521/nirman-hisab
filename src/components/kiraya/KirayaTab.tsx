@@ -334,33 +334,27 @@ export default function KirayaTab() {
                       'bg-red-500/10 border-red-500/20': dStatus === 'forfeited',
                       'bg-amber-500/10 border-amber-500/20': dStatus === 'pending',
                     })}>
-                      <p className="text-caption font-bold text-text-subdued uppercase mb-0.5">Deposit</p>
-                      <p className="font-bold text-text-primary">{formatCurrency(rental.deposit || 0)}</p>
-                      <p className={cn('text-caption font-bold mt-0.5', {
-                        'text-blue-500': dStatus === 'paid',
-                        'text-emerald-500': dStatus === 'refunded',
-                        'text-red-500': dStatus === 'forfeited',
-                        'text-amber-500': dStatus === 'pending',
-                      })}>
-                        {dStatus === 'pending' && '⏳ Dena Baaki'}
-                        {dStatus === 'paid' && '✓ Diya'}
-                        {dStatus === 'refunded' && '✓ Wapas'}
-                        {dStatus === 'forfeited' && '✗ Kaat Liya'}
+                      <p className="text-caption font-bold text-text-subdued uppercase mb-0.5">
+                        {depositUsedForRent > 0 ? 'Deposit Bacha' : 'Deposit'}
                       </p>
-                    </div>
-                  )}
-                  {depositUsedForRent > 0 && (
-                    <div className="col-span-2 bg-brand/10 p-3 rounded-xl border border-brand/20">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="text-caption font-bold text-brand uppercase mb-0.5">Deposit Remaining</p>
-                          <p className="font-bold text-text-primary">{formatCurrency(Math.max(0, depositRemaining))}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-caption font-bold text-brand uppercase mb-0.5">Rent se Kata</p>
-                          <p className="font-bold text-brand">−{formatCurrency(depositUsedForRent)}</p>
-                        </div>
-                      </div>
+                      <p className="font-bold text-text-primary">
+                        {formatCurrency(depositUsedForRent > 0 ? Math.max(0, depositRemaining) : (rental.deposit || 0))}
+                      </p>
+                      {depositUsedForRent > 0 ? (
+                        <p className="text-caption font-bold text-brand mt-0.5">−{formatCurrency(depositUsedForRent)} rent se kata</p>
+                      ) : (
+                        <p className={cn('text-caption font-bold mt-0.5', {
+                          'text-blue-500': dStatus === 'paid',
+                          'text-emerald-500': dStatus === 'refunded',
+                          'text-red-500': dStatus === 'forfeited',
+                          'text-amber-500': dStatus === 'pending',
+                        })}>
+                          {dStatus === 'pending' && '⏳ Dena Baaki'}
+                          {dStatus === 'paid' && '✓ Diya'}
+                          {dStatus === 'refunded' && '✓ Wapas'}
+                          {dStatus === 'forfeited' && '✗ Kaat Liya'}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

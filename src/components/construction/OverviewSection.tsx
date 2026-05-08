@@ -7,7 +7,7 @@ import { useAppContext } from '../../context/AppContext';
 
 export default function OverviewSection() {
   const { state, calcs, setActiveTab, setSubTab } = useAppContext();
-  const { totalSpent, totalMisc } = calcs;
+  const { totalSpent, totalMisc, totalElecPaid } = calcs;
 
   if (!state.project) {
     return (
@@ -166,9 +166,15 @@ export default function OverviewSection() {
                 <span className="text-body-sm text-text-secondary font-medium">Miscellaneous</span>
                 <span className="text-body font-bold text-text-primary">{formatCurrency(totalMisc)}</span>
               </div>
+              {totalElecPaid > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-body-sm text-text-secondary font-medium">Bijli Bill</span>
+                  <span className="text-body font-bold text-text-primary">{formatCurrency(totalElecPaid)}</span>
+                </div>
+              )}
               <div className="pt-4 border-t border-border-subdued flex justify-between items-center">
                 <span className="text-body font-bold text-text-primary uppercase tracking-widest">Total Spent</span>
-                <span className="text-title font-bold text-red-600">{formatCurrency(totalSpent + totalMisc)}</span>
+                <span className="text-title font-bold text-red-600">{formatCurrency(totalSpent + totalMisc + totalElecPaid)}</span>
               </div>
             </div>
           </div>

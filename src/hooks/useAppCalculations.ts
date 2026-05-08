@@ -100,9 +100,19 @@ export function useAppCalculations(state: AppState) {
     [state.miscExpenses]
   );
 
+  const totalElecPaid = useMemo(
+    () => (state.rentals || []).reduce((a, r) =>
+      a + (r.electricityReadings || [])
+        .filter(x => x.paid)
+        .reduce((s, x) => s + (Math.max(0, x.currentReading - x.previousReading) * x.ratePerUnit + x.fixedCharge), 0),
+      0
+    ),
+    [state.rentals]
+  );
+
   const totalKharcha = useMemo(
-    () => totalSpent + demolitionThekaCost + malwaCost + totalCashRentPaid + depositPaid + totalMisc,
-    [totalSpent, demolitionThekaCost, malwaCost, totalCashRentPaid, depositPaid, totalMisc]
+    () => totalSpent + demolitionThekaCost + malwaCost + totalCashRentPaid + depositPaid + totalMisc + totalElecPaid,
+    [totalSpent, demolitionThekaCost, malwaCost, totalCashRentPaid, depositPaid, totalMisc, totalElecPaid]
   );
 
   const masterRemaining = masterBudget > 0 ? masterBudget - totalKharcha : 0;
@@ -125,6 +135,7 @@ export function useAppCalculations(state: AppState) {
     depositWapas,
     currentMonthRent,
     totalMisc,
+    totalElecPaid,
     totalKharcha,
     masterRemaining,
     masterBurnRate,
