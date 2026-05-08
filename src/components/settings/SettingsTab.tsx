@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Wallet, Ruler, Calendar, Cloud, User, AlertTriangle, RefreshCw, ChevronRight, Moon, Sun, Monitor, Images, Trash2, ExternalLink, FileText, Plus } from 'lucide-react';
+import { Building2, Wallet, Ruler, Calendar, Cloud, User, AlertTriangle, RefreshCw, ChevronRight, Moon, Sun, Monitor, Images, Trash2, ExternalLink, FileText, Plus, LogOut } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
@@ -514,9 +514,12 @@ export default function SettingsTab() {
                 </button>
                 <button
                   onClick={() => askConfirm('Kya aap logout karna chahte hain?', handleLogout, 'Logout', 'Logout')}
-                  className="px-4 py-3 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-sm border border-border-default flex items-center justify-between hover:bg-border-subdued transition-colors"
+                  className="px-4 py-3 bg-amber-500/10 text-amber-700 dark:text-amber-300 rounded-2xl font-extrabold text-sm border border-amber-500/30 flex items-center justify-between hover:bg-amber-500/20 transition-colors"
                 >
-                  <span>Logout</span>
+                  <span className="flex items-center gap-2">
+                    <LogOut size={15} />
+                    Logout
+                  </span>
                   <ChevronRight size={16} />
                 </button>
               </div>
