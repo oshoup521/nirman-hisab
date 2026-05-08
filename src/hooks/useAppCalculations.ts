@@ -77,6 +77,20 @@ export function useAppCalculations(state: AppState) {
     [state.rentals, getDepositStatus]
   );
 
+  const totalDepositUsedForRent = useMemo(
+    () => (state.rentals || []).reduce(
+      (a, r) => a + r.payments.filter(p => p.paidFromDeposit).reduce((s, p) => s + p.amount, 0),
+      0
+    ),
+    [state.rentals]
+  );
+
+  // Net deposit = what's still locked (original deposit - used for rent)
+  const netDepositPaid = useMemo(
+    () => Math.max(0, depositPaid - totalDepositUsedForRent),
+    [depositPaid, totalDepositUsedForRent]
+  );
+
   const depositWapas = useMemo(
     () => (state.rentals || [])
       .filter(r => getDepositStatus(r) === 'paid')
@@ -131,6 +145,8 @@ export function useAppCalculations(state: AppState) {
     totalRentPaid,
     totalCashRentPaid,
     depositPaid,
+    netDepositPaid,
+    totalDepositUsedForRent,
     depositPending,
     depositWapas,
     currentMonthRent,

@@ -22,7 +22,7 @@ export default function DashboardTab() {
   const {
     totalKharcha, masterBudget, masterBurnRate, masterRemaining,
     totalSpent, demolitionThekaCost, malwaCost, totalCashRentPaid,
-    depositPaid, totalMisc, totalElecPaid, totalRentPaid, totalRecovery,
+    depositPaid, netDepositPaid, totalMisc, totalElecPaid, totalRentPaid, totalRecovery,
     currentMonthRent, depositPending,
   } = calcs;
 
@@ -75,8 +75,8 @@ export default function DashboardTab() {
     { label: 'Construction', value: totalSpent, color: 'bg-indigo-500', navigate: () => { setActiveTab('construction'); setSubTab('expenses'); } },
     { label: 'Tod-Phod Theka', value: demolitionThekaCost, color: 'bg-orange-500', navigate: () => setActiveTab('demolition') },
     { label: 'Malwa Disposal', value: malwaCost, color: 'bg-amber-500', navigate: () => setActiveTab('demolition') },
-    { label: 'Kiraya', value: totalCashRentPaid, color: 'bg-violet-500', navigate: () => setActiveTab('kiraya') },
-    { label: 'Security Deposit', value: depositPaid, color: 'bg-blue-400', navigate: () => setActiveTab('kiraya') },
+    { label: 'Kiraya', value: totalRentPaid, color: 'bg-violet-500', navigate: () => setActiveTab('kiraya') },
+    { label: 'Security Deposit', value: netDepositPaid, color: 'bg-blue-400', navigate: () => setActiveTab('kiraya') },
     { label: 'Bijli Bill', value: totalElecPaid, color: 'bg-amber-400', navigate: () => setActiveTab('kiraya') },
     { label: 'Miscellaneous', value: totalMisc, color: 'bg-slate-400 dark:bg-slate-500', navigate: () => setShowAllMisc(true) },
   ].filter(r => r.value > 0);
@@ -349,12 +349,6 @@ export default function DashboardTab() {
                       </div>
                     </button>
                   ))}
-                  {(totalRentPaid - totalCashRentPaid) > 0 && (
-                    <div className="bg-violet-500/10 rounded-xl px-3 py-2 flex justify-between items-center">
-                      <span className="text-caption text-violet-600 dark:text-violet-400 font-bold">+ Deposit Se Kata Rent</span>
-                      <span className="text-caption font-bold text-violet-600 dark:text-violet-400">{formatCurrency(totalRentPaid - totalCashRentPaid)}</span>
-                    </div>
-                  )}
                   <div className="pt-2 border-t border-border-subdued flex justify-between items-center px-2">
                     <span className="text-body-sm font-bold text-text-secondary uppercase">Total</span>
                     <span className="font-bold text-text-primary">{formatCurrency(totalKharcha)}</span>
