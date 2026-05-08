@@ -73,6 +73,7 @@ export default function App() {
     if (error) {
       setPwForm(p => ({ ...p, loading: false, error: error.message }));
     } else {
+      await supabase.auth.signOut({ scope: 'others' });
       setPwForm({ open: false, newPw: '', confirmPw: '', loading: false, error: '', success: '' });
     }
   };
