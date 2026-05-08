@@ -27,7 +27,7 @@ const WEATHER_OPTS: { id: Weather; label: string; Icon: React.ElementType; tone:
 const todayStr = () => format(new Date(), 'yyyy-MM-dd');
 
 export default function DiaryTab() {
-  const { state, setState, askConfirm, photos } = useAppContext();
+  const { state, setState, askConfirm, photos, isViewer } = useAppContext();
   const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
 
   const [view, setView] = useState<View>('entry');
@@ -193,10 +193,12 @@ export default function DiaryTab() {
             return (
               <button
                 key={id}
-                onClick={() => setWeather(id)}
+                onClick={() => !isViewer && setWeather(id)}
+                disabled={isViewer}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-2 rounded-xl text-body-sm font-bold border transition-all',
-                  sel ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default'
+                  sel ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default',
+                  isViewer && 'cursor-default'
                 )}
               >
                 <Icon size={14} className={sel ? 'text-brand' : tone} /> {label}
@@ -210,11 +212,12 @@ export default function DiaryTab() {
       <Section icon={<Users size={14} />} title="Kaun aaya">
         <textarea
           rows={2}
+          readOnly={isViewer}
           value={draft.whoCame ?? ''}
           onChange={e => scheduleFlush({ whoCame: e.target.value })}
           onBlur={flushNow}
-          placeholder="e.g. Raju mistri + 4 mazdoor, Plumber Salim"
-          className="w-full p-3 bg-surface-subdued rounded-xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary resize-none"
+          placeholder={isViewer ? '—' : 'e.g. Raju mistri + 4 mazdoor, Plumber Salim'}
+          className="w-full p-3 bg-surface-subdued rounded-xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary resize-none read-only:opacity-70 read-only:cursor-default"
         />
       </Section>
 
@@ -222,11 +225,12 @@ export default function DiaryTab() {
       <Section icon={<Wrench size={14} />} title="Kya kaam hua">
         <textarea
           rows={3}
+          readOnly={isViewer}
           value={draft.workDone ?? ''}
           onChange={e => scheduleFlush({ workDone: e.target.value })}
           onBlur={flushNow}
-          placeholder="2 line mein likho — aaj kya kaam khatam hua, kya bacha"
-          className="w-full p-3 bg-surface-subdued rounded-xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary resize-none"
+          placeholder={isViewer ? '—' : '2 line mein likho — aaj kya kaam khatam hua, kya bacha'}
+          className="w-full p-3 bg-surface-subdued rounded-xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary resize-none read-only:opacity-70 read-only:cursor-default"
         />
       </Section>
 
@@ -234,11 +238,12 @@ export default function DiaryTab() {
       <Section icon={<Package size={14} />} title="Kya delivery aayi">
         <textarea
           rows={2}
+          readOnly={isViewer}
           value={draft.delivered ?? ''}
           onChange={e => scheduleFlush({ delivered: e.target.value })}
           onBlur={flushNow}
-          placeholder="e.g. 10 bori cement, 2 trolley reti, 1 truck sariya"
-          className="w-full p-3 bg-surface-subdued rounded-xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary resize-none"
+          placeholder={isViewer ? '—' : 'e.g. 10 bori cement, 2 trolley reti, 1 truck sariya'}
+          className="w-full p-3 bg-surface-subdued rounded-xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary resize-none read-only:opacity-70 read-only:cursor-default"
         />
       </Section>
 
@@ -246,47 +251,50 @@ export default function DiaryTab() {
       <Section icon={<AlertTriangle size={14} />} title="Problem / Dikkat">
         <textarea
           rows={2}
+          readOnly={isViewer}
           value={draft.problems ?? ''}
           onChange={e => scheduleFlush({ problems: e.target.value })}
           onBlur={flushNow}
-          placeholder="Koi issue, vendor delay, paani/light ki problem..."
-          className="w-full p-3 bg-surface-subdued rounded-xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary resize-none"
+          placeholder={isViewer ? '—' : 'Koi issue, vendor delay, paani/light ki problem...'}
+          className="w-full p-3 bg-surface-subdued rounded-xl border-none focus:ring-2 focus:ring-brand text-sm text-text-primary resize-none read-only:opacity-70 read-only:cursor-default"
         />
       </Section>
 
       {/* Photos */}
       <Section icon={<ImageIcon size={14} />} title={`Photos ${entry?.photos?.length ? `(${entry.photos.length})` : ''}`}>
-        <div className="flex items-center justify-end mb-2">
-          {photoUploading === `diary:${entry?.id ?? ''}` ? (
-            <span className="text-body-sm text-text-subdued font-bold">Uploading…</span>
-          ) : (
-            <label className="flex items-center gap-1 text-body-sm font-bold px-3 py-1.5 rounded-lg cursor-pointer bg-border-default text-text-secondary active:bg-border-subdued hover:bg-border-subdued transition-colors">
-              <ImageIcon size={12} /> Photo Add
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={e => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    let id = entry?.id;
-                    if (!id) {
-                      id = genId();
-                      const stubId = id;
-                      setState(prev => ({
-                        ...prev,
-                        diary: [...(prev.diary || []), { id: stubId, date }],
-                      }));
+        {!isViewer && (
+          <div className="flex items-center justify-end mb-2">
+            {photoUploading === `diary:${entry?.id ?? ''}` ? (
+              <span className="text-body-sm text-text-subdued font-bold">Uploading…</span>
+            ) : (
+              <label className="flex items-center gap-1 text-body-sm font-bold px-3 py-1.5 rounded-lg cursor-pointer bg-border-default text-text-secondary active:bg-border-subdued hover:bg-border-subdued transition-colors">
+                <ImageIcon size={12} /> Photo Add
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      let id = entry?.id;
+                      if (!id) {
+                        id = genId();
+                        const stubId = id;
+                        setState(prev => ({
+                          ...prev,
+                          diary: [...(prev.diary || []), { id: stubId, date }],
+                        }));
+                      }
+                      const caption = prompt('Photo ka naam / caption (optional):') ?? '';
+                      uploadPhoto('diary', id, file, caption);
                     }
-                    const caption = prompt('Photo ka naam / caption (optional):') ?? '';
-                    uploadPhoto('diary', id, file, caption);
-                  }
-                  e.target.value = '';
-                }}
-              />
-            </label>
-          )}
-        </div>
+                    e.target.value = '';
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        )}
         {entry?.photos && entry.photos.length > 0 ? (
           <PhotoStrip
             photos={entry.photos}

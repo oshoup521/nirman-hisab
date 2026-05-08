@@ -20,7 +20,7 @@ type DayEntryForm = {
 const WORKER_TYPES = ['Mistri', 'Beldar', 'Plumber', 'Electrician', 'Painter', 'Carpenter', 'Other'];
 
 export default function LabourSection() {
-  const { state, setState, askConfirm } = useAppContext();
+  const { state, setState, askConfirm, isViewer } = useAppContext();
   const today = format(new Date(), 'yyyy-MM-dd');
 
   const [dayForm, setDayForm] = useState<DayEntryForm | null>(null);
@@ -104,9 +104,11 @@ export default function LabourSection() {
           <h3 className="font-heading text-title font-bold text-text-primary">Mazdoor Hisaab</h3>
           <p className="text-caption text-text-subdued mt-0.5">Din ke hisab se mazdoor log karo</p>
         </div>
-        <button onClick={openDayAdd} className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity">
-          <Plus size={16} /> Add
-        </button>
+        {!isViewer && (
+          <button onClick={openDayAdd} className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity">
+            <Plus size={16} /> Add
+          </button>
+        )}
       </div>
 
       {dayEntries.length > 0 && (
@@ -130,9 +132,11 @@ export default function LabourSection() {
             <CalendarDays size={26} className="text-text-secondary" />
           </div>
           <p className="font-bold text-text-secondary text-body-sm">Abhi tak koi record nahi</p>
-          <button onClick={openDayAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
-            + Aaj ka hisaab add karein
-          </button>
+          {!isViewer && (
+            <button onClick={openDayAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+              + Aaj ka hisaab add karein
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
@@ -195,12 +199,16 @@ export default function LabourSection() {
                           </div>
                           <div className="flex items-center gap-2">
                             <p className="font-bold text-body-sm text-text-primary">{formatCurrency(amt)}</p>
-                            <button onClick={() => openDayEdit(entry)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
-                              <Pencil size={12} />
-                            </button>
-                            <button onClick={() => askConfirm('Ye entry delete kar dein?', () => deleteDayEntry(entry))} className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors">
-                              <Trash2 size={12} />
-                            </button>
+                            {!isViewer && (
+                              <>
+                                <button onClick={() => openDayEdit(entry)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
+                                  <Pencil size={12} />
+                                </button>
+                                <button onClick={() => askConfirm('Ye entry delete kar dein?', () => deleteDayEntry(entry))} className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors">
+                                  <Trash2 size={12} />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       );

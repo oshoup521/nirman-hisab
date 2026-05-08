@@ -23,7 +23,7 @@ const STATUS_CFG = {
 } as const;
 
 export default function GallerySection() {
-  const { state, askConfirm, photos } = useAppContext();
+  const { state, askConfirm, photos, isViewer } = useAppContext();
   const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
 
   const [lightbox, setLightbox] = useState<LightboxState | null>(null);
@@ -118,6 +118,7 @@ export default function GallerySection() {
                       getSignedUrl={getSignedUrl}
                       onOpen={(url) => openLightbox(milestone, photo.path, url)}
                       onDelete={() => askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', milestone.id, photo.path))}
+                      hideDelete={isViewer}
                     />
                   ))}
                   {overflow && (
@@ -239,8 +240,8 @@ export default function GallerySection() {
             if (url) setLightbox(p => p ? { ...p, urls: { ...p.urls, [target.path]: url } } : null);
           });
         }}
-        onDelete={(path) => sheetMilestoneId && askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', sheetMilestoneId, path))}
-        onAdd={(file, caption) => sheetMilestoneId && uploadPhoto('milestone', sheetMilestoneId, file, caption)}
+        onDelete={isViewer ? undefined : (path) => sheetMilestoneId && askConfirm('Is photo ko delete karein?', () => deletePhoto('milestone', sheetMilestoneId, path))}
+        onAdd={isViewer ? undefined : (file, caption) => sheetMilestoneId && uploadPhoto('milestone', sheetMilestoneId, file, caption)}
       />
     </div>
   );

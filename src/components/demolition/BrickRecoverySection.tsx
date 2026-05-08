@@ -18,7 +18,7 @@ const blankForm = (): EntryForm => ({
 });
 
 export default function BrickRecoverySection() {
-  const { state, setState, askConfirm } = useAppContext();
+  const { state, setState, askConfirm, isViewer } = useAppContext();
   const [form, setForm] = useState<EntryForm | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -72,12 +72,14 @@ export default function BrickRecoverySection() {
           <h3 className="font-heading text-title font-bold text-text-primary">Eent Bachao Counter</h3>
           <p className="text-caption text-text-subdued mt-0.5">{state.brickRecovery.length} entries</p>
         </div>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} /> Add
-        </button>
+        {!isViewer && (
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} /> Add
+          </button>
+        )}
       </div>
 
       {state.brickRecovery.length > 0 && (
@@ -103,9 +105,11 @@ export default function BrickRecoverySection() {
       {sorted.length === 0 ? (
         <div className="bg-surface rounded-2xl border border-border-default p-10 text-center">
           <p className="font-bold text-text-secondary text-body-sm">Koi entry nahi abhi tak</p>
-          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
-            + Pehli Entry Add Karo
-          </button>
+          {!isViewer && (
+            <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+              + Pehli Entry Add Karo
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
@@ -120,17 +124,21 @@ export default function BrickRecoverySection() {
               </div>
               <div className="flex items-center gap-2">
                 <p className="text-title-lg font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(entry.recovered * entry.ratePerBrick)}</p>
-                <button onClick={() => openEdit(entry)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
-                  <Pencil size={14} />
-                </button>
-                <button
-                  onClick={() => askConfirm('Is brick recovery entry ko delete kar dein?', () =>
-                    setState(prev => ({ ...prev, brickRecovery: prev.brickRecovery.filter(b => b.id !== entry.id) }))
-                  )}
-                  className="p-1.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
-                >
-                  <Trash2 size={14} />
-                </button>
+                {!isViewer && (
+                  <>
+                    <button onClick={() => openEdit(entry)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => askConfirm('Is brick recovery entry ko delete kar dein?', () =>
+                        setState(prev => ({ ...prev, brickRecovery: prev.brickRecovery.filter(b => b.id !== entry.id) }))
+                      )}
+                      className="p-1.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex gap-4 text-body-sm">

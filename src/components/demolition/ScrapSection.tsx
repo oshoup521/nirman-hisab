@@ -27,7 +27,7 @@ const blankForm = (): EntryForm => ({
 });
 
 export default function ScrapSection() {
-  const { state, setState, askConfirm } = useAppContext();
+  const { state, setState, askConfirm, isViewer } = useAppContext();
   const [form, setForm] = useState<EntryForm | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
 
@@ -89,12 +89,14 @@ export default function ScrapSection() {
           <h3 className="font-heading text-title font-bold text-text-primary">Kabaad se Kamai</h3>
           <p className="text-caption text-text-subdued mt-0.5">{state.scrap.length} entries</p>
         </div>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} /> Add
-        </button>
+        {!isViewer && (
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} /> Add
+          </button>
+        )}
       </div>
 
       {sorted.length === 0 ? (
@@ -103,9 +105,11 @@ export default function ScrapSection() {
             <Recycle size={26} className="text-text-secondary" />
           </div>
           <p className="font-bold text-text-secondary text-body-sm">Koi scrap entry nahi abhi tak</p>
-          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
-            + Pehli Entry Add Karo
-          </button>
+          {!isViewer && (
+            <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+              + Pehli Entry Add Karo
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -124,17 +128,21 @@ export default function ScrapSection() {
                 </div>
                 <div className="flex items-center gap-2">
                   <p className="text-title-lg font-bold text-emerald-600 dark:text-emerald-400">+{formatCurrency(entry.quantity * entry.rate)}</p>
-                  <button onClick={() => openEdit(entry)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => askConfirm('Is scrap entry ko delete kar dein?', () =>
-                      setState(prev => ({ ...prev, scrap: prev.scrap.filter(s => s.id !== entry.id) }))
-                    )}
-                    className="p-1.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {!isViewer && (
+                    <>
+                      <button onClick={() => openEdit(entry)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => askConfirm('Is scrap entry ko delete kar dein?', () =>
+                          setState(prev => ({ ...prev, scrap: prev.scrap.filter(s => s.id !== entry.id) }))
+                        )}
+                        className="p-1.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -166,6 +174,7 @@ export default function ScrapSection() {
                     <td className="py-2.5 px-3 text-text-secondary">{entry.dealer || '—'}</td>
                     <td className="py-2.5 px-3 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">+{formatCurrency(entry.quantity * entry.rate)}</td>
                     <td className="py-2.5 px-4 text-right whitespace-nowrap">
+                      {!isViewer && (<>
                       <button onClick={() => openEdit(entry)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors">
                         <Pencil size={12} />
                       </button>
@@ -176,7 +185,7 @@ export default function ScrapSection() {
                         className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
                       >
                         <Trash2 size={12} />
-                      </button>
+                      </button></>)}
                     </td>
                   </tr>
                 ))}

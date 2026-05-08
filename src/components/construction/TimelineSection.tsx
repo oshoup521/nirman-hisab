@@ -9,7 +9,7 @@ import PhotosSheet from '../common/PhotosSheet';
 import Lightbox from '../common/Lightbox';
 
 export default function TimelineSection() {
-  const { state, setState, askConfirm, photos } = useAppContext();
+  const { state, setState, askConfirm, photos, isViewer } = useAppContext();
   const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
   const [sheetMilestoneId, setSheetMilestoneId] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<{ milestoneId: string; idx: number } | null>(null);
@@ -59,7 +59,8 @@ export default function TimelineSection() {
                 <select
                   value={milestone.status}
                   onChange={e => updateStatus(milestone.id, e.target.value as Milestone['status'])}
-                  className="text-caption font-bold bg-surface-subdued text-text-primary border-none rounded-lg focus:ring-0"
+                  disabled={isViewer}
+                  className="text-caption font-bold bg-surface-subdued text-text-primary border-none rounded-lg focus:ring-0 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="pending">Pending</option>
                   <option value="in-progress">In Progress</option>
@@ -113,7 +114,7 @@ export default function TimelineSection() {
                   <p className="text-caption font-bold text-text-subdued uppercase flex items-center gap-1">
                     <ImageIcon size={11} /> Photos {milestone.photos?.length ? `(${milestone.photos.length})` : ''}
                   </p>
-                  {photoUploading === `milestone:${milestone.id}` ? (
+                  {!isViewer && (photoUploading === `milestone:${milestone.id}` ? (
                     <span className="text-caption text-text-subdued font-bold">Uploading…</span>
                   ) : (
                     <label className="flex items-center gap-1 text-caption font-bold px-2 py-1 rounded-lg cursor-pointer bg-surface-subdued text-text-secondary active:bg-border-default transition-colors">
@@ -132,7 +133,7 @@ export default function TimelineSection() {
                         }}
                       />
                     </label>
-                  )}
+                  ))}
                 </div>
                 {milestone.photos && milestone.photos.length > 0 && (
                   <PhotoStrip

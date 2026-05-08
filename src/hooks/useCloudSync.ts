@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
 export type SyncStatus = 'loading' | 'syncing' | 'synced' | 'error' | 'offline';
+export type UserRole = 'owner' | 'viewer';
 
 export function useCloudSync<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -30,8 +31,11 @@ export function useCloudSync<T>(key: string, initialValue: T) {
   const [cloudUpdatedAt, setCloudUpdatedAt] = useState<Date | null>(null);
   const [syncError, setSyncError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [role, setRole] = useState<UserRole>('viewer');
+  const [userName, setUserName] = useState<string | null>(null);
   const storedValueRef = useRef(storedValue);
   storedValueRef.current = storedValue;
+  const isViewerRef = useRef(false);
 
   const mergeCloud = useCallback((cloudData: any): T => {
     const merged = { ...initialValue, ...(typeof cloudData === 'object' && cloudData ? cloudData : {}) } as any;
@@ -55,10 +59,26 @@ export function useCloudSync<T>(key: string, initialValue: T) {
       }
       setUserEmail(session.user.email ?? null);
 
+      // Load profile to determine role and data source
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, data_owner_id, name')
+        .eq('id', session.user.id)
+        .single();
+
+      const userRole: UserRole = profile?.role === 'owner' ? 'owner' : 'viewer';
+      const dataOwnerId: string | null = profile?.data_owner_id ?? null;
+      setRole(userRole);
+      setUserName(profile?.name ?? null);
+      isViewerRef.current = userRole === 'viewer';
+
+      // Viewers read from owner's row; owners read their own
+      const targetUserId = (userRole === 'viewer' && dataOwnerId) ? dataOwnerId : session.user.id;
+
       const { data, error } = await supabase
         .from('app_state')
         .select('data, updated_at')
-        .eq('user_id', session.user.id)
+        .eq('user_id', targetUserId)
         .single();
 
       if (data && data.data) {
@@ -68,7 +88,8 @@ export function useCloudSync<T>(key: string, initialValue: T) {
         setSyncStatus('synced');
         setLastSynced(new Date());
         if (data.updated_at) setCloudUpdatedAt(new Date(data.updated_at));
-      } else if (error && error.code === 'PGRST116') {
+      } else if (error && error.code === 'PGRST116' && userRole === 'owner') {
+        // Only owners create their own row
         await supabase.from('app_state').insert({
           user_id: session.user.id,
           data: storedValueRef.current || initialValue
@@ -93,9 +114,9 @@ export function useCloudSync<T>(key: string, initialValue: T) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  // Sync to Cloud on change (Debounced, with retry)
+  // Sync to Cloud on change (Debounced, with retry) — viewers never write
   useEffect(() => {
-    if (loading) return;
+    if (loading || isViewerRef.current) return;
 
     window.localStorage.setItem(key, JSON.stringify(storedValue));
     setSyncStatus('syncing');
@@ -117,7 +138,6 @@ export function useCloudSync<T>(key: string, initialValue: T) {
         setSyncError(null);
       } catch (err: any) {
         if (attempt < 3) {
-          // Retry after 3s, then 6s
           setTimeout(() => pushToCloud(valueToSync, attempt + 1), attempt * 3000);
         } else {
           setSyncStatus('error');
@@ -136,10 +156,20 @@ export function useCloudSync<T>(key: string, initialValue: T) {
     if (!session) { setSyncStatus('offline'); return; }
     setUserEmail(session.user.email ?? null);
 
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, data_owner_id')
+      .eq('id', session.user.id)
+      .single();
+
+    const userRole: UserRole = profile?.role === 'owner' ? 'owner' : 'viewer';
+    const dataOwnerId: string | null = profile?.data_owner_id ?? null;
+    const targetUserId = (userRole === 'viewer' && dataOwnerId) ? dataOwnerId : session.user.id;
+
     const { data, error } = await supabase
       .from('app_state')
       .select('data, updated_at')
-      .eq('user_id', session.user.id)
+      .eq('user_id', targetUserId)
       .single();
 
     if (data && data.data) {
@@ -156,5 +186,5 @@ export function useCloudSync<T>(key: string, initialValue: T) {
     }
   }, [key, mergeCloud]);
 
-  return [storedValue, setStoredValue, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt] as const;
+  return [storedValue, setStoredValue, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt, role, userName] as const;
 }

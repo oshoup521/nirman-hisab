@@ -34,7 +34,7 @@ const blankVendor = (): VendorForm => ({
 });
 
 export default function VendorsSection() {
-  const { state, setState, askConfirm } = useAppContext();
+  const { state, setState, askConfirm, isViewer } = useAppContext();
   const vendors = state.vendors || [];
 
   const [vendorForm, setVendorForm] = useState<VendorForm | null>(null);
@@ -132,12 +132,14 @@ export default function VendorsSection() {
           <h3 className="font-heading text-title font-bold text-text-primary">Dukandar Khata (Udhaar)</h3>
           <p className="text-caption text-text-subdued mt-0.5">{vendors.length} vendors</p>
         </div>
-        <button
-          onClick={openAddVendor}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} /> Add
-        </button>
+        {!isViewer && (
+          <button
+            onClick={openAddVendor}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} /> Add
+          </button>
+        )}
       </div>
 
       {vendors.length === 0 ? (
@@ -146,9 +148,11 @@ export default function VendorsSection() {
             <Store size={26} className="text-text-secondary" />
           </div>
           <p className="font-bold text-text-secondary text-body-sm">Koi vendor nahi abhi tak</p>
-          <button onClick={openAddVendor} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
-            + Vendor Add Karein
-          </button>
+          {!isViewer && (
+            <button onClick={openAddVendor} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+              + Vendor Add Karein
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -183,19 +187,23 @@ export default function VendorsSection() {
                       </span>
                     </td>
                     <td className="py-2.5 px-4 text-right whitespace-nowrap">
-                      <button onClick={() => openAddPay(vendor)} className="text-caption font-bold text-emerald-600 dark:text-emerald-400 hover:opacity-80 transition-opacity mr-1">Pay</button>
-                      <button onClick={() => openAddBill(vendor)} className="text-caption font-bold text-brand hover:opacity-80 transition-opacity mr-1">Bill</button>
-                      <button onClick={() => openEditVendor(vendor)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors">
-                        <Pencil size={12} />
-                      </button>
-                      <button
-                        onClick={() => askConfirm(`"${vendor.name}" vendor ko delete kar dein?`, () =>
-                          setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }))
-                        )}
-                        className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
-                      >
-                        <Trash2 size={12} />
-                      </button>
+                      {!isViewer && (
+                        <>
+                          <button onClick={() => openAddPay(vendor)} className="text-caption font-bold text-emerald-600 dark:text-emerald-400 hover:opacity-80 transition-opacity mr-1">Pay</button>
+                          <button onClick={() => openAddBill(vendor)} className="text-caption font-bold text-brand hover:opacity-80 transition-opacity mr-1">Bill</button>
+                          <button onClick={() => openEditVendor(vendor)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors">
+                            <Pencil size={12} />
+                          </button>
+                          <button
+                            onClick={() => askConfirm(`"${vendor.name}" vendor ko delete kar dein?`, () =>
+                              setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }))
+                            )}
+                            className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 );
@@ -221,17 +229,21 @@ export default function VendorsSection() {
                     <p className="text-caption text-text-subdued font-bold uppercase">Total Bill</p>
                     <p className="text-title-lg font-bold text-text-primary">₹{formatNumber(vendor.totalBilled)}</p>
                   </div>
-                  <button onClick={() => openEditVendor(vendor)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
-                    <Pencil size={12} />
-                  </button>
-                  <button
-                    onClick={() => askConfirm(`"${vendor.name}" vendor ko delete kar dein?`, () =>
-                      setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }))
-                    )}
-                    className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  {!isViewer && (
+                    <>
+                      <button onClick={() => openEditVendor(vendor)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors">
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() => askConfirm(`"${vendor.name}" vendor ko delete kar dein?`, () =>
+                          setState(prev => ({ ...prev, vendors: prev.vendors.filter(v => v.id !== vendor.id) }))
+                        )}
+                        className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="flex justify-between text-body-sm font-bold border-y border-border-subdued py-2">
@@ -246,20 +258,22 @@ export default function VendorsSection() {
                   </span>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => openAddPay(vendor)}
-                  className="flex-1 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl text-body-sm font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
-                >
-                  + Paise Jama
-                </button>
-                <button
-                  onClick={() => openAddBill(vendor)}
-                  className="flex-1 py-1.5 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
-                >
-                  + Bill Badao
-                </button>
-              </div>
+              {!isViewer && (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openAddPay(vendor)}
+                    className="flex-1 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl text-body-sm font-bold border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+                  >
+                    + Paise Jama
+                  </button>
+                  <button
+                    onClick={() => openAddBill(vendor)}
+                    className="flex-1 py-1.5 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
+                  >
+                    + Bill Badao
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}

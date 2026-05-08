@@ -34,7 +34,7 @@ function Section({ icon, title, children }: { icon: React.ReactNode; title: stri
 }
 
 export default function SettingsTab() {
-  const { state, setState, calcs, askConfirm, sync, pwForm, setPwForm, handleChangePassword, handleLogout, photos } = useAppContext();
+  const { state, setState, calcs, askConfirm, sync, pwForm, setPwForm, handleChangePassword, handleLogout, photos, isViewer } = useAppContext();
   const { theme, setTheme } = useTheme();
   const { masterBudget, masterBurnRate, masterRemaining, totalKharcha } = calcs;
   const { uploadPhoto, deletePhoto, getSignedUrl, photoUploading, setLightboxPhoto } = photos;
@@ -142,12 +142,12 @@ export default function SettingsTab() {
               <div>
                 <label className={lbl}>Project Name</label>
                 <input type="text" value={project?.name || ''} onChange={e => updateProject({ name: e.target.value })}
-                  className={inp} placeholder="e.g. Sharma Sadan" />
+                  readOnly={isViewer} className={inp} placeholder="e.g. Sharma Sadan" />
               </div>
               <div>
                 <label className={lbl}>Location</label>
                 <input type="text" value={project?.location || ''} onChange={e => updateProject({ location: e.target.value })}
-                  className={inp} placeholder="e.g. Sector 15, Noida" />
+                  readOnly={isViewer} className={inp} placeholder="e.g. Sector 15, Noida" />
               </div>
               <div>
                 <label className={lbl}>Project Type</label>
@@ -155,12 +155,14 @@ export default function SettingsTab() {
                   {PROJECT_TYPES.map(({ value, label }) => (
                     <button
                       key={value}
-                      onClick={() => updateProject({ type: value })}
+                      onClick={() => !isViewer && updateProject({ type: value })}
+                      disabled={isViewer}
                       className={cn(
                         'px-3.5 py-2 rounded-xl text-xs font-bold border transition-all',
                         project?.type === value
                           ? 'bg-brand text-surface border-brand shadow-sm'
-                          : 'bg-surface-subdued text-text-secondary border-border-subdued hover:border-text-subdued'
+                          : 'bg-surface-subdued text-text-secondary border-border-subdued hover:border-text-subdued',
+                        isViewer && 'cursor-default'
                       )}
                     >
                       {label}
@@ -179,6 +181,7 @@ export default function SettingsTab() {
                 <input type="number" inputMode="numeric"
                   value={project?.masterBudget || ''}
                   onChange={e => updateProject({ masterBudget: Number(e.target.value) })}
+                  readOnly={isViewer}
                   className={cn(inp, 'bg-brand/5 border border-brand/10 focus:ring-brand')}
                   placeholder="e.g. 80,00,000" />
               </div>
@@ -187,6 +190,7 @@ export default function SettingsTab() {
                 <input type="number" inputMode="numeric"
                   value={project?.budget || ''}
                   onChange={e => updateProject({ budget: Number(e.target.value) })}
+                  readOnly={isViewer}
                   className={inp}
                   placeholder="e.g. 50,00,000" />
               </div>
@@ -245,6 +249,7 @@ export default function SettingsTab() {
                     const f = project?.floors || 1;
                     updateProject({ plotWidth: w, totalArea: w * l * f });
                   }}
+                  readOnly={isViewer}
                   className={inp} />
               </div>
               <div>
@@ -257,6 +262,7 @@ export default function SettingsTab() {
                     const f = project?.floors || 1;
                     updateProject({ plotLength: l, totalArea: w * l * f });
                   }}
+                  readOnly={isViewer}
                   className={inp} />
               </div>
               <div>
@@ -269,6 +275,7 @@ export default function SettingsTab() {
                     const l = project?.plotLength || 0;
                     updateProject({ floors: f, totalArea: w * l * f });
                   }}
+                  readOnly={isViewer}
                   className={inp} />
               </div>
             </div>
@@ -300,7 +307,7 @@ export default function SettingsTab() {
             <div className="pt-4 border-t border-border-subdued space-y-4">
               <div className="flex items-center justify-between">
                  <label className={lbl}>Site Plans (Naksha Gallery)</label>
-                 {project?.sitePlans && project.sitePlans.length > 0 && (
+                 {!isViewer && project?.sitePlans && project.sitePlans.length > 0 && (
                    <label className="text-[10px] font-bold text-brand uppercase tracking-widest cursor-pointer hover:opacity-80 flex items-center gap-1">
                      <Plus size={12} /> Add More
                      <input type="file" className="hidden" accept="image/*,.pdf" onChange={handleNakshaUpload} />
@@ -337,25 +344,27 @@ export default function SettingsTab() {
                         </div>
                         
                         <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <a 
-                            href={url || '#'} 
-                            target="_blank" 
+                          <a
+                            href={url || '#'}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 bg-surface text-text-secondary rounded-lg border border-border-subdued hover:text-brand transition-colors"
                           >
                             <ExternalLink size={16} />
                           </a>
-                          <button 
-                            onClick={() => handleNakshaDelete(p.path)}
-                            className="p-2 bg-surface text-red-500 rounded-lg border border-border-subdued hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {!isViewer && (
+                            <button
+                              onClick={() => handleNakshaDelete(p.path)}
+                              className="p-2 bg-surface text-red-500 rounded-lg border border-border-subdued hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     );
                   })
-                ) : (
+                ) : !isViewer ? (
                   <label className="w-full flex flex-col items-center justify-center py-8 bg-surface-subdued border-2 border-dashed border-border-subdued rounded-2xl cursor-pointer hover:border-brand/40 transition-colors group">
                     <div className="w-12 h-12 bg-brand/10 rounded-full flex items-center justify-center text-brand mb-3 group-hover:scale-110 transition-transform">
                       <Images size={24} />
@@ -369,6 +378,8 @@ export default function SettingsTab() {
                       </div>
                     )}
                   </label>
+                ) : (
+                  <p className="text-xs text-text-subdued font-bold text-center py-6">Koi site plan upload nahi hua</p>
                 )}
               </div>
             </div>
@@ -386,12 +397,14 @@ export default function SettingsTab() {
                 <label className={lbl}>Start Date</label>
                 <input type="date" value={project?.startDate || ''}
                   onChange={e => updateProject({ startDate: e.target.value })}
+                  readOnly={isViewer}
                   className={inp} />
               </div>
               <div>
                 <label className={lbl}>End Date (Plan)</label>
                 <input type="date" value={project?.endDate || ''}
                   onChange={e => updateProject({ endDate: e.target.value })}
+                  readOnly={isViewer}
                   className={inp} />
               </div>
             </div>
@@ -469,7 +482,7 @@ export default function SettingsTab() {
 
           {/* ── 6. Account ── */}
           <Section icon={<User size={16} />} title="Account Management">
-            {pwForm.open ? (
+            {!isViewer && pwForm.open ? (
               <form onSubmit={handleChangePassword} className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                    <div>
@@ -504,17 +517,19 @@ export default function SettingsTab() {
                 </div>
               </form>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setPwForm(p => ({ ...p, open: true }))}
-                  className="px-4 py-3 bg-brand/10 text-brand rounded-2xl font-bold text-sm border border-brand/20 flex items-center justify-between hover:bg-brand/15 transition-colors"
-                >
-                  <span>Password</span>
-                  <ChevronRight size={16} />
-                </button>
+              <div className={isViewer ? 'flex' : 'grid grid-cols-2 gap-3'}>
+                {!isViewer && (
+                  <button
+                    onClick={() => setPwForm(p => ({ ...p, open: true }))}
+                    className="px-4 py-3 bg-brand/10 text-brand rounded-2xl font-bold text-sm border border-brand/20 flex items-center justify-between hover:bg-brand/15 transition-colors"
+                  >
+                    <span>Password</span>
+                    <ChevronRight size={16} />
+                  </button>
+                )}
                 <button
                   onClick={() => askConfirm('Kya aap logout karna chahte hain?', handleLogout, 'Logout', 'Logout')}
-                  className="px-4 py-3 bg-amber-500/10 text-amber-700 dark:text-amber-300 rounded-2xl font-extrabold text-sm border border-amber-500/30 flex items-center justify-between hover:bg-amber-500/20 transition-colors"
+                  className="flex-1 px-4 py-3 bg-amber-500/10 text-amber-700 dark:text-amber-300 rounded-2xl font-extrabold text-sm border border-amber-500/30 flex items-center justify-between hover:bg-amber-500/20 transition-colors"
                 >
                   <span className="flex items-center gap-2">
                     <LogOut size={15} />
@@ -527,7 +542,7 @@ export default function SettingsTab() {
           </Section>
 
           {/* ── 7. Danger Zone ── */}
-          <div className="bg-red-500/5 rounded-3xl border border-red-500/20 p-6 space-y-4">
+          {!isViewer && <div className="bg-red-500/5 rounded-3xl border border-red-500/20 p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-red-500/10 rounded-xl flex items-center justify-center">
                  <AlertTriangle size={20} className="text-red-500" />
@@ -551,7 +566,7 @@ export default function SettingsTab() {
             >
               Reset All Project Data
             </button>
-          </div>
+          </div>}
         </div>
       </div>
     </div>

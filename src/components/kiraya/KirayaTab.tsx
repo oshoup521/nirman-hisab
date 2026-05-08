@@ -41,7 +41,7 @@ const blankProp = (): PropForm => ({
 });
 
 export default function KirayaTab() {
-  const { state, setState, calcs, askConfirm } = useAppContext();
+  const { state, setState, calcs, askConfirm, isViewer } = useAppContext();
   const { depositPaid, depositPending, depositWapas, getDepositStatus } = calcs;
 
   const rentals = state.rentals || [];
@@ -220,12 +220,14 @@ export default function KirayaTab() {
           <h1 className="font-heading text-display font-bold text-text-primary">Kiraya Hisaab</h1>
           <p className="text-text-subdued text-body-sm">Rent Tracker</p>
         </div>
-        <button
-          onClick={openAddProp}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} /> Add Property
-        </button>
+        {!isViewer && (
+          <button
+            onClick={openAddProp}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} /> Add Property
+          </button>
+        )}
       </header>
 
       {/* Summary */}
@@ -272,9 +274,11 @@ export default function KirayaTab() {
             <Home size={26} className="text-text-subdued" />
           </div>
           <p className="font-bold text-text-secondary text-body-sm">Koi property nahi abhi tak</p>
-          <button onClick={openAddProp} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
-            + Property Add Karein
-          </button>
+          {!isViewer && (
+            <button onClick={openAddProp} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+              + Property Add Karein
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
@@ -300,19 +304,21 @@ export default function KirayaTab() {
                       <p className="text-caption text-text-subdued mt-0.5">{rental.ownerName}{rental.ownerPhone ? ` • ${rental.ownerPhone}` : ''}</p>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 shrink-0 ml-2">
-                    <button onClick={() => openEditProp(rental)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-border-default transition-colors">
-                      <Pencil size={12} />
-                    </button>
-                    <button
-                      onClick={() => askConfirm(`"${rental.name}" delete kar dein?`, () =>
-                        setState(prev => ({ ...prev, rentals: (prev.rentals || []).filter(r => r.id !== rental.id) }))
-                      )}
-                      className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </div>
+                  {!isViewer && (
+                    <div className="flex items-center gap-1 shrink-0 ml-2">
+                      <button onClick={() => openEditProp(rental)} className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-border-default transition-colors">
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() => askConfirm(`"${rental.name}" delete kar dein?`, () =>
+                          setState(prev => ({ ...prev, rentals: (prev.rentals || []).filter(r => r.id !== rental.id) }))
+                        )}
+                        className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 transition-colors"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Rent + Deposit mini stats */}
@@ -398,46 +404,50 @@ export default function KirayaTab() {
                             {payment.note ? ` • ${payment.note}` : ''}
                           </p>
                         </div>
-                        <div className="flex items-center gap-0.5 shrink-0 ml-2">
-                          <button onClick={() => openEditPay(rental.id, payment)} className="w-7 h-7 flex items-center justify-center text-text-secondary hover:text-brand rounded-lg transition-colors">
-                            <Pencil size={12} />
-                          </button>
-                          <button
-                            onClick={() => askConfirm('Is payment ko delete kar dein?', () =>
-                              setState(prev => ({
-                                ...prev,
-                                rentals: (prev.rentals || []).map(r =>
-                                  r.id === rental.id ? { ...r, payments: r.payments.filter(p => p.id !== payment.id) } : r
-                                ),
-                              }))
-                            )}
-                            className="w-7 h-7 flex items-center justify-center text-red-500/50 hover:text-red-500 rounded-lg transition-colors"
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
+                        {!isViewer && (
+                          <div className="flex items-center gap-0.5 shrink-0 ml-2">
+                            <button onClick={() => openEditPay(rental.id, payment)} className="w-7 h-7 flex items-center justify-center text-text-secondary hover:text-brand rounded-lg transition-colors">
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              onClick={() => askConfirm('Is payment ko delete kar dein?', () =>
+                                setState(prev => ({
+                                  ...prev,
+                                  rentals: (prev.rentals || []).map(r =>
+                                    r.id === rental.id ? { ...r, payments: r.payments.filter(p => p.id !== payment.id) } : r
+                                  ),
+                                }))
+                              )}
+                              className="w-7 h-7 flex items-center justify-center text-red-500/50 hover:text-red-500 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
                 )}
 
                 {/* Add payment buttons */}
-                <div className="border-t border-border-default p-3 flex gap-2">
-                  <button
-                    onClick={() => openAddPay(rental, false)}
-                    className="flex-1 py-2.5 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
-                  >
-                    + Online/Cash
-                  </button>
-                  {dStatus === 'paid' && depositRemaining > 0 && (
+                {!isViewer && (
+                  <div className="border-t border-border-default p-3 flex gap-2">
                     <button
-                      onClick={() => openAddPay(rental, true)}
+                      onClick={() => openAddPay(rental, false)}
                       className="flex-1 py-2.5 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
                     >
-                      + Deposit se
+                      + Online/Cash
                     </button>
-                  )}
-                </div>
+                    {dStatus === 'paid' && depositRemaining > 0 && (
+                      <button
+                        onClick={() => openAddPay(rental, true)}
+                        className="flex-1 py-2.5 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
+                      >
+                        + Deposit se
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {/* Electricity Section */}
                 {rental.hasElectricity && (() => {
@@ -458,12 +468,14 @@ export default function KirayaTab() {
                             </span>
                           )}
                         </div>
-                        <button
-                          onClick={() => openAddElec(rental)}
-                          className="flex items-center gap-1 text-caption font-bold text-amber-600 dark:text-amber-400 hover:opacity-80 transition-opacity"
-                        >
-                          <Plus size={12} /> Reading
-                        </button>
+                        {!isViewer && (
+                          <button
+                            onClick={() => openAddElec(rental)}
+                            className="flex items-center gap-1 text-caption font-bold text-amber-600 dark:text-amber-400 hover:opacity-80 transition-opacity"
+                          >
+                            <Plus size={12} /> Reading
+                          </button>
+                        )}
                       </div>
                       {readings.length > 0 && (
                         <div className="px-4 pb-3 space-y-2 max-h-52 overflow-y-auto">
@@ -491,40 +503,42 @@ export default function KirayaTab() {
                                       {reading.note ? ` • ${reading.note}` : ''}
                                     </p>
                                   </div>
-                                  <div className="flex items-center gap-0.5 shrink-0 ml-2">
-                                    <button
-                                      onClick={() => toggleElecPaid(rental.id, reading.id, !reading.paid)}
-                                      className={cn(
-                                        'text-caption font-bold px-2 py-1 rounded-lg border transition-all',
-                                        reading.paid
-                                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                                      )}
-                                    >
-                                      {reading.paid ? '✓ Diya' : 'Baaki'}
-                                    </button>
-                                    <button
-                                      onClick={() => openEditElec(rental.id, reading)}
-                                      className="w-7 h-7 flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg transition-colors"
-                                    >
-                                      <Pencil size={11} />
-                                    </button>
-                                    <button
-                                      onClick={() => askConfirm('Is reading ko delete karein?', () =>
-                                        setState(prev => ({
-                                          ...prev,
-                                          rentals: (prev.rentals || []).map(r =>
-                                            r.id === rental.id
-                                              ? { ...r, electricityReadings: (r.electricityReadings || []).filter(x => x.id !== reading.id) }
-                                              : r
-                                          ),
-                                        }))
-                                      )}
-                                      className="w-7 h-7 flex items-center justify-center text-red-500/50 hover:text-red-500 rounded-lg transition-colors"
-                                    >
-                                      <Trash2 size={11} />
-                                    </button>
-                                  </div>
+                                  {!isViewer && (
+                                    <div className="flex items-center gap-0.5 shrink-0 ml-2">
+                                      <button
+                                        onClick={() => toggleElecPaid(rental.id, reading.id, !reading.paid)}
+                                        className={cn(
+                                          'text-caption font-bold px-2 py-1 rounded-lg border transition-all',
+                                          reading.paid
+                                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                                        )}
+                                      >
+                                        {reading.paid ? '✓ Diya' : 'Baaki'}
+                                      </button>
+                                      <button
+                                        onClick={() => openEditElec(rental.id, reading)}
+                                        className="w-7 h-7 flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg transition-colors"
+                                      >
+                                        <Pencil size={11} />
+                                      </button>
+                                      <button
+                                        onClick={() => askConfirm('Is reading ko delete karein?', () =>
+                                          setState(prev => ({
+                                            ...prev,
+                                            rentals: (prev.rentals || []).map(r =>
+                                              r.id === rental.id
+                                                ? { ...r, electricityReadings: (r.electricityReadings || []).filter(x => x.id !== reading.id) }
+                                                : r
+                                            ),
+                                          }))
+                                        )}
+                                        className="w-7 h-7 flex items-center justify-center text-red-500/50 hover:text-red-500 rounded-lg transition-colors"
+                                      >
+                                        <Trash2 size={11} />
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             );

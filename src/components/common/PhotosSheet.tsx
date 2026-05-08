@@ -13,7 +13,7 @@ interface PhotosSheetProps {
   getSignedUrl: (path: string) => Promise<string | null>;
   onClose: () => void;
   onOpenAt: (index: number) => void;
-  onDelete: (path: string) => void;
+  onDelete?: (path: string) => void;
   onAdd?: (file: File, caption: string) => void;
 }
 
@@ -79,7 +79,8 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
                   caption={photo.caption}
                   getSignedUrl={getSignedUrl}
                   onOpen={() => onOpenAt(i)}
-                  onDelete={() => onDelete(photo.path)}
+                  onDelete={() => onDelete?.(photo.path)}
+                  hideDelete={!onDelete}
                 />
               ))}
             </div>

@@ -15,7 +15,7 @@ type UsageForm = { materialId: string; materialName: string; unit: string; amoun
 const blankForm = (): MatForm => ({ name: '', unit: '', purchased: '', rate: '', minStock: '' });
 
 export default function MaterialsSection() {
-  const { state, setState, askConfirm, photos } = useAppContext();
+  const { state, setState, askConfirm, photos, isViewer } = useAppContext();
   const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
   const [form, setForm] = useState<MatForm | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
@@ -88,12 +88,14 @@ export default function MaterialsSection() {
             </p>
           )}
         </div>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} /> Add
-        </button>
+        {!isViewer && (
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} /> Add
+          </button>
+        )}
       </div>
 
       {/* Empty state */}
@@ -103,9 +105,11 @@ export default function MaterialsSection() {
             <Package size={26} className="text-text-secondary" />
           </div>
           <p className="font-bold text-text-secondary text-body-sm">Koi material nahi abhi tak</p>
-          <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
-            + Material Add Karein
-          </button>
+          {!isViewer && (
+            <button onClick={openAdd} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+              + Material Add Karein
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -175,23 +179,27 @@ export default function MaterialsSection() {
                         )}
                       </td>
                       <td className="py-2.5 px-4 text-right whitespace-nowrap">
-                        <button
-                          onClick={() => setUsageForm({ materialId: material.id, materialName: material.name, unit: material.unit, amount: '' })}
-                          className="text-caption font-bold text-brand hover:opacity-80 transition-opacity mr-1"
-                        >
-                          Use
-                        </button>
-                        <button onClick={() => openEdit(material)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors">
-                          <Pencil size={12} />
-                        </button>
-                        <button
-                          onClick={() => askConfirm(`"${material.name}" delete kar dein?`, () =>
-                            setState(prev => ({ ...prev, materials: prev.materials.filter(m => m.id !== material.id) }))
-                          )}
-                          className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        {!isViewer && (
+                          <>
+                            <button
+                              onClick={() => setUsageForm({ materialId: material.id, materialName: material.name, unit: material.unit, amount: '' })}
+                              className="text-caption font-bold text-brand hover:opacity-80 transition-opacity mr-1"
+                            >
+                              Use
+                            </button>
+                            <button onClick={() => openEdit(material)} className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors">
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              onClick={() => askConfirm(`"${material.name}" delete kar dein?`, () =>
+                                setState(prev => ({ ...prev, materials: prev.materials.filter(m => m.id !== material.id) }))
+                              )}
+                              className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   );
@@ -245,25 +253,27 @@ export default function MaterialsSection() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setUsageForm({ materialId: material.id, materialName: material.name, unit: material.unit, amount: '' })}
-                    className="flex-1 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
-                  >
-                    Update Usage
-                  </button>
-                  <button onClick={() => openEdit(material)} className="w-9 h-9 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary border border-border-default hover:bg-border-default transition-colors">
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => askConfirm(`"${material.name}" delete kar dein?`, () =>
-                      setState(prev => ({ ...prev, materials: prev.materials.filter(m => m.id !== material.id) }))
-                    )}
-                    className="w-9 h-9 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+                {!isViewer && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setUsageForm({ materialId: material.id, materialName: material.name, unit: material.unit, amount: '' })}
+                      className="flex-1 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
+                    >
+                      Update Usage
+                    </button>
+                    <button onClick={() => openEdit(material)} className="w-9 h-9 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary border border-border-default hover:bg-border-default transition-colors">
+                      <Pencil size={14} />
+                    </button>
+                    <button
+                      onClick={() => askConfirm(`"${material.name}" delete kar dein?`, () =>
+                        setState(prev => ({ ...prev, materials: prev.materials.filter(m => m.id !== material.id) }))
+                      )}
+                      className="w-9 h-9 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                )}
 
                 {/* Photos: bill / samaan ki tasveer */}
                 <div className="mt-3 border-t border-border-subdued pt-3">
@@ -271,7 +281,7 @@ export default function MaterialsSection() {
                     <p className="text-caption font-bold text-text-subdued uppercase flex items-center gap-1">
                       <ImageIcon size={11} /> Bill / Photos {material.photos?.length ? `(${material.photos.length})` : ''}
                     </p>
-                    {photoUploading === `material:${material.id}` ? (
+                    {!isViewer && (photoUploading === `material:${material.id}` ? (
                       <span className="text-caption text-text-subdued font-bold">Uploading…</span>
                     ) : (
                       <label className="flex items-center gap-1 text-caption font-bold px-2 py-1 rounded-lg cursor-pointer bg-surface-subdued text-text-secondary active:bg-border-default transition-colors">
@@ -290,7 +300,7 @@ export default function MaterialsSection() {
                           }}
                         />
                       </label>
-                    )}
+                    ))}
                   </div>
                   <PhotoStrip
                     photos={material.photos ?? []}

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, Dispatch, SetStateAction } from 'react';
 import { AppState } from '../types';
-import { SyncStatus } from '../hooks/useCloudSync';
+import { SyncStatus, UserRole } from '../hooks/useCloudSync';
 import { AppCalculations } from '../hooks/useAppCalculations';
 import { PhotoManager } from '../hooks/usePhotoManager';
 
@@ -45,6 +45,9 @@ export interface AppContextValue {
     userEmail: string | null;
     cloudUpdatedAt: Date | null;
   };
+
+  role: UserRole;
+  isViewer: boolean;
 
   photos: PhotoManager;
 

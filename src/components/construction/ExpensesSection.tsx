@@ -32,7 +32,7 @@ const blankForm = (): FormState => ({
 });
 
 export default function ExpensesSection() {
-  const { state, setState, askConfirm, photos } = useAppContext();
+  const { state, setState, askConfirm, photos, isViewer } = useAppContext();
   const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
   const [form, setForm] = useState<FormState | null>(null);
   const [editId, setEditId] = useState<string | null>(null);
@@ -88,12 +88,14 @@ export default function ExpensesSection() {
           <h3 className="font-heading text-title font-bold text-text-primary">Kharcha Paani</h3>
           <p className="text-caption text-text-subdued mt-0.5">{state.expenses.length} entries</p>
         </div>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} /> Add
-        </button>
+        {!isViewer && (
+          <button
+            onClick={openAdd}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} /> Add
+          </button>
+        )}
       </div>
 
       {/* Summary Card */}
@@ -128,12 +130,14 @@ export default function ExpensesSection() {
           </div>
           <p className="font-bold text-text-secondary text-body-sm">Koi kharcha nahi abhi tak</p>
           <p className="text-text-subdued text-caption mt-1">Pehla kharcha add karo</p>
-          <button
-            onClick={openAdd}
-            className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
-          >
-            + Kharcha Add Karein
-          </button>
+          {!isViewer && (
+            <button
+              onClick={openAdd}
+              className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
+            >
+              + Kharcha Add Karein
+            </button>
+          )}
         </div>
       ) : (
         <>
@@ -185,41 +189,45 @@ export default function ExpensesSection() {
                         {formatCurrency(expense.amount)}
                       </td>
                       <td className="py-2.5 px-4 text-right whitespace-nowrap">
-                        <label className={cn(
-                          'w-7 h-7 rounded-lg inline-flex items-center justify-center cursor-pointer transition-colors mr-0.5',
-                          isUploading ? 'bg-brand/10 text-brand' : 'text-text-secondary hover:bg-border-default'
-                        )}>
-                          <ImageIcon size={12} />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            disabled={isUploading}
-                            onChange={e => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const caption = prompt('Bill ka naam / caption (optional):') ?? '';
-                                uploadPhoto('expense', expense.id, file, caption);
-                              }
-                              e.target.value = '';
-                            }}
-                          />
-                        </label>
-                        <button
-                          onClick={() => openEdit(expense)}
-                          className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors"
-                        >
-                          <Pencil size={12} />
-                        </button>
-                        <button
-                          onClick={() => askConfirm(
-                            'Is kharche ko delete kar dein?',
-                            () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
-                          )}
-                          className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        {!isViewer && (
+                          <>
+                            <label className={cn(
+                              'w-7 h-7 rounded-lg inline-flex items-center justify-center cursor-pointer transition-colors mr-0.5',
+                              isUploading ? 'bg-brand/10 text-brand' : 'text-text-secondary hover:bg-border-default'
+                            )}>
+                              <ImageIcon size={12} />
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={isUploading}
+                                onChange={e => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const caption = prompt('Bill ka naam / caption (optional):') ?? '';
+                                    uploadPhoto('expense', expense.id, file, caption);
+                                  }
+                                  e.target.value = '';
+                                }}
+                              />
+                            </label>
+                            <button
+                              onClick={() => openEdit(expense)}
+                              className="w-7 h-7 inline-flex items-center justify-center text-text-secondary hover:text-text-primary rounded-lg hover:bg-border-default transition-colors"
+                            >
+                              <Pencil size={12} />
+                            </button>
+                            <button
+                              onClick={() => askConfirm(
+                                'Is kharche ko delete kar dein?',
+                                () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
+                              )}
+                              className="w-7 h-7 inline-flex items-center justify-center text-red-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 ml-0.5 transition-colors"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   );
@@ -275,43 +283,45 @@ export default function ExpensesSection() {
                   {/* Amount + Actions */}
                   <div className="shrink-0 flex flex-col items-end gap-2">
                     <p className="font-mono text-title font-bold text-text-primary">{formatCurrency(expense.amount)}</p>
-                    <div className="flex items-center gap-1">
-                      <label className={cn(
-                        'w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors',
-                        isUploading ? 'bg-brand/10 text-brand' : 'bg-surface-subdued text-text-secondary hover:bg-border-default active:bg-border-subdued'
-                      )}>
-                        <ImageIcon size={12} />
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          disabled={isUploading}
-                          onChange={e => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const caption = prompt('Bill ka naam / caption (optional):') ?? '';
-                              uploadPhoto('expense', expense.id, file, caption);
-                            }
-                            e.target.value = '';
-                          }}
-                        />
-                      </label>
-                      <button
-                        onClick={() => openEdit(expense)}
-                        className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default active:bg-border-subdued transition-colors"
-                      >
-                        <Pencil size={12} />
-                      </button>
-                      <button
-                        onClick={() => askConfirm(
-                          'Is kharche ko delete kar dein?',
-                          () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
-                        )}
-                        className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 active:bg-red-500/30 transition-colors"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
+                    {!isViewer && (
+                      <div className="flex items-center gap-1">
+                        <label className={cn(
+                          'w-7 h-7 rounded-lg flex items-center justify-center cursor-pointer transition-colors',
+                          isUploading ? 'bg-brand/10 text-brand' : 'bg-surface-subdued text-text-secondary hover:bg-border-default active:bg-border-subdued'
+                        )}>
+                          <ImageIcon size={12} />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            disabled={isUploading}
+                            onChange={e => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const caption = prompt('Bill ka naam / caption (optional):') ?? '';
+                                uploadPhoto('expense', expense.id, file, caption);
+                              }
+                              e.target.value = '';
+                            }}
+                          />
+                        </label>
+                        <button
+                          onClick={() => openEdit(expense)}
+                          className="w-7 h-7 bg-surface-subdued rounded-lg flex items-center justify-center text-text-secondary hover:bg-border-default active:bg-border-subdued transition-colors"
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={() => askConfirm(
+                            'Is kharche ko delete kar dein?',
+                            () => setState(prev => ({ ...prev, expenses: prev.expenses.filter(e => e.id !== expense.id) }))
+                          )}
+                          className="w-7 h-7 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-500/20 active:bg-red-500/30 transition-colors"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
 

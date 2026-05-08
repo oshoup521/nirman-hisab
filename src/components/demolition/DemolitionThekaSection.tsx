@@ -31,7 +31,7 @@ const blankThekaForm = (): ThekaForm => ({
 });
 
 export default function DemolitionThekaSection() {
-  const { state, setState, askConfirm } = useAppContext();
+  const { state, setState, askConfirm, isViewer } = useAppContext();
   const thekas = state.demolitionThekas || [];
 
   const [thekaForm, setThekaForm] = useState<ThekaForm | null>(null);
@@ -126,12 +126,14 @@ export default function DemolitionThekaSection() {
           <h3 className="font-heading text-title font-bold text-text-primary">Tod-Phod Theka</h3>
           <p className="text-caption text-text-subdued mt-0.5">{thekas.length} thekedar</p>
         </div>
-        <button
-          onClick={openAddTheka}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} /> Add
-        </button>
+        {!isViewer && (
+          <button
+            onClick={openAddTheka}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand text-surface rounded-xl text-body-sm font-bold shadow-sm shadow-brand/20 hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} /> Add
+          </button>
+        )}
       </div>
 
       {thekas.length === 0 ? (
@@ -140,9 +142,11 @@ export default function DemolitionThekaSection() {
             <Hammer size={26} className="text-text-secondary" />
           </div>
           <p className="font-bold text-text-secondary text-body-sm">Koi theka nahi abhi tak</p>
-          <button onClick={openAddTheka} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
-            + Theka Add Karein
-          </button>
+          {!isViewer && (
+            <button onClick={openAddTheka} className="mt-4 px-4 py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors">
+              + Theka Add Karein
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
@@ -162,17 +166,21 @@ export default function DemolitionThekaSection() {
                     <p className="text-caption text-text-subdued font-bold uppercase">Total</p>
                     <p className="text-title-lg font-bold text-text-primary">{formatCurrency(theka.totalAmount)}</p>
                   </div>
-                  <button onClick={() => openEditTheka(theka)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => askConfirm(`"${theka.name}" ka demolition theka delete kar dein?`, () =>
-                      setState(prev => ({ ...prev, demolitionThekas: (prev.demolitionThekas || []).filter(t => t.id !== theka.id) }))
-                    )}
-                    className="p-1.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {!isViewer && (
+                    <>
+                      <button onClick={() => openEditTheka(theka)} className="p-1.5 bg-surface-subdued text-text-secondary rounded-xl border border-border-default hover:bg-border-default transition-colors">
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => askConfirm(`"${theka.name}" ka demolition theka delete kar dein?`, () =>
+                          setState(prev => ({ ...prev, demolitionThekas: (prev.demolitionThekas || []).filter(t => t.id !== theka.id) }))
+                        )}
+                        className="p-1.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
               <div className="px-4 pb-3">
@@ -194,26 +202,30 @@ export default function DemolitionThekaSection() {
                           {format(new Date(payment.date), 'dd MMM yyyy')}{payment.note && ` • ${payment.note}`}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => openEditPay(theka, payment)} className="p-1 text-text-secondary hover:text-brand transition-colors">
-                          <Pencil size={12} />
-                        </button>
-                        <button onClick={() => deletePayment(theka.id, payment.id)} className="p-1 text-red-500/50 hover:text-red-500 transition-colors">
-                          <Trash2 size={12} />
-                        </button>
-                      </div>
+                      {!isViewer && (
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => openEditPay(theka, payment)} className="p-1 text-text-secondary hover:text-brand transition-colors">
+                            <Pencil size={12} />
+                          </button>
+                          <button onClick={() => deletePayment(theka.id, payment.id)} className="p-1 text-red-500/50 hover:text-red-500 transition-colors">
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
-              <div className="border-t border-border-default p-3">
-                <button
-                  onClick={() => openAddPay(theka)}
-                  className="w-full py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
-                >
-                  + Payment Add Karo
-                </button>
-              </div>
+              {!isViewer && (
+                <div className="border-t border-border-default p-3">
+                  <button
+                    onClick={() => openAddPay(theka)}
+                    className="w-full py-2 bg-brand/10 text-brand rounded-xl text-body-sm font-bold border border-brand/20 hover:bg-brand/20 transition-colors"
+                  >
+                    + Payment Add Karo
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}

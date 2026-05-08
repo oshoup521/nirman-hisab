@@ -23,8 +23,16 @@ import SettingsTab from './components/settings/SettingsTab';
 import DiaryTab from './components/diary/DiaryTab';
 
 export default function App() {
-  const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt] =
+  const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt, role] =
     useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
+
+  const isViewer = role === 'viewer';
+
+  // Viewers never mutate state — wrapping prevents accidental writes
+  const safeSetState: typeof setState = React.useCallback(
+    (action) => { if (!isViewer) setState(action); },
+    [isViewer, setState]
+  );
 
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [subTab, setSubTab] = useState('overview');
@@ -35,7 +43,7 @@ export default function App() {
 
   const { confirmDialog, askConfirm, closeConfirm } = useConfirmDialog();
   const calcs = useAppCalculations(state);
-  const photos = usePhotoManager(setState);
+  const photos = usePhotoManager(safeSetState);
   const { pullY, isPulling, toast, PULL_THRESHOLD } = usePullToRefresh(syncStatus, syncNow);
 
   // One-time migration: prepend Demolition phase if missing
@@ -116,7 +124,7 @@ export default function App() {
 
   return (
     <AppProvider value={{
-      state, setState, calcs,
+      state, setState: safeSetState, calcs,
       activeTab, setActiveTab,
       subTab, setSubTab,
       confirmDialog, askConfirm, closeConfirm,
@@ -126,6 +134,7 @@ export default function App() {
       handleChangePassword, handleLogout,
       exportToCSV, shareOnWhatsApp,
       showAllMisc, setShowAllMisc,
+      role, isViewer,
     }}>
       <div className="min-h-screen bg-app font-sans text-text-primary transition-colors duration-200">
         <div
