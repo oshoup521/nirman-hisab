@@ -46,6 +46,10 @@ export default function App() {
   const photos = usePhotoManager(safeSetState);
   const { pullY, isPulling, toast, PULL_THRESHOLD } = usePullToRefresh(syncStatus, syncNow);
 
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [activeTab, subTab]);
+
   // One-time migration: prepend Demolition phase if missing
   React.useEffect(() => {
     if (!loading && !state.milestones.find(m => m.id === 'demolition')) {
