@@ -18,16 +18,16 @@ export default function TopNav() {
 
   return (
     <nav className="hidden md:block sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-border-default shadow-sm">
-      <div className="max-w-6xl mx-auto px-6 flex items-center gap-6 h-16">
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 flex items-center gap-3 lg:gap-6 h-16">
         <button
           onClick={() => { setActiveTab('dashboard'); setSubTab('overview'); }}
-          className="flex items-center gap-4 shrink-0 hover:opacity-80 active:opacity-60 transition-opacity"
+          className="flex items-center gap-2 lg:gap-4 shrink-0 hover:opacity-80 active:opacity-60 transition-opacity"
         >
-          <img src="/pwa-192x192.png" alt="Nirman Hisab" className="w-12 h-12 rounded-2xl object-cover shadow-sm" />
-          <span className="font-heading font-black text-text-primary text-2xl tracking-tighter">Nirman Hisab</span>
+          <img src="/pwa-192x192.png" alt="Nirman Hisab" className="w-10 h-10 lg:w-12 lg:h-12 rounded-2xl object-cover shadow-sm" />
+          <span className="font-heading font-black text-text-primary text-lg lg:text-2xl tracking-tighter hidden lg:inline">Nirman Hisab</span>
         </button>
 
-        <div className="flex items-center gap-1 flex-1 h-full">
+        <div className="flex items-center gap-0.5 lg:gap-1 flex-1 h-full min-w-0">
           {tabs.map(({ id, label, Icon, color, pill }) => {
             const active = activeTab === id;
             return (
@@ -35,11 +35,11 @@ export default function TopNav() {
                 key={id}
                 onClick={() => { setActiveTab(id); setSubTab('overview'); }}
                 className={cn(
-                  'relative h-full flex items-center gap-2 px-5 py-2 text-sm font-bold transition-all group',
+                  'relative h-full flex items-center gap-1.5 lg:gap-2 px-2.5 lg:px-5 py-2 text-sm font-bold transition-all group shrink-0',
                   active ? color : 'text-text-secondary hover:text-text-primary'
                 )}
               >
-                <Icon size={18} className={cn('transition-transform', active ? 'scale-110' : 'group-hover:scale-110')} />
+                <Icon size={18} className={cn('transition-transform shrink-0', active ? 'scale-110' : 'group-hover:scale-110')} />
                 <span>{label}</span>
                 
                 {/* Active Indicator Line */}
