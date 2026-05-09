@@ -164,7 +164,7 @@ export interface ElectricityReading {
 export interface RentalProperty {
   id: string;
   name: string;
-  type: 'Basement' | '1BHK' | '2BHK' | 'Shop' | 'Other';
+  type: 'Basement' | '1BHK' | '2BHK' | 'Shop' | 'Plot' | 'Other';
   monthlyRent: number;
   deposit: number;
   // 'pending'   = deposit dena baaki hai mujhe
@@ -178,6 +178,9 @@ export interface RentalProperty {
   agreementEndDate: string;
   agreementNote: string;
   payments: RentPayment[];
+  // false = electricity-only property (e.g. construction plot), no rent/deposit tracked.
+  // undefined = legacy data → treated as true (rented property).
+  hasRent?: boolean;
   hasElectricity?: boolean;
   electricityRatePerUnit?: number;
   electricityReadings?: ElectricityReading[];

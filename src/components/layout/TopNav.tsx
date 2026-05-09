@@ -18,7 +18,7 @@ export default function TopNav() {
 
   return (
     <nav className="hidden md:block sticky top-0 z-40 bg-surface/95 backdrop-blur-md border-b border-border-default shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 lg:px-6 flex items-center gap-3 lg:gap-6 h-16">
+      <div className="max-w-6xl mx-auto px-4 lg:px-6 flex items-center gap-3 lg:gap-6 h-16 justify-center lg:justify-start">
         <button
           onClick={() => { setActiveTab('dashboard'); setSubTab('overview'); }}
           className="flex items-center gap-2 lg:gap-4 shrink-0 hover:opacity-80 active:opacity-60 transition-opacity"
@@ -27,7 +27,7 @@ export default function TopNav() {
           <span className="font-heading font-black text-text-primary text-lg lg:text-2xl tracking-tighter hidden lg:inline">Nirman Hisab</span>
         </button>
 
-        <div className="flex items-center gap-0.5 lg:gap-1 flex-1 h-full min-w-0">
+        <div className="flex items-center gap-0.5 lg:gap-1 lg:flex-1 h-full min-w-0">
           {tabs.map(({ id, label, Icon, color, pill }) => {
             const active = activeTab === id;
             return (

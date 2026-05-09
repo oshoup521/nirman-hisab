@@ -12,6 +12,7 @@ type PropForm = {
   monthlyRent: string; deposit: string; depositStatus: RentalProperty['depositStatus'];
   ownerName: string; ownerPhone: string;
   startDate: string; agreementEndDate: string; agreementNote: string;
+  hasRent: boolean;
   hasElectricity: boolean; electricityRatePerUnit: string;
 };
 type PayForm = {
@@ -26,6 +27,8 @@ type ElecForm = {
 };
 
 const PROP_TYPES: RentalProperty['type'][] = ['Basement', '1BHK', '2BHK', 'Shop', 'Other'];
+// Site/plot type — used only when "Kiraya Track Karein" toggle is OFF
+const NON_RENT_TYPE: RentalProperty['type'] = 'Plot';
 const DEP_STATUSES: { value: RentalProperty['depositStatus']; label: string }[] = [
   { value: 'pending', label: '⏳ Dena Baaki' },
   { value: 'paid', label: '✓ De Diya' },
@@ -37,6 +40,7 @@ const blankProp = (): PropForm => ({
   name: '', type: 'Other', monthlyRent: '', deposit: '', depositStatus: 'pending',
   ownerName: '', ownerPhone: '', startDate: format(new Date(), 'yyyy-MM-dd'),
   agreementEndDate: '', agreementNote: '',
+  hasRent: true,
   hasElectricity: false, electricityRatePerUnit: '',
 });
 
@@ -64,6 +68,7 @@ export default function KirayaTab() {
       startDate: r.startDate ? format(new Date(r.startDate), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
       agreementEndDate: r.agreementEndDate ? format(new Date(r.agreementEndDate), 'yyyy-MM-dd') : '',
       agreementNote: r.agreementNote || '',
+      hasRent: r.hasRent ?? true,
       hasElectricity: r.hasElectricity ?? false,
       electricityRatePerUnit: String(r.electricityRatePerUnit ?? ''),
     });
@@ -76,14 +81,15 @@ export default function KirayaTab() {
     const entry: RentalProperty = {
       id: propEditId || genId(),
       name: propForm.name, type: propForm.type,
-      monthlyRent: Number(propForm.monthlyRent) || 0,
-      deposit: Number(propForm.deposit) || 0,
-      depositStatus: propForm.depositStatus,
+      monthlyRent: propForm.hasRent ? (Number(propForm.monthlyRent) || 0) : 0,
+      deposit: propForm.hasRent ? (Number(propForm.deposit) || 0) : 0,
+      depositStatus: propForm.hasRent ? propForm.depositStatus : 'pending',
       ownerName: propForm.ownerName, ownerPhone: propForm.ownerPhone,
       startDate: propForm.startDate ? new Date(propForm.startDate).toISOString() : new Date().toISOString(),
-      agreementEndDate: propForm.agreementEndDate ? new Date(propForm.agreementEndDate).toISOString() : '',
-      agreementNote: propForm.agreementNote,
+      agreementEndDate: propForm.hasRent && propForm.agreementEndDate ? new Date(propForm.agreementEndDate).toISOString() : '',
+      agreementNote: propForm.hasRent ? propForm.agreementNote : '',
       payments: existing?.payments || [],
+      hasRent: propForm.hasRent,
       hasElectricity: propForm.hasElectricity,
       electricityRatePerUnit: propForm.hasElectricity ? (Number(propForm.electricityRatePerUnit) || 0) : undefined,
       electricityReadings: existing?.electricityReadings || [],
@@ -321,7 +327,8 @@ export default function KirayaTab() {
                   )}
                 </div>
 
-                {/* Rent + Deposit mini stats */}
+                {/* Rent + Deposit mini stats — hidden for electricity-only properties */}
+                {rental.hasRent !== false && (
                 <div className="px-4 pb-3 grid grid-cols-2 gap-2">
                   <div className="bg-surface-subdued p-3 rounded-xl border border-border-default">
                     <p className="text-caption font-bold text-text-subdued uppercase mb-0.5">Monthly Rent</p>
@@ -358,6 +365,7 @@ export default function KirayaTab() {
                     </div>
                   )}
                 </div>
+                )}
 
                 {/* Agreement */}
                 {(rental.agreementEndDate || rental.agreementNote) && (
@@ -369,7 +377,8 @@ export default function KirayaTab() {
                   </div>
                 )}
 
-                {/* This month badge */}
+                {/* This month badge — only for rented properties */}
+                {rental.hasRent !== false && (
                 <div className={cn(
                   'mx-4 mb-3 px-3 py-2 rounded-xl text-body-sm font-bold flex justify-between items-center border',
                   thisMonthDone ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
@@ -380,9 +389,10 @@ export default function KirayaTab() {
                   </div>
                   <span>{thisMonthDone ? `✓ Paid ${formatCurrency(paidThisMonth)}` : `Baaki: ${formatCurrency(rental.monthlyRent - paidThisMonth)}`}</span>
                 </div>
+                )}
 
                 {/* Payment history */}
-                {rental.payments.length > 0 && (
+                {rental.hasRent !== false && rental.payments.length > 0 && (
                   <div className="border-t border-border-default px-4 py-2 max-h-44 overflow-y-auto space-y-0">
                     {[...rental.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
                       <div key={payment.id} className="flex justify-between items-center py-2 border-b border-border-subdued last:border-0">
@@ -423,8 +433,8 @@ export default function KirayaTab() {
                   </div>
                 )}
 
-                {/* Add payment buttons */}
-                {!isViewer && (
+                {/* Add payment buttons — hidden for electricity-only properties */}
+                {!isViewer && rental.hasRent !== false && (
                   <div className="border-t border-border-default p-3 flex gap-2">
                     <button
                       onClick={() => openAddPay(rental, false)}
@@ -575,45 +585,92 @@ export default function KirayaTab() {
                   placeholder="e.g. Basement, 1BHK Floor 1" />
               </div>
 
-              <div>
-                <label className="text-caption font-bold text-text-subdued uppercase block mb-2">Type</label>
-                <div className="flex flex-wrap gap-2">
-                  {PROP_TYPES.map(t => (
-                    <button key={t} onClick={() => setPropForm(f => f ? { ...f, type: t } : f)}
-                      className={cn('px-3 py-1.5 rounded-full text-body-sm font-bold border transition-all',
-                        propForm.type === t ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default')}>
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              {propForm.hasRent && (
                 <div>
-                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Monthly Rent (₹)</label>
-                  <input type="number" inputMode="numeric" value={propForm.monthlyRent} onChange={e => setPropForm(f => f ? { ...f, monthlyRent: e.target.value } : f)}
-                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold" placeholder="0" />
-                </div>
-                <div>
-                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Security Deposit (₹)</label>
-                  <input type="number" inputMode="numeric" value={propForm.deposit} onChange={e => setPropForm(f => f ? { ...f, deposit: e.target.value } : f)}
-                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold" placeholder="0" />
-                </div>
-              </div>
-
-              {Number(propForm.deposit) > 0 && (
-                <div>
-                  <label className="text-caption font-bold text-text-subdued uppercase block mb-2">Deposit Status</label>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-2">Type</label>
                   <div className="flex flex-wrap gap-2">
-                    {DEP_STATUSES.map(s => (
-                      <button key={s.value} onClick={() => setPropForm(f => f ? { ...f, depositStatus: s.value } : f)}
+                    {PROP_TYPES.map(t => (
+                      <button key={t} onClick={() => setPropForm(f => f ? { ...f, type: t } : f)}
                         className={cn('px-3 py-1.5 rounded-full text-body-sm font-bold border transition-all',
-                          propForm.depositStatus === s.value ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default')}>
-                        {s.label}
+                          propForm.type === t ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default')}>
+                        {t}
                       </button>
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* Rent toggle — off for electricity-only properties (e.g. construction plot) */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setPropForm(f => {
+                    if (!f) return f;
+                    const next = !f.hasRent;
+                    // Auto-set type: Plot when toggling off rent, Other when toggling back on (if was Plot)
+                    const nextType = next
+                      ? (f.type === NON_RENT_TYPE ? 'Other' : f.type)
+                      : NON_RENT_TYPE;
+                    return { ...f, hasRent: next, type: nextType };
+                  })}
+                  className={cn(
+                    'w-full flex items-center justify-between px-4 py-3 rounded-2xl border transition-all',
+                    propForm.hasRent
+                      ? 'bg-brand/10 border-brand/20 text-brand'
+                      : 'bg-surface-subdued border-border-default text-text-secondary'
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Home size={15} className={propForm.hasRent ? 'text-brand' : ''} />
+                    <span className="font-bold text-body-sm">Kiraya Track Karein</span>
+                  </div>
+                  <div className={cn(
+                    'w-10 h-5.5 rounded-full relative transition-colors',
+                    propForm.hasRent ? 'bg-brand' : 'bg-border-default'
+                  )}>
+                    <div className={cn(
+                      'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all',
+                      propForm.hasRent ? 'left-[22px]' : 'left-0.5'
+                    )} />
+                  </div>
+                </button>
+                {!propForm.hasRent && (
+                  <p className="text-caption text-text-subdued mt-1.5 px-1">
+                    Sirf bijli bill track hoga, rent/deposit nahi.
+                  </p>
+                )}
+              </div>
+
+              {propForm.hasRent && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Monthly Rent (₹)</label>
+                      <input type="number" inputMode="numeric" value={propForm.monthlyRent} onChange={e => setPropForm(f => f ? { ...f, monthlyRent: e.target.value } : f)}
+                        className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold" placeholder="0" />
+                    </div>
+                    <div>
+                      <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Security Deposit (₹)</label>
+                      <input type="number" inputMode="numeric" value={propForm.deposit} onChange={e => setPropForm(f => f ? { ...f, deposit: e.target.value } : f)}
+                        className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold" placeholder="0" />
+                    </div>
+                  </div>
+
+                  {Number(propForm.deposit) > 0 && (
+                    <div>
+                      <label className="text-caption font-bold text-text-subdued uppercase block mb-2">Deposit Status</label>
+                      <div className="flex flex-wrap gap-2">
+                        {DEP_STATUSES.map(s => (
+                          <button key={s.value} onClick={() => setPropForm(f => f ? { ...f, depositStatus: s.value } : f)}
+                            className={cn('px-3 py-1.5 rounded-full text-body-sm font-bold border transition-all',
+                              propForm.depositStatus === s.value ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default hover:bg-border-default')}>
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="grid grid-cols-2 gap-3">
@@ -629,25 +686,29 @@ export default function KirayaTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className={cn('grid gap-3', propForm.hasRent ? 'grid-cols-2' : 'grid-cols-1')}>
                 <div>
                   <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Start Date</label>
                   <input type="date" value={propForm.startDate} onChange={e => setPropForm(f => f ? { ...f, startDate: e.target.value } : f)}
                     className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
                 </div>
-                <div>
-                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Agreement End</label>
-                  <input type="date" value={propForm.agreementEndDate} onChange={e => setPropForm(f => f ? { ...f, agreementEndDate: e.target.value } : f)}
-                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
-                </div>
+                {propForm.hasRent && (
+                  <div>
+                    <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Agreement End</label>
+                    <input type="date" value={propForm.agreementEndDate} onChange={e => setPropForm(f => f ? { ...f, agreementEndDate: e.target.value } : f)}
+                      className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Agreement Notes</label>
-                <input type="text" value={propForm.agreementNote} onChange={e => setPropForm(f => f ? { ...f, agreementNote: e.target.value } : f)}
-                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
-                  placeholder="e.g. 11 month, 1 month notice" />
-              </div>
+              {propForm.hasRent && (
+                <div>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Agreement Notes</label>
+                  <input type="text" value={propForm.agreementNote} onChange={e => setPropForm(f => f ? { ...f, agreementNote: e.target.value } : f)}
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
+                    placeholder="e.g. 11 month, 1 month notice" />
+                </div>
+              )}
 
               {/* Electricity toggle */}
               <div>

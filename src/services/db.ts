@@ -194,6 +194,7 @@ function rentalToRow(r: RentalProperty | any, userId: string) {
     monthly_rent: r.monthlyRent, deposit: r.deposit, deposit_status: depositStatus,
     owner_name: r.ownerName, owner_phone: r.ownerPhone,
     start_date: r.startDate, agreement_end_date: r.agreementEndDate, agreement_note: r.agreementNote,
+    has_rent: r.hasRent ?? true,
     has_electricity: r.hasElectricity ?? false,
     electricity_rate_per_unit: r.electricityRatePerUnit ?? null,
     updated_at: new Date().toISOString(),
@@ -205,7 +206,9 @@ function rowToRental(r: any, payments: RentPayment[], electricityReadings: Elect
     deposit: r.deposit, depositStatus: r.deposit_status,
     ownerName: r.owner_name, ownerPhone: r.owner_phone,
     startDate: r.start_date, agreementEndDate: r.agreement_end_date, agreementNote: r.agreement_note,
-    payments, hasElectricity: r.has_electricity,
+    payments,
+    hasRent: r.has_rent ?? true,
+    hasElectricity: r.has_electricity,
     electricityRatePerUnit: r.electricity_rate_per_unit ?? undefined, electricityReadings,
   };
 }

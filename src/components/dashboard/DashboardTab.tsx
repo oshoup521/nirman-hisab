@@ -323,10 +323,10 @@ export default function DashboardTab() {
           </div>
         )}
 
-        {/* Breakdown + Misc side-by-side */}
-        <div className="grid grid-cols-5 gap-5 items-stretch">
+        {/* Breakdown + Misc side-by-side on desktop, stacked on tablet portrait */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-stretch">
           {/* Left: Breakdown */}
-          <div className="col-span-2">
+          <div className="lg:col-span-2">
             {breakdownRows.length > 0 && (
               <div className="bg-surface p-5 rounded-2xl border border-border-default shadow-sm space-y-2 h-full">
                 <h3 className="font-heading text-title font-bold text-text-primary mb-1">Kharcha Breakdown</h3>
@@ -359,7 +359,7 @@ export default function DashboardTab() {
           </div>
 
           {/* Right: Misc table */}
-          <div className="col-span-3">
+          <div className="lg:col-span-3">
             <div className="bg-surface p-5 rounded-2xl border border-border-default shadow-sm h-full flex flex-col">
               <div className="flex justify-between items-center mb-3">
                 <div>

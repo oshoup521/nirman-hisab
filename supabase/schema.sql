@@ -243,6 +243,7 @@ create table if not exists rentals (
   start_date              text        default '',
   agreement_end_date      text        default '',
   agreement_note          text        default '',
+  has_rent                boolean     default true,
   has_electricity         boolean     default false,
   electricity_rate_per_unit numeric,
   created_at              timestamptz default now(),

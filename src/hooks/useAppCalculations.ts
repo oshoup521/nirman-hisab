@@ -41,17 +41,24 @@ export function useAppCalculations(state: AppState) {
     [state.demolitionThekas]
   );
 
-  const totalRentPaid = useMemo(
-    () => (state.rentals || []).reduce((a, r) => a + r.payments.reduce((s, p) => s + p.amount, 0), 0),
+  // Only properties marked as rented (hasRent !== false) contribute to rent totals.
+  // Electricity-only properties (hasRent === false) are excluded.
+  const rentedOnly = useMemo(
+    () => (state.rentals || []).filter(r => r.hasRent !== false),
     [state.rentals]
   );
 
+  const totalRentPaid = useMemo(
+    () => rentedOnly.reduce((a, r) => a + r.payments.reduce((s, p) => s + p.amount, 0), 0),
+    [rentedOnly]
+  );
+
   const totalCashRentPaid = useMemo(
-    () => (state.rentals || []).reduce(
+    () => rentedOnly.reduce(
       (a, r) => a + r.payments.filter(p => !p.paidFromDeposit).reduce((s, p) => s + p.amount, 0),
       0
     ),
-    [state.rentals]
+    [rentedOnly]
   );
 
   const getDepositStatus = useCallback(
@@ -64,25 +71,25 @@ export function useAppCalculations(state: AppState) {
   );
 
   const depositPaid = useMemo(
-    () => (state.rentals || [])
+    () => rentedOnly
       .filter(r => { const s = getDepositStatus(r); return s === 'paid' || s === 'forfeited'; })
       .reduce((a, r) => a + (r.deposit || 0), 0),
-    [state.rentals, getDepositStatus]
+    [rentedOnly, getDepositStatus]
   );
 
   const depositPending = useMemo(
-    () => (state.rentals || [])
+    () => rentedOnly
       .filter(r => getDepositStatus(r) === 'pending')
       .reduce((a, r) => a + (r.deposit || 0), 0),
-    [state.rentals, getDepositStatus]
+    [rentedOnly, getDepositStatus]
   );
 
   const totalDepositUsedForRent = useMemo(
-    () => (state.rentals || []).reduce(
+    () => rentedOnly.reduce(
       (a, r) => a + r.payments.filter(p => p.paidFromDeposit).reduce((s, p) => s + p.amount, 0),
       0
     ),
-    [state.rentals]
+    [rentedOnly]
   );
 
   // Net deposit = what's still locked (original deposit - used for rent)
@@ -92,22 +99,22 @@ export function useAppCalculations(state: AppState) {
   );
 
   const depositWapas = useMemo(
-    () => (state.rentals || [])
+    () => rentedOnly
       .filter(r => getDepositStatus(r) === 'paid')
       .reduce((a, r) => {
         const usedForRent = r.payments.filter(p => p.paidFromDeposit).reduce((s, p) => s + p.amount, 0);
         return a + Math.max(0, (r.deposit || 0) - usedForRent);
       }, 0),
-    [state.rentals, getDepositStatus]
+    [rentedOnly, getDepositStatus]
   );
 
   const currentMonthRent = useMemo(() => {
     const m = format(new Date(), 'yyyy-MM');
-    return (state.rentals || []).reduce((a, r) => {
+    return rentedOnly.reduce((a, r) => {
       const paid = r.payments.filter(p => p.month === m).reduce((s, p) => s + p.amount, 0);
       return a + (r.monthlyRent - paid);
     }, 0);
-  }, [state.rentals]);
+  }, [rentedOnly]);
 
   const totalMisc = useMemo(
     () => (state.miscExpenses || []).reduce((a, e) => a + e.amount, 0),
