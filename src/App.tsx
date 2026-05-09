@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { AppProvider, useConfirmDialog, PwFormState, TabType } from './context/AppContext';
-import { useCloudSync } from './hooks/useCloudSync';
+import { useNormalizedSync } from './hooks/useNormalizedSync';
 import { useAppCalculations } from './hooks/useAppCalculations';
 import { usePhotoManager } from './hooks/usePhotoManager';
 import { usePullToRefresh } from './hooks/usePullToRefresh';
@@ -24,7 +24,7 @@ import DiaryTab from './components/diary/DiaryTab';
 
 export default function App() {
   const [state, setState, loading, syncStatus, lastSynced, syncError, syncNow, userEmail, cloudUpdatedAt, role] =
-    useCloudSync<AppState>('nirman_hisaab_data', INITIAL_STATE);
+    useNormalizedSync(INITIAL_STATE);
 
   const isViewer = role === 'viewer';
 
