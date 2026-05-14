@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { X, ImageIcon } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { X, ImageIcon, Check } from 'lucide-react';
 import PhotoThumb from './PhotoThumb';
 
 type Photo = { path: string; caption?: string };
@@ -20,6 +20,10 @@ interface PhotosSheetProps {
 const PhotosSheet: React.FC<PhotosSheetProps> = ({
   open, title, subtitle, photos, uploading, getSignedUrl, onClose, onOpenAt, onDelete, onAdd,
 }) => {
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [caption, setCaption] = useState('');
+  const captionInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -28,6 +32,33 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
       document.body.style.overflow = '';
     };
   }, [open]);
+
+  useEffect(() => {
+    if (pendingFile) {
+      setTimeout(() => captionInputRef.current?.focus(), 100);
+    }
+  }, [pendingFile]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPendingFile(file);
+      setCaption('');
+    }
+    e.target.value = '';
+  };
+
+  const handleConfirm = () => {
+    if (!pendingFile || !onAdd) return;
+    onAdd(pendingFile, caption.trim());
+    setPendingFile(null);
+    setCaption('');
+  };
+
+  const handleCancelCaption = () => {
+    setPendingFile(null);
+    setCaption('');
+  };
 
   if (!open) return null;
 
@@ -87,12 +118,41 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
           )}
         </div>
 
-        {/* Footer add button */}
+        {/* Footer */}
         {onAdd && (
           <div
             className="absolute bottom-0 inset-x-0 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] bg-gradient-to-t from-surface via-surface to-transparent"
           >
-            {uploading ? (
+            {pendingFile ? (
+              /* Caption entry UI */
+              <div className="bg-surface-subdued rounded-2xl p-3 flex flex-col gap-2.5 border border-border-default">
+                <p className="text-caption font-bold text-text-subdued uppercase tracking-wide">Photo ka caption (optional)</p>
+                <input
+                  ref={captionInputRef}
+                  type="text"
+                  value={caption}
+                  onChange={e => setCaption(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleConfirm()}
+                  placeholder="e.g. Foundation ka kaam, Chhath ka view..."
+                  className="w-full p-3.5 bg-surface text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand text-body-sm outline-none"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleCancelCaption}
+                    className="flex-1 py-3 bg-surface text-text-secondary rounded-2xl font-bold text-body-sm border border-border-default active:scale-[0.99] transition-transform"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirm}
+                    className="flex-1 py-3 bg-brand text-white rounded-2xl font-bold text-body-sm flex items-center justify-center gap-1.5 shadow-sm shadow-brand/20 active:scale-[0.99] transition-transform"
+                  >
+                    <Check size={15} />
+                    Upload Karein
+                  </button>
+                </div>
+              </div>
+            ) : uploading ? (
               <div className="w-full py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm text-center">
                 Uploading…
               </div>
@@ -104,14 +164,7 @@ const PhotosSheet: React.FC<PhotosSheetProps> = ({
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={e => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const caption = prompt('Photo ka naam / caption (optional):') ?? '';
-                      onAdd(file, caption);
-                    }
-                    e.target.value = '';
-                  }}
+                  onChange={handleFileChange}
                 />
               </label>
             )}
