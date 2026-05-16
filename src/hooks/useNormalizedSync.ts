@@ -6,7 +6,7 @@ import {
   syncProject, syncMaterials, syncLabours, syncLabourDayEntries,
   syncThekas, syncDemolitionThekas, syncExpenses, syncMiscExpenses,
   syncMilestones, syncDemolitionProject, syncBrickRecovery, syncMalwaEntries,
-  syncScrapEntries, syncVendors, syncRentals, syncDiaryEntries,
+  syncScrapEntries, syncVendors, syncRentals, syncDiaryEntries, syncArchitects,
 } from '../services/db';
 
 export type SyncStatus = 'loading' | 'syncing' | 'synced' | 'error' | 'offline';
@@ -37,6 +37,7 @@ function makeSyncMap(): Record<keyof AppState, SyncFn> {
     miscExpenses:     (uid, v) => syncMiscExpenses(uid, v),
     vendors:          (uid, v) => syncVendors(uid, v),
     diary:            (uid, v) => syncDiaryEntries(uid, v),
+    architects:       (uid, v) => syncArchitects(uid, v),
   };
 }
 

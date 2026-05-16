@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Package, Users, Hammer, Wrench, Truck, Tag, X, ImageIcon, Paperclip } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, Users, Hammer, Wrench, Truck, Tag, X, ImageIcon, Paperclip, Compass } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
@@ -10,7 +10,7 @@ import PhotoStrip from '../common/PhotoStrip';
 import PhotosSheet from '../common/PhotosSheet';
 import Lightbox from '../common/Lightbox';
 
-const CATEGORIES: Expense['category'][] = ['Material', 'Labour', 'Theka', 'Equipment', 'Transport', 'Misc'];
+const CATEGORIES: Expense['category'][] = ['Material', 'Labour', 'Theka', 'Architect', 'Equipment', 'Transport', 'Misc'];
 
 const CAT_CFG: Record<Expense['category'], {
   Icon: React.ComponentType<{ size?: number; className?: string }>;
@@ -20,6 +20,7 @@ const CAT_CFG: Record<Expense['category'], {
   Material:  { Icon: Package,  iconBg: 'bg-blue-500/10',   iconText: 'text-blue-500',   badge: 'bg-blue-500/20 text-blue-700 dark:text-blue-400',   pill: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20'   },
   Labour:    { Icon: Users,    iconBg: 'bg-orange-500/10',  iconText: 'text-orange-500', badge: 'bg-orange-500/20 text-orange-700 dark:text-orange-400', pill: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20' },
   Theka:     { Icon: Hammer,   iconBg: 'bg-purple-500/10',  iconText: 'text-purple-500', badge: 'bg-purple-500/20 text-purple-700 dark:text-purple-400', pill: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20' },
+  Architect: { Icon: Compass,  iconBg: 'bg-indigo-500/10',  iconText: 'text-indigo-500', badge: 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-400', pill: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20' },
   Equipment: { Icon: Wrench,   iconBg: 'bg-amber-500/10',  iconText: 'text-amber-500', badge: 'bg-amber-500/20 text-amber-700 dark:text-amber-400', pill: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
   Transport: { Icon: Truck,    iconBg: 'bg-emerald-500/10',    iconText: 'text-emerald-500',   badge: 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400',   pill: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'   },
   Misc:      { Icon: Tag,      iconBg: 'bg-surface-subdued',   iconText: 'text-text-secondary',  badge: 'bg-border-default text-text-secondary', pill: 'bg-surface-subdued text-text-secondary border-border-default'  },

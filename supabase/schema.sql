@@ -290,6 +290,41 @@ create table if not exists diary_entries (
   updated_at timestamptz default now()
 );
 
+create table if not exists architects (
+  id                text        primary key,
+  user_id           uuid        not null references auth.users(id) on delete cascade,
+  name              text        not null default '',
+  firm              text        default '',
+  phone             text        default '',
+  role              text        default 'Architect',
+  fee_type          text        default 'package',
+  total_fee         numeric     default 0,
+  rate_per_sq_ft    numeric,
+  area_sq_ft        numeric,
+  rate_per_visit    numeric,
+  percentage_rate   numeric,
+  project_value     numeric,
+  package_visits    integer     default 0,
+  extra_visit_rate  numeric     default 0,
+  scope_notes       text        default '',
+  start_date        text        default '',
+  visits            jsonb       default '[]',
+  deliverables      jsonb       default '[]',
+  photos            jsonb       default '[]',
+  created_at        timestamptz default now(),
+  updated_at        timestamptz default now()
+);
+
+create table if not exists architect_payments (
+  id            text        primary key,
+  architect_id  text        not null references architects(id) on delete cascade,
+  user_id       uuid        not null references auth.users(id) on delete cascade,
+  date          text        default '',
+  amount        numeric     default 0,
+  note          text        default '',
+  created_at    timestamptz default now()
+);
+
 -- ─── Enable Row Level Security ────────────────────────────────
 
 alter table projects                 enable row level security;
@@ -313,6 +348,8 @@ alter table rentals                  enable row level security;
 alter table rent_payments            enable row level security;
 alter table electricity_readings     enable row level security;
 alter table diary_entries            enable row level security;
+alter table architects               enable row level security;
+alter table architect_payments       enable row level security;
 
 -- ─── RLS Policies ─────────────────────────────────────────────
 -- Pattern: owners can SELECT/INSERT/UPDATE/DELETE their own rows.
@@ -328,7 +365,8 @@ declare
     'brick_recovery', 'malwa_entries', 'scrap_entries',
     'vendors', 'vendor_payments',
     'rentals', 'rent_payments', 'electricity_readings',
-    'diary_entries'
+    'diary_entries',
+    'architects', 'architect_payments'
   ];
 begin
   foreach tbl in array tables loop

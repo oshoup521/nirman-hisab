@@ -4,7 +4,7 @@ import type {
   Theka, ThekaPayment, DemolitionTheka, Expense, MiscExpense,
   Milestone, DemolitionProject, BrickRecovery, MalwaEntry, ScrapEntry,
   Vendor, VendorPayment, RentalProperty, RentPayment, ElectricityReading,
-  DiaryEntry,
+  DiaryEntry, Architect, ArchitectPayment,
 } from '../types';
 
 // ─── Row ↔ Domain converters ──────────────────────────────────
@@ -232,6 +232,39 @@ function rowToElectricity(r: any): ElectricityReading {
   };
 }
 
+function architectToRow(a: Architect, userId: string) {
+  return {
+    id: a.id, user_id: userId, name: a.name, firm: a.firm ?? '', phone: a.phone ?? '',
+    role: a.role, fee_type: a.feeType, total_fee: a.totalFee,
+    rate_per_sq_ft: a.ratePerSqFt ?? null, area_sq_ft: a.areaSqFt ?? null,
+    rate_per_visit: a.ratePerVisit ?? null,
+    percentage_rate: a.percentageRate ?? null, project_value: a.projectValue ?? null,
+    package_visits: a.packageVisits ?? 0, extra_visit_rate: a.extraVisitRate ?? 0,
+    scope_notes: a.scopeNotes ?? '', start_date: a.startDate ?? '',
+    visits: a.visits ?? [], deliverables: a.deliverables ?? [], photos: a.photos ?? [],
+    updated_at: new Date().toISOString(),
+  };
+}
+function rowToArchitect(r: any, payments: ArchitectPayment[]): Architect {
+  return {
+    id: r.id, name: r.name, firm: r.firm || undefined, phone: r.phone || undefined,
+    role: r.role, feeType: r.fee_type, totalFee: r.total_fee,
+    ratePerSqFt: r.rate_per_sq_ft ?? undefined, areaSqFt: r.area_sq_ft ?? undefined,
+    ratePerVisit: r.rate_per_visit ?? undefined,
+    percentageRate: r.percentage_rate ?? undefined, projectValue: r.project_value ?? undefined,
+    packageVisits: r.package_visits ?? 0, extraVisitRate: r.extra_visit_rate ?? 0,
+    scopeNotes: r.scope_notes || undefined, startDate: r.start_date || '',
+    visits: r.visits ?? [], deliverables: r.deliverables ?? [], photos: r.photos ?? [],
+    payments,
+  };
+}
+function architectPaymentToRow(p: ArchitectPayment, architectId: string, userId: string) {
+  return { id: p.id, architect_id: architectId, user_id: userId, date: p.date, amount: p.amount, note: p.note };
+}
+function rowToArchitectPayment(r: any): ArchitectPayment {
+  return { id: r.id, date: r.date, amount: r.amount, note: r.note };
+}
+
 function diaryToRow(d: DiaryEntry, userId: string) {
   return {
     id: d.id, user_id: userId, date: d.date, weather: d.weather ?? null,
@@ -261,6 +294,7 @@ export async function loadAllData(userId: string): Promise<AppState | null> {
     vendorsRes, vendorPayRes,
     rentalsRes, rentPayRes, electricityRes,
     diaryRes,
+    architectsRes, architectPayRes,
   ] = await Promise.all([
     supabase.from('projects').select('*').eq('user_id', userId).maybeSingle(),
     supabase.from('materials').select('*').eq('user_id', userId),
@@ -283,6 +317,8 @@ export async function loadAllData(userId: string): Promise<AppState | null> {
     supabase.from('rent_payments').select('*').eq('user_id', userId),
     supabase.from('electricity_readings').select('*').eq('user_id', userId),
     supabase.from('diary_entries').select('*').eq('user_id', userId),
+    supabase.from('architects').select('*').eq('user_id', userId),
+    supabase.from('architect_payments').select('*').eq('user_id', userId),
   ]);
 
   // No data at all → new user, haven't migrated yet
@@ -319,6 +355,11 @@ export async function loadAllData(userId: string): Promise<AppState | null> {
     (electricityMap[r.rental_id] ??= []).push(rowToElectricity(r));
   }
 
+  const architectPayMap: Record<string, ArchitectPayment[]> = {};
+  for (const r of architectPayRes.data ?? []) {
+    (architectPayMap[r.architect_id] ??= []).push(rowToArchitectPayment(r));
+  }
+
   return {
     project:         projectRes.data ? rowToProject(projectRes.data) : null,
     materials:       (materialsRes.data ?? []).map(rowToMaterial),
@@ -336,6 +377,7 @@ export async function loadAllData(userId: string): Promise<AppState | null> {
     miscExpenses:    (miscRes.data ?? []).map(rowToMisc),
     vendors:         (vendorsRes.data ?? []).map(r => rowToVendor(r, vendorPayMap[r.id] ?? [])),
     diary:           (diaryRes.data ?? []).map(rowToDiary),
+    architects:      (architectsRes.data ?? []).map(r => rowToArchitect(r, architectPayMap[r.id] ?? [])),
   };
 }
 
@@ -539,6 +581,33 @@ export async function syncRentals(userId: string, rentals: RentalProperty[]): Pr
   }
 }
 
+export async function syncArchitects(userId: string, architects: Architect[]): Promise<void> {
+  const archRows = architects.map(a => architectToRow(a, userId));
+  const payRows  = architects.flatMap(a => (a.payments ?? []).map(p => architectPaymentToRow(p, a.id, userId)));
+  const archIds  = archRows.map(r => r.id);
+  const payIds   = payRows.map(r => r.id);
+
+  if (archRows.length > 0) {
+    const { error } = await supabase.from('architects').upsert(archRows, { onConflict: 'id' });
+    if (error) throw new Error(`architects upsert: ${error.message}`);
+  }
+  if (payRows.length > 0) {
+    const { error } = await supabase.from('architect_payments').upsert(payRows, { onConflict: 'id' });
+    if (error) throw new Error(`architect_payments upsert: ${error.message}`);
+  }
+
+  if (archIds.length > 0) {
+    await supabase.from('architects').delete().eq('user_id', userId).not('id', 'in', `(${archIds.join(',')})`);
+  } else {
+    await supabase.from('architects').delete().eq('user_id', userId);
+  }
+  if (payIds.length > 0) {
+    await supabase.from('architect_payments').delete().eq('user_id', userId).not('id', 'in', `(${payIds.join(',')})`);
+  } else {
+    await supabase.from('architect_payments').delete().eq('user_id', userId);
+  }
+}
+
 // ─── One-time migration from old JSON blob ────────────────────
 
 export async function migrateFromBlob(userId: string, blob: AppState): Promise<void> {
@@ -559,5 +628,6 @@ export async function migrateFromBlob(userId: string, blob: AppState): Promise<v
     syncVendors(userId, blob.vendors ?? []),
     syncRentals(userId, blob.rentals ?? []),
     syncDiaryEntries(userId, blob.diary ?? []),
+    syncArchitects(userId, blob.architects ?? []),
   ]);
 }

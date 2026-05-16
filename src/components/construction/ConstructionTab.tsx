@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Package, Users, ChevronRight, IndianRupee, Clock, Images } from 'lucide-react';
+import { LayoutDashboard, Package, Users, ChevronRight, IndianRupee, Clock, Images, Compass } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { useAppContext } from '../../context/AppContext';
 import { useDragScroll } from '../../hooks/useDragScroll';
@@ -9,6 +9,7 @@ import MaterialsSection from './MaterialsSection';
 import VendorsSection from './VendorsSection';
 import LabourSection from './LabourSection';
 import ThekaSection from './ThekaSection';
+import ArchitectSection from './ArchitectSection';
 import ExpensesSection from './ExpensesSection';
 import TimelineSection from './TimelineSection';
 import GallerySection from './GallerySection';
@@ -19,6 +20,7 @@ const tabs = [
   { id: 'vendors',    label: 'Udhaar',   Icon: Users },
   { id: 'labour',     label: 'Mazdoor',  Icon: Users },
   { id: 'theka',      label: 'Theka',    Icon: ChevronRight },
+  { id: 'architect',  label: 'Naksha',   Icon: Compass },
   { id: 'expenses',   label: 'Kharcha',  Icon: IndianRupee },
   { id: 'timeline',   label: 'Raftaar',  Icon: Clock },
   { id: 'gallery',    label: 'Gallery',  Icon: Images },
@@ -72,6 +74,7 @@ export default function ConstructionTab() {
       {subTab === 'vendors'    && <VendorsSection />}
       {subTab === 'labour'     && <LabourSection />}
       {subTab === 'theka'      && <ThekaSection />}
+      {subTab === 'architect'  && <ArchitectSection />}
       {subTab === 'expenses'   && <ExpensesSection />}
       {subTab === 'timeline'   && <TimelineSection />}
       {subTab === 'gallery'    && <GallerySection />}

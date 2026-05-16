@@ -2,13 +2,14 @@ import { useState, useCallback, Dispatch, SetStateAction } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { AppState } from '../types';
 
-export type PhotoEntity = 'milestone' | 'material' | 'expense' | 'diary' | 'project';
+export type PhotoEntity = 'milestone' | 'material' | 'expense' | 'diary' | 'project' | 'architect';
 
 const ENTITY_KEY: Record<string, string> = {
   milestone: 'milestones',
   material: 'materials',
   expense: 'expenses',
   diary: 'diary',
+  architect: 'architects',
 };
 
 function compressImage(file: File): Promise<Blob> {

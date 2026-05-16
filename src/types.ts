@@ -89,7 +89,7 @@ export interface Expense {
   id: string;
   date: string;
   amount: number;
-  category: 'Material' | 'Labour' | 'Theka' | 'Equipment' | 'Transport' | 'Misc';
+  category: 'Material' | 'Labour' | 'Theka' | 'Architect' | 'Equipment' | 'Transport' | 'Misc';
   notes: string;
   photos?: { path: string; caption?: string }[];
 }
@@ -216,6 +216,54 @@ export interface DiaryEntry {
   photos?: { path: string; caption?: string }[];
 }
 
+export interface ArchitectVisit {
+  id: string;
+  date: string;
+  purpose: string;       // e.g. "Site Marking", "Slab Inspection"
+  notes?: string;
+  billable: boolean;     // true = paid extra visit, false = included in package
+}
+
+export interface ArchitectPayment {
+  id: string;
+  date: string;
+  amount: number;
+  note: string;
+}
+
+export interface ArchitectDeliverable {
+  id: string;
+  name: string;
+  status: 'pending' | 'done';
+  doneDate?: string;
+}
+
+export type ArchitectRole = 'Architect' | 'Structural Engineer' | 'Interior Designer' | 'MEP' | 'Other';
+export type ArchitectFeeType = 'package' | 'per-sqft' | 'per-visit' | 'percentage';
+
+export interface Architect {
+  id: string;
+  name: string;
+  firm?: string;
+  phone?: string;
+  role: ArchitectRole;
+  feeType: ArchitectFeeType;
+  totalFee: number;            // final agreed fee (excluding extra visit charges)
+  ratePerSqFt?: number;        // per-sqft mode
+  areaSqFt?: number;
+  ratePerVisit?: number;       // per-visit mode (base rate)
+  percentageRate?: number;     // percentage mode (% of project value)
+  projectValue?: number;
+  packageVisits: number;       // visits included in fee (0 if N/A)
+  extraVisitRate: number;      // ₹/visit charged beyond packageVisits
+  scopeNotes?: string;
+  startDate: string;
+  visits: ArchitectVisit[];
+  payments: ArchitectPayment[];
+  deliverables: ArchitectDeliverable[];
+  photos?: { path: string; caption?: string }[];  // naksha (plans) — captioned
+}
+
 export interface AppState {
   project: Project | null;
   materials: Material[];
@@ -233,4 +281,5 @@ export interface AppState {
   miscExpenses: MiscExpense[];
   vendors: Vendor[];
   diary: DiaryEntry[];
+  architects: Architect[];
 }
