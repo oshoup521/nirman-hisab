@@ -1,4 +1,4 @@
-# Nirman Hisaab 🏗️
+# Nirman Hisaab
 
 A mobile-first Progressive Web App for tracking construction project expenses in India. Built with Hinglish labels (Hindi + English) to feel natural on-site. Data syncs to the cloud in real-time via Supabase and works offline through localStorage fallback.
 
@@ -8,18 +8,22 @@ A mobile-first Progressive Web App for tracking construction project expenses in
 
 | Module | What it tracks |
 |---|---|
-| **Dashboard** (Hisaab) | Master budget burn-rate, category-wise kharcha breakdown, WhatsApp share, CSV export |
-| **Naya Kaam** (Construction) | Materials stock, labour attendance & wages, subcontractor (theka) payments, expense log, project timeline with phase photos |
+| **Dashboard** (Hisaab) | Budget burn-rate, category-wise kharcha breakdown, WhatsApp share, CSV export |
+| **Naya Kaam** (Construction) | Materials stock, labour attendance & wages, subcontractor (theka) payments, vendor ledger, expense log, architect/engineer management, project timeline with phase photos, full gallery |
 | **Tod-Phod** (Demolition) | Demolition theka payments, malwa (debris) disposal costs, scrap/kabaad income, brick recovery counter |
-| **Kiraya** (Rent) | Rental property tracking, security deposit status, monthly rent payments with deposit-adjustment support |
-| **Settings** (Taiyari) | Project config, plot dimensions, budgets, cloud sync status, account management |
+| **Kiraya** (Rent) | Rental property tracking, security deposit status, monthly rent payments, electricity reading log |
+| **Roznamcha** (Diary) | Daily site diary — weather, notes, photos, calendar view, full-text search |
+| **Settings** (Taiyari) | Project config, plot dimensions, budgets, site plan (naksha) upload, cloud sync status, viewer sharing, account management |
 
 **Other highlights:**
 - Offline-first — all data saved to `localStorage` instantly, synced to Supabase in the background with retry
 - Pull-to-refresh on any screen to force a cloud sync
-- Phase gallery — upload and caption photos per construction phase (Supabase Storage, image-compressed before upload)
-- WhatsApp share button with a formatted project summary
+- Viewer role — share a read-only link with clients or site owners
+- Phase gallery — upload and caption photos per construction phase (image-compressed before upload)
+- Site plan (naksha) upload — supports images and PDFs, stored in Supabase Storage with signed URLs
+- WhatsApp share with a formatted project summary
 - CSV export with Excel-compatible UTF-8 BOM
+- Bulk labour entry for adding multiple workers at once
 
 ---
 
@@ -33,7 +37,7 @@ A mobile-first Progressive Web App for tracking construction project expenses in
 | Backend / Auth / Storage | Supabase (PostgreSQL + Auth + Storage) |
 | Icons | Lucide React |
 | Date utils | date-fns |
-| Charts | Recharts (available, minimal use currently) |
+| Charts | Recharts |
 | Animations | Motion (Framer Motion v12) |
 | PWA | vite-plugin-pwa + Workbox |
 
@@ -103,9 +107,6 @@ Add your Supabase credentials to `.env`:
 ```env
 VITE_SUPABASE_URL=https://your-project-ref.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key-here
-
-# Optional — only needed for Gemini AI features
-GEMINI_API_KEY=your-gemini-key
 ```
 
 ```bash
@@ -132,13 +133,14 @@ npm run dev
 
 ```
 src/
-├── App.tsx                          # Root — mounts context provider, routes between tabs
+├── App.tsx                          # Root — mounts context providers, routes between tabs
 ├── main.tsx                         # Entry point wrapped in AuthWrapper
 ├── index.css                        # Tailwind import + .no-scrollbar utility
 ├── types.ts                         # All TypeScript interfaces (AppState, Project, etc.)
 │
 ├── context/
-│   └── AppContext.tsx               # React context, AppProvider, useAppContext hook
+│   ├── AppContext.tsx               # React context, AppProvider, useAppContext hook
+│   └── ThemeContext.tsx             # Theme (light/dark) context
 │
 ├── constants/
 │   └── initialState.ts             # Default AppState on first launch
@@ -146,12 +148,17 @@ src/
 ├── lib/
 │   └── cn.ts                        # tailwind-merge + clsx helper
 │
+├── services/
+│   └── db.ts                        # Supabase DB read/write helpers
+│
 ├── hooks/
 │   ├── useCloudSync.ts             # Supabase sync with localStorage fallback + debounce + retry
+│   ├── useNormalizedSync.ts        # Normalized schema sync (architects, diary, etc.)
 │   ├── useAppCalculations.ts       # All derived financial values (useMemo)
 │   ├── usePhotoManager.ts          # Photo upload, delete, signed URL cache
 │   ├── usePullToRefresh.ts         # Touch gesture pull-to-refresh
 │   ├── useDragScroll.ts            # Horizontal drag-scroll for sub-tab bars
+│   ├── useEscapeKey.ts             # Global Escape key handler
 │   └── useLocalStorage.ts          # Basic localStorage hook
 │
 ├── utils/
@@ -161,14 +168,16 @@ src/
 │   └── helpers.ts                   # genId() — random ID generator
 │
 └── components/
-    ├── auth/
-    │   └── AuthWrapper.tsx          # Login screen + session gate
+    ├── AuthWrapper.tsx              # Login screen + session gate
+    ├── ConfirmDialog.tsx            # Reusable confirmation modal
     ├── common/
-    │   ├── ConfirmDialog.tsx        # Reusable confirmation modal
-    │   ├── PhotoThumb.tsx           # Lazy photo thumbnail with signed URL resolution
-    │   └── Lightbox.tsx             # Full-screen photo viewer overlay
+    │   ├── Lightbox.tsx             # Full-screen photo viewer overlay
+    │   ├── PhotosSheet.tsx          # Bottom sheet for managing photos
+    │   ├── PhotoStrip.tsx           # Horizontal scrollable photo strip
+    │   └── PhotoThumb.tsx           # Lazy photo thumbnail with signed URL resolution
     ├── layout/
     │   ├── BottomNav.tsx            # 5-tab bottom navigation bar
+    │   ├── TopNav.tsx               # Top bar with project switcher and sync status
     │   ├── LoadingScreen.tsx        # Initial spinner during cloud fetch
     │   └── PullToRefreshIndicator.tsx
     ├── dashboard/DashboardTab.tsx
@@ -177,27 +186,33 @@ src/
     │   ├── OverviewSection.tsx      # Project info, timeline progress, quick stats
     │   ├── MaterialsSection.tsx     # Stock tracking with low-stock warnings
     │   ├── VendorsSection.tsx       # Vendor ledger (udhaar / khata)
-    │   ├── LabourSection.tsx        # Daily attendance + wage tracking
+    │   ├── LabourSection.tsx        # Daily attendance + wage tracking (bulk add)
+    │   ├── ArchitectSection.tsx     # Architect/engineer fee, visits, payments, deliverables
     │   ├── ThekaSection.tsx         # Subcontractor payment management
     │   ├── ExpensesSection.tsx      # Itemised expense log
     │   ├── TimelineSection.tsx      # 8-phase milestone tracker with photo upload
     │   └── GallerySection.tsx       # All phase photos in one view
     ├── demolition/
     │   ├── DemolitionTab.tsx        # Sub-tab router
-    │   ├── DemolitionOverview.tsx   # Cost vs income summary + thekedar cards
     │   ├── BrickRecoverySection.tsx
     │   ├── MalwaSection.tsx
     │   ├── ScrapSection.tsx
     │   └── DemolitionThekaSection.tsx
-    ├── kiraya/KirayaTab.tsx
-    └── settings/SettingsTab.tsx
+    ├── kiraya/KirayaTab.tsx         # Rent + electricity tracking
+    ├── diary/DiaryTab.tsx           # Daily site diary with calendar + search
+    └── settings/SettingsTab.tsx     # Project config, site plans, viewer sharing
 ```
 
 ---
 
 ## Data Architecture
 
-All app data is a single JSON blob stored in `app_state` (one row per user in Supabase). The same blob is mirrored in `localStorage` for instant offline reads.
+All app data lives in two places in Supabase:
+
+1. **`app_state`** — a single JSONB blob per user for fast reads and offline fallback
+2. **Normalized tables** — separate rows per architect, diary entry, etc. for structured querying and RLS
+
+Both are kept in sync. Offline reads fall back to `localStorage`.
 
 **Sync flow:**
 1. App load → fetch from Supabase, merge with localStorage
@@ -207,19 +222,23 @@ All app data is a single JSON blob stored in `app_state` (one row per user in Su
 **State shape:**
 
 ```
-project           — name, location, type, budgets, plot dimensions, start/end dates
-materials[]       — stock items with purchased/used counts and low-stock threshold
-labours[]         — workers with daily wage and attendance map
-thekas[]          — construction subcontractors with payment history
-expenses[]        — itemised construction expense log
-milestones[]      — 8 phases (Demolition → Finishing) with status + photos
-demolitionThekas[]— demolition subcontractors
-brickRecovery[]   — brick salvage entries (estimated / recovered / broken)
-malwa[]           — debris disposal trips with cost
-scrap[]           — scrap material sales
-rentals[]         — rental properties with deposit status and monthly payments
-miscExpenses[]    — miscellaneous one-off expenses
-vendors[]         — vendor ledger (bill amount, payments, outstanding balance)
+project             — name, location, type, budgets, plot dimensions, start/end dates, site plans
+materials[]         — stock items with purchased/used counts and low-stock threshold
+labours[]           — workers with daily wage
+labourDayEntries[]  — per-day attendance records (normalized)
+thekas[]            — construction subcontractors with payment history
+expenses[]          — itemised construction expense log
+milestones[]        — 8 phases (Demolition → Finishing) with status + photos
+demolition          — demolition project totals
+demolitionThekas[]  — demolition subcontractors
+brickRecovery[]     — brick salvage entries (estimated / recovered / broken)
+malwa[]             — debris disposal trips with cost
+scrap[]             — scrap material sales
+rentals[]           — rental properties with deposit status, monthly payments, electricity readings
+miscExpenses[]      — miscellaneous one-off expenses
+vendors[]           — vendor ledger (bill amount, payments, outstanding balance)
+diary[]             — daily site diary entries with weather, notes, photos
+architects[]        — architects/engineers with fee structure, visits, payments, deliverables
 ```
 
 ---
@@ -232,7 +251,8 @@ All components consume a single React context via `useAppContext()`. The context
 - Navigation (`activeTab`, `subTab`)
 - Confirm dialog helper (`askConfirm`)
 - Cloud sync metadata
-- Photo manager
+- Photo manager (`photos`)
+- `isViewer` — read-only mode flag
 - CSV export and WhatsApp share actions
 
 No prop drilling; no third-party state library needed.
