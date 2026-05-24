@@ -52,24 +52,11 @@ A mobile-first Progressive Web App for tracking construction project expenses in
 
 ## Supabase Setup
 
-### 1. Create the `app_state` table
+### 1. Run the schema
 
-Run this in Supabase SQL Editor:
+Paste the contents of `supabase/schema.sql` into the Supabase SQL Editor and run it. This creates all normalized tables (`projects`, `materials`, `labours`, `thekas`, `rentals`, `diary_entries`, `architects`, etc.) with RLS policies already applied.
 
-```sql
-create table public.app_state (
-  user_id    uuid primary key references auth.users(id) on delete cascade,
-  data       jsonb not null default '{}'::jsonb,
-  updated_at timestamptz not null default now()
-);
-
-alter table public.app_state enable row level security;
-
-create policy "Users manage own state"
-  on public.app_state for all
-  using  (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
-```
+If you previously used the old single-blob `app_state` table, the app will automatically migrate your data on first launch and mark the migration complete. The `app_state` table is not required for new installs.
 
 ### 2. Create the `phase-photos` storage bucket
 
@@ -207,17 +194,14 @@ src/
 
 ## Data Architecture
 
-All app data lives in two places in Supabase:
-
-1. **`app_state`** — a single JSONB blob per user for fast reads and offline fallback
-2. **Normalized tables** — separate rows per architect, diary entry, etc. for structured querying and RLS
-
-Both are kept in sync. Offline reads fall back to `localStorage`.
+All app data is stored in **normalized Supabase tables** (one row per entity). The same data is mirrored in `localStorage` for instant offline reads.
 
 **Sync flow:**
-1. App load → fetch from Supabase, merge with localStorage
-2. Any state change → debounced 1.5s push to Supabase (up to 3 retries, exponential backoff)
+1. App load → fetch all rows from Supabase, merge with localStorage
+2. Any state change → debounced push to Supabase (up to 3 retries, exponential backoff)
 3. Pull-to-refresh → immediate manual sync
+
+> **Legacy migration:** If a user's account still has data in the old `app_state` JSONB blob, the app reads it once on first launch, writes everything to the normalized tables, and sets a flag in localStorage so it never runs again.
 
 **State shape:**
 
