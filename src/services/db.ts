@@ -40,6 +40,7 @@ function materialToRow(m: Material, userId: string) {
     purchased: m.purchased, used: m.used, rate: m.rate,
     vendor: m.vendor, date: m.date, bill_number: m.billNumber,
     min_stock: m.minStock, photos: m.photos ?? [],
+    purchases: m.purchases ?? [],
     updated_at: new Date().toISOString(),
   };
 }
@@ -48,6 +49,7 @@ function rowToMaterial(r: any): Material {
     id: r.id, name: r.name, unit: r.unit, purchased: r.purchased,
     used: r.used, rate: r.rate, vendor: r.vendor, date: r.date,
     billNumber: r.bill_number, minStock: r.min_stock, photos: r.photos ?? [],
+    purchases: r.purchases ?? [],
   };
 }
 

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, Package, AlertTriangle, X, ImageIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, AlertTriangle, X, ImageIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
 import { genId } from '../../utils/helpers';
 import { useAppContext } from '../../context/AppContext';
-import { Material } from '../../types';
+import { Material, MaterialPurchase } from '../../types';
 import PhotoStrip from '../common/PhotoStrip';
 import PhotosSheet from '../common/PhotosSheet';
 import Lightbox from '../common/Lightbox';
@@ -14,6 +14,17 @@ type UsageForm = { materialId: string; materialName: string; unit: string; amoun
 
 const blankForm = (): MatForm => ({ name: '', unit: '', purchased: '', rate: '', minStock: '' });
 
+// Normalize for duplicate-detection so "Cement"/"cement " and "Bags"/"bag" match.
+const normName = (s: string) => s.trim().replace(/\s+/g, ' ').toLowerCase();
+const normUnit = (s: string) => s.trim().toLowerCase().replace(/s$/, '');
+const matKey = (name: string, unit: string) => `${normName(name)}|${normUnit(unit)}`;
+
+// Returns purchase lots; synthesises one for old rows that predate the purchases[] field.
+const getPurchaseLots = (m: Material): MaterialPurchase[] =>
+  m.purchases && m.purchases.length > 0
+    ? m.purchases
+    : [{ id: m.id + '_0', qty: m.purchased, rate: m.rate, date: m.date }];
+
 export default function MaterialsSection() {
   const { state, setState, askConfirm, photos, isViewer } = useAppContext();
   const { photoUploading, getSignedUrl, uploadPhoto, deletePhoto } = photos;
@@ -22,9 +33,16 @@ export default function MaterialsSection() {
   const [usageForm, setUsageForm] = useState<UsageForm | null>(null);
   const [sheetMatId, setSheetMatId] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<{ matId: string; idx: number } | null>(null);
+  const [expandedPurchasesId, setExpandedPurchasesId] = useState<string | null>(null);
 
   const sheetMaterial = sheetMatId ? state.materials.find(m => m.id === sheetMatId) : null;
   const lightboxMaterial = lightbox ? state.materials.find(m => m.id === lightbox.matId) : null;
+
+  // When adding, detect if this material (same name + unit) already exists — it will merge.
+  const dupMaterial = form && !editId && form.name.trim()
+    ? state.materials.find(m => matKey(m.name, m.unit) === matKey(form.name, form.unit)) ?? null
+    : null;
+
 
   const openAdd = () => { setEditId(null); setForm(blankForm()); };
   const openEdit = (m: Material) => {
@@ -46,18 +64,36 @@ export default function MaterialsSection() {
         ),
       }));
     } else {
-      const newMat: Material = {
-        id: genId(), name: form.name, unit, purchased, used: 0, rate,
-        vendor: '', date: new Date().toISOString(), billNumber: '', minStock: Number(form.minStock) || 0,
-      };
-      setState(prev => ({
-        ...prev,
-        materials: [...prev.materials, newMat],
-        expenses: [...prev.expenses, {
-          id: genId(), date: new Date().toISOString(), amount: purchased * rate,
-          category: 'Material', notes: `${purchased} ${unit} of ${form.name} purchased`,
-        }],
-      }));
+      const purchaseDate = new Date().toISOString();
+      const newLot: MaterialPurchase = { id: genId(), qty: purchased, rate, date: purchaseDate };
+      setState(prev => {
+        const key = matKey(form.name, unit);
+        const idx = prev.materials.findIndex(m => matKey(m.name, m.unit) === key);
+        let materials: Material[];
+        if (idx >= 0) {
+          // Same material already exists — push a new purchase lot, recalculate total quantity.
+          const ex = prev.materials[idx];
+          const allLots = [...getPurchaseLots(ex), newLot];
+          const totalPurchased = allLots.reduce((s, p) => s + p.qty, 0);
+          const merged: Material = { ...ex, purchased: totalPurchased, rate, purchases: allLots, date: purchaseDate };
+          materials = prev.materials.map((m, i) => (i === idx ? merged : m));
+        } else {
+          const newMat: Material = {
+            id: genId(), name: form.name, unit, purchased, used: 0, rate,
+            vendor: '', date: purchaseDate, billNumber: '', minStock: Number(form.minStock) || 0,
+            purchases: [newLot],
+          };
+          materials = [...prev.materials, newMat];
+        }
+        return {
+          ...prev,
+          materials,
+          expenses: [...prev.expenses, {
+            id: genId(), date: purchaseDate, amount: purchased * rate,
+            category: 'Material', notes: `${purchased} ${unit} of ${form.name} @ ${formatCurrency(rate)}/${unit}`,
+          }],
+        };
+      });
     }
     closeForm();
   };
@@ -135,8 +171,10 @@ export default function MaterialsSection() {
                   const isLow = stock <= material.minStock;
                   const usedPct = material.purchased > 0 ? Math.min(100, (material.used / material.purchased) * 100) : 0;
                   const photoCount = material.photos?.length ?? 0;
+                  const lots = getPurchaseLots(material);
                   return (
-                    <tr key={material.id} className={cn('border-b border-border-subdued last:border-0 hover:bg-surface-subdued/50 transition-colors', isLow && 'bg-red-500/5')}>
+                    <React.Fragment key={material.id}>
+                    <tr className={cn('border-b border-border-subdued last:border-0 hover:bg-surface-subdued/50 transition-colors', isLow && 'bg-red-500/5')}>
                       <td className="py-2.5 px-4">
                         <div className="flex items-center gap-2">
                           <p className="font-bold text-text-primary text-body-sm">{material.name}</p>
@@ -154,7 +192,18 @@ export default function MaterialsSection() {
                           {stock} {material.unit}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-right text-body-sm text-text-primary whitespace-nowrap">{formatCurrency(material.rate)}/{material.unit}</td>
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                        <button
+                          onClick={() => setExpandedPurchasesId(expandedPurchasesId === material.id ? null : material.id)}
+                          className="inline-flex items-center gap-1 text-body-sm text-text-primary hover:text-brand transition-colors group"
+                        >
+                          {formatCurrency(material.rate)}/{material.unit}
+                          {lots.length > 1 && <span className="text-caption text-brand font-bold">({lots.length})</span>}
+                          {expandedPurchasesId === material.id
+                            ? <ChevronUp size={11} className="text-brand" />
+                            : <ChevronDown size={11} className="text-text-subdued group-hover:text-brand transition-colors" />}
+                        </button>
+                      </td>
                       <td className="py-2.5 px-3 text-center">
                         <div className="w-16 mx-auto">
                           <div className="w-full bg-surface-subdued h-1.5 rounded-full overflow-hidden border border-border-subdued">
@@ -202,6 +251,27 @@ export default function MaterialsSection() {
                         )}
                       </td>
                     </tr>
+                    {/* Purchase history sub-row */}
+                    {expandedPurchasesId === material.id && (
+                      <tr className="bg-surface-subdued/60">
+                        <td colSpan={8} className="px-6 pb-3 pt-1">
+                          <p className="text-caption font-bold text-text-subdued uppercase mb-1.5">Kharide ka itihas ({lots.length} lot)</p>
+                          <div className="space-y-1">
+                            {lots.map((lot, i) => (
+                              <div key={lot.id} className="flex items-center gap-3 text-body-sm">
+                                <span className="text-text-subdued w-5 text-caption font-bold">{i + 1}.</span>
+                                <span className="text-text-primary font-bold">{lot.qty} {material.unit}</span>
+                                <span className="text-text-subdued">@</span>
+                                <span className="text-text-primary font-bold">{formatCurrency(lot.rate)}/{material.unit}</span>
+                                <span className="text-text-subdued text-caption">{new Date(lot.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}</span>
+                                <span className="ml-auto text-text-secondary font-bold">{formatCurrency(lot.qty * lot.rate)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                    </React.Fragment>
                   );
                 })}
               </tbody>
@@ -228,9 +298,23 @@ export default function MaterialsSection() {
                         </span>
                       )}
                     </div>
-                    <p className="text-caption text-text-subdued mt-0.5">
-                      {material.purchased} {material.unit} bought • {formatCurrency(material.rate)}/{material.unit}
-                    </p>
+                    {(() => {
+                      const lots = getPurchaseLots(material);
+                      return (
+                        <button
+                          onClick={() => setExpandedPurchasesId(expandedPurchasesId === material.id ? null : material.id)}
+                          className="flex items-center gap-1.5 mt-0.5 text-left"
+                        >
+                          <p className="text-caption text-text-subdued">
+                            {material.purchased} {material.unit} kharida • {formatCurrency(material.rate)}/{material.unit}
+                            {lots.length > 1 && <span className="text-brand font-bold"> ({lots.length} lots)</span>}
+                          </p>
+                          {expandedPurchasesId === material.id
+                            ? <ChevronUp size={12} className="text-brand shrink-0" />
+                            : <ChevronDown size={12} className="text-text-subdued shrink-0" />}
+                        </button>
+                      );
+                    })()}
                   </div>
                   <div className="text-right shrink-0">
                     <p className={cn('text-title-lg font-bold leading-none', isLow ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400')}>{stock}</p>
@@ -251,6 +335,31 @@ export default function MaterialsSection() {
                     />
                   </div>
                 </div>
+
+                {/* Purchase history (expandable) */}
+                {expandedPurchasesId === material.id && (() => {
+                  const lots = getPurchaseLots(material);
+                  return (
+                    <div className="mb-3 bg-surface-subdued rounded-xl p-3 border border-border-subdued">
+                      <p className="text-caption font-bold text-text-subdued uppercase mb-2">Kharide ka itihas</p>
+                      <div className="space-y-1.5">
+                        {lots.map((lot, i) => (
+                          <div key={lot.id} className="flex items-center justify-between gap-2 text-body-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="text-caption text-text-subdued font-bold w-4">{i + 1}.</span>
+                              <span className="font-bold text-text-primary">{lot.qty} {material.unit}</span>
+                              <span className="text-text-subdued text-caption">@ {formatCurrency(lot.rate)}/{material.unit}</span>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="font-bold text-text-primary">{formatCurrency(lot.qty * lot.rate)}</p>
+                              <p className="text-caption text-text-subdued">{new Date(lot.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Actions */}
                 {!isViewer && (
@@ -364,6 +473,17 @@ export default function MaterialsSection() {
                     className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand" placeholder="0" />
                 </div>
               </div>
+              {dupMaterial && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 flex items-start gap-2">
+                  <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                  <p className="text-caption text-amber-700 dark:text-amber-300 font-medium leading-snug">
+                    <span className="font-bold">{dupMaterial.name}</span> pehle se hai ({dupMaterial.purchased} {dupMaterial.unit})
+                    {form.purchased && form.rate
+                      ? <>. Naya lot add hoga — combined stock: <span className="font-bold">{dupMaterial.purchased + (Number(form.purchased) || 0)} {dupMaterial.unit}</span>. Rate alag-alag dikhega.</>
+                      : <>. Naya lot add hoga, rate alag-alag dikhega.</>}
+                  </p>
+                </div>
+              )}
               {!editId && form.purchased && form.rate && (
                 <div className="bg-brand/10 border border-brand/20 rounded-xl px-3 py-2 text-center">
                   <p className="text-caption text-brand font-bold uppercase">Total Cost (auto-logged as expense)</p>
@@ -373,7 +493,7 @@ export default function MaterialsSection() {
               <div className="flex gap-3 pt-1">
                 <button onClick={closeForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors">Cancel</button>
                 <button onClick={save} disabled={!form.name} className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
-                  {editId ? 'Update Karein' : 'Save Karo'}
+                  {editId ? 'Update Karein' : dupMaterial ? 'Jodo (Merge)' : 'Save Karo'}
                 </button>
               </div>
             </div>

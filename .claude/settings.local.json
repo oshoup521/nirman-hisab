@@ -7,7 +7,9 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\oshoupadhyay\\\\PROJECTS\\\\MY-PROJECTs\\\\nirman-hisab\" -Recurse -Directory)",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Bash(Select-Object -First 20 FullName)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(npx vite *)",
+      "Bash(node -e \"try { require\\('./node_modules/@supabase/supabase-js'\\).createClient\\('',''\\) } catch\\(e\\) { console.log\\('THROWS:', e.message\\) }\")"
     ]
   }
 }

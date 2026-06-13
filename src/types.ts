@@ -22,18 +22,26 @@ export interface Project {
   sitePlans?: { id: string; path: string; caption: string }[];
 }
 
+export interface MaterialPurchase {
+  id: string;
+  qty: number;
+  rate: number;
+  date: string;
+}
+
 export interface Material {
   id: string;
   name: string;
   unit: string;
   purchased: number;
   used: number;
-  rate: number;
+  rate: number;           // latest purchase rate (for display)
   vendor: string;
   date: string;
   billNumber: string;
   minStock: number;
   photos?: { path: string; caption?: string }[];
+  purchases?: MaterialPurchase[];
 }
 
 export interface Labour {
