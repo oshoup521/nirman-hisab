@@ -67,34 +67,25 @@ export default function TimelineSection() {
                   <option value="completed">Completed</option>
                 </select>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <div>
-                  <p className="text-caption font-bold text-text-subdued uppercase mb-1">Shuru</p>
-                  <input
-                    type="date"
-                    value={milestone.startDate ?? ''}
-                    onChange={e => updateDate(milestone.id, 'startDate', e.target.value)}
-                    disabled={isViewer}
-                    className="w-full text-caption bg-surface-subdued border border-border-default rounded-lg px-2 py-1.5 text-text-primary dark:[color-scheme:dark] disabled:opacity-60 disabled:cursor-not-allowed"
-                  />
-                </div>
-                <div>
-                  <p className={cn('text-caption font-bold uppercase mb-1', milestone.status !== 'completed' ? 'text-text-subdued/50' : 'text-text-subdued')}>
-                    Khatam
-                  </p>
-                  <input
-                    type="date"
-                    value={milestone.endDate ?? ''}
-                    disabled={isViewer || milestone.status !== 'completed'}
-                    onChange={e => updateDate(milestone.id, 'endDate', e.target.value)}
-                    className={cn(
-                      'w-full text-caption border rounded-lg px-2 py-1.5 dark:[color-scheme:dark]',
-                      milestone.status !== 'completed'
-                        ? 'bg-surface-subdued/50 border-border-subdued text-text-subdued/50 cursor-not-allowed'
-                        : 'bg-surface-subdued border-border-default text-text-primary'
-                    )}
-                  />
-                </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1">
+                <p className="text-body-sm font-bold text-text-subdued uppercase">Shuru</p>
+                <p className={`text-body-sm font-bold text-text-subdued uppercase${milestone.status !== 'completed' ? ' opacity-50' : ''}`}>
+                  Khatam
+                </p>
+                <input
+                  type="date"
+                  value={milestone.startDate ?? ''}
+                  onChange={e => updateDate(milestone.id, 'startDate', e.target.value)}
+                  disabled={isViewer}
+                  className="w-full text-body-sm font-normal [font-family:inherit] bg-surface-subdued border border-border-default text-text-primary rounded-lg px-2 py-1.5 dark:[color-scheme:dark] disabled:opacity-60 disabled:cursor-not-allowed"
+                />
+                <input
+                  type="date"
+                  value={milestone.endDate ?? ''}
+                  disabled={isViewer || milestone.status !== 'completed'}
+                  onChange={e => updateDate(milestone.id, 'endDate', e.target.value)}
+                  className={`w-full text-body-sm font-normal [font-family:inherit] bg-surface-subdued border rounded-lg px-2 py-1.5 dark:[color-scheme:dark] disabled:cursor-not-allowed${milestone.status !== 'completed' ? ' border-border-subdued text-text-primary opacity-30' : ' border-border-default text-text-primary'}`}
+                />
               </div>
 
               {milestone.startDate && (() => {
