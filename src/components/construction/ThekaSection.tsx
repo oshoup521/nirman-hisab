@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Plus, Pencil, Trash2, X, Hammer } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Hammer, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '../../lib/cn';
 import { formatCurrency } from '../../utils/formatters';
 import { genId } from '../../utils/helpers';
 import { useAppContext } from '../../context/AppContext';
-import { Theka } from '../../types';
+import { Theka, ThekaExtra } from '../../types';
 
 const WORK_TYPES: Theka['workType'][] = ['Civil', 'Electrical', 'Plumbing', 'Painting', 'Flooring', 'Other'];
 
@@ -28,6 +28,17 @@ type PayForm = {
   note: string;
 };
 
+type ExtraForm = {
+  thekaId: string;
+  extraId: string | null;  // null = new
+  description: string;
+  mode: 'sqft' | 'lumpsum';
+  area: string;
+  rate: string;
+  amount: string;          // used only in lumpsum mode
+  date: string;
+};
+
 const blankThekaForm = (defaultArea: number): ThekaForm => ({
   name: '',
   workType: 'Civil',
@@ -44,6 +55,7 @@ export default function ThekaSection() {
   const [thekaForm, setThekaForm] = useState<ThekaForm | null>(null);
   const [thekaEditId, setThekaEditId] = useState<string | null>(null);
   const [payForm, setPayForm] = useState<PayForm | null>(null);
+  const [extraForm, setExtraForm] = useState<ExtraForm | null>(null);
 
   const openAddTheka = () => {
     setThekaEditId(null);
@@ -94,7 +106,7 @@ export default function ThekaSection() {
     } else {
       setState(prev => ({
         ...prev,
-        thekas: [...prev.thekas, { id: genId(), ...baseFields, payments: [] }],
+        thekas: [...prev.thekas, { id: genId(), ...baseFields, payments: [], extras: [] }],
       }));
     }
     closeThekaForm();
@@ -156,6 +168,52 @@ export default function ThekaSection() {
       }))
     );
 
+  const openAddExtra = (theka: Theka) =>
+    setExtraForm({ thekaId: theka.id, extraId: null, description: '', mode: 'sqft', area: '', rate: '', amount: '', date: format(new Date(), 'yyyy-MM-dd') });
+
+  const openEditExtra = (theka: Theka, ex: ThekaExtra) =>
+    setExtraForm({ thekaId: theka.id, extraId: ex.id, description: ex.description, mode: ex.mode, area: String(ex.area ?? ''), rate: String(ex.rate ?? ''), amount: String(ex.amount), date: format(new Date(ex.date), 'yyyy-MM-dd') });
+
+  const closeExtraForm = () => setExtraForm(null);
+
+  const extraComputedAmount = (f: ExtraForm) =>
+    f.mode === 'sqft' ? (Number(f.area) || 0) * (Number(f.rate) || 0) : Number(f.amount) || 0;
+
+  const saveExtra = () => {
+    if (!extraForm?.description.trim()) return;
+    const amount = extraComputedAmount(extraForm);
+    if (amount <= 0) return;
+    const isoDate = new Date(extraForm.date).toISOString();
+    const id = extraForm.extraId || genId();
+    const entry: ThekaExtra = {
+      id, description: extraForm.description.trim(),
+      mode: extraForm.mode,
+      area: extraForm.mode === 'sqft' ? Number(extraForm.area) || undefined : undefined,
+      rate: extraForm.mode === 'sqft' ? Number(extraForm.rate) || undefined : undefined,
+      amount, date: isoDate,
+    };
+    setState(prev => ({
+      ...prev,
+      thekas: prev.thekas.map(t => t.id !== extraForm.thekaId ? t : ({
+        ...t,
+        extras: extraForm.extraId
+          ? t.extras.map(e => e.id === extraForm.extraId ? entry : e)
+          : [...t.extras, entry],
+      })),
+    }));
+    closeExtraForm();
+  };
+
+  const deleteExtra = (theka: Theka, extraId: string) =>
+    askConfirm('Is extra kaam ko delete kar dein?', () =>
+      setState(prev => ({
+        ...prev,
+        thekas: prev.thekas.map(t => t.id === theka.id
+          ? { ...t, extras: t.extras.filter(e => e.id !== extraId) }
+          : t),
+      }))
+    );
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -188,11 +246,15 @@ export default function ThekaSection() {
       ) : (
         <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
         {state.thekas.map(theka => {
+          const extras = theka.extras ?? [];
+          const extraTotal = extras.reduce((a, e) => a + e.amount, 0);
+          const totalDue = theka.totalAmount + extraTotal;
           const totalPaid = theka.payments.reduce((a, p) => a + p.amount, 0);
-          const remaining = theka.totalAmount - totalPaid;
-          const pct = theka.totalAmount > 0 ? (totalPaid / theka.totalAmount) * 100 : 0;
+          const remaining = totalDue - totalPaid;
+          const pct = totalDue > 0 ? (totalPaid / totalDue) * 100 : 0;
           return (
             <div key={theka.id} className="bg-surface rounded-2xl border border-border-default shadow-sm overflow-hidden">
+              {/* Header */}
               <div className="p-4 flex justify-between items-start">
                 <div>
                   <h4 className="font-heading text-title font-bold text-text-primary">{theka.name}</h4>
@@ -203,7 +265,7 @@ export default function ThekaSection() {
                     {theka.ratePerSqFt && theka.areaSqFt ? (
                       <p className="text-caption text-text-subdued font-bold mb-0.5 leading-none">{theka.areaSqFt} sq.ft × ₹{theka.ratePerSqFt}</p>
                     ) : (
-                      <p className="text-caption text-text-subdued font-bold uppercase mb-0.5 leading-none">Total</p>
+                      <p className="text-caption text-text-subdued font-bold uppercase mb-0.5 leading-none">Fixed</p>
                     )}
                     <p className="text-title-lg font-bold text-text-primary leading-none">{formatCurrency(theka.totalAmount)}</p>
                   </div>
@@ -224,7 +286,58 @@ export default function ThekaSection() {
                   )}
                 </div>
               </div>
-              <div className="px-4 pb-3">
+
+              {/* Extra Kaam section */}
+              <div className="px-4 pb-3 border-t border-border-subdued pt-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-caption font-bold text-text-subdued uppercase">Extra Kaam {extras.length > 0 && `(${extras.length})`}</p>
+                  {!isViewer && (
+                    <button onClick={() => openAddExtra(theka)} className="flex items-center gap-1 text-caption font-bold text-brand hover:opacity-80 transition-opacity">
+                      <PlusCircle size={12} /> Add
+                    </button>
+                  )}
+                </div>
+                {extras.length > 0 ? (
+                  <div className="space-y-1.5 mb-2">
+                    {extras.map(ex => (
+                      <div key={ex.id} className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-body-sm font-bold text-text-primary truncate">{ex.description}</p>
+                          {ex.mode === 'sqft' && ex.area && ex.rate ? (
+                            <p className="text-caption text-text-subdued">{ex.area} sq.ft × ₹{ex.rate}/sq.ft</p>
+                          ) : (
+                            <p className="text-caption text-text-subdued">Lumpsum</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <p className="font-bold text-body-sm text-text-primary">{formatCurrency(ex.amount)}</p>
+                          {!isViewer && (
+                            <div className="flex items-center gap-0.5">
+                              <button onClick={() => openEditExtra(theka, ex)} className="p-1 text-text-secondary hover:text-brand transition-colors"><Pencil size={11} /></button>
+                              <button onClick={() => deleteExtra(theka, ex.id)} className="p-1 text-red-500/50 hover:text-red-500 transition-colors"><Trash2 size={11} /></button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex justify-between items-center pt-1 border-t border-border-subdued mt-1">
+                      <p className="text-caption font-bold text-text-subdued uppercase">Extra Total</p>
+                      <p className="text-body-sm font-bold text-amber-600 dark:text-amber-400">{formatCurrency(extraTotal)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-caption text-text-subdued italic mb-2">Koi extra kaam nahi abhi tak</p>
+                )}
+              </div>
+
+              {/* Total due + progress */}
+              <div className="px-4 pb-3 border-t border-border-default pt-2">
+                {extraTotal > 0 && (
+                  <div className="flex justify-between text-caption font-bold mb-1.5">
+                    <span className="text-text-subdued">Fixed {formatCurrency(theka.totalAmount)} + Extra {formatCurrency(extraTotal)}</span>
+                    <span className="text-text-primary">= {formatCurrency(totalDue)}</span>
+                  </div>
+                )}
                 <div className="w-full bg-border-default h-2 rounded-full overflow-hidden mb-1">
                   <div className="h-full bg-brand transition-all" style={{ width: `${Math.min(100, pct)}%` }} />
                 </div>
@@ -233,8 +346,10 @@ export default function ThekaSection() {
                   <span className="text-red-500">Baaki: {formatCurrency(remaining)}</span>
                 </div>
               </div>
+
+              {/* Payments list */}
               {theka.payments.length > 0 && (
-                <div className="border-t border-border-default px-4 py-2 space-y-2">
+                <div className="border-t border-border-default px-4 py-2 space-y-2 max-h-48 overflow-y-auto">
                   {[...theka.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
                     <div key={payment.id} className="flex justify-between items-center text-body-sm">
                       <div>
@@ -433,6 +548,103 @@ export default function ThekaSection() {
                 <button onClick={savePay} disabled={!payForm.amount || Number(payForm.amount) <= 0}
                   className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity">
                   {payForm.paymentId ? 'Update Karein' : 'Save Karo'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Extra Kaam Form */}
+      {extraForm && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex justify-center items-end md:items-center"
+          onClick={closeExtraForm}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            className="bg-surface border border-border-default w-full max-w-md md:max-w-lg rounded-t-3xl md:rounded-3xl shadow-2xl md:m-4 overflow-y-auto max-h-[92vh] md:max-h-[88vh] pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:pb-0"
+          >
+            <div className="p-6 space-y-4">
+              <div className="w-10 h-1 bg-border-default rounded-full mx-auto md:hidden" />
+              <div className="flex items-center justify-between">
+                <h3 className="font-heading text-title font-bold text-text-primary">{extraForm.extraId ? 'Extra Kaam Edit' : 'Extra Kaam Add'}</h3>
+                <button onClick={closeExtraForm} className="w-8 h-8 bg-surface-subdued rounded-xl flex items-center justify-center text-text-secondary hover:bg-border-default transition-colors"><X size={16} /></button>
+              </div>
+
+              <div>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Kaam ka Naam</label>
+                <input type="text" autoFocus value={extraForm.description}
+                  onChange={e => setExtraForm(f => f ? { ...f, description: e.target.value } : f)}
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand"
+                  placeholder="e.g. Parapet wall, Outer plaster, Stairs" />
+              </div>
+
+              <div>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-2">Rate Type</label>
+                <div className="flex gap-2">
+                  <button onClick={() => setExtraForm(f => f ? { ...f, mode: 'sqft' } : f)}
+                    className={cn('flex-1 py-2.5 rounded-xl text-body-sm font-bold border transition-all',
+                      extraForm.mode === 'sqft' ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default')}>
+                    Per Sq.Ft
+                  </button>
+                  <button onClick={() => setExtraForm(f => f ? { ...f, mode: 'lumpsum' } : f)}
+                    className={cn('flex-1 py-2.5 rounded-xl text-body-sm font-bold border transition-all',
+                      extraForm.mode === 'lumpsum' ? 'bg-brand/10 text-brand border-brand/20' : 'bg-surface-subdued text-text-secondary border-border-default')}>
+                    Lumpsum (₹)
+                  </button>
+                </div>
+              </div>
+
+              {extraForm.mode === 'sqft' ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Area (sq.ft)</label>
+                    <input type="number" inputMode="numeric" value={extraForm.area}
+                      onChange={e => setExtraForm(f => f ? { ...f, area: e.target.value } : f)}
+                      className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold"
+                      placeholder="0" />
+                  </div>
+                  <div>
+                    <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Rate (₹/sq.ft)</label>
+                    <input type="number" inputMode="numeric" value={extraForm.rate}
+                      onChange={e => setExtraForm(f => f ? { ...f, rate: e.target.value } : f)}
+                      className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold"
+                      placeholder="0" />
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Amount (₹)</label>
+                  <input type="number" inputMode="numeric" value={extraForm.amount}
+                    onChange={e => setExtraForm(f => f ? { ...f, amount: e.target.value } : f)}
+                    className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand font-bold text-title-lg"
+                    placeholder="0" />
+                </div>
+              )}
+
+              {extraComputedAmount(extraForm) > 0 && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 text-center">
+                  <p className="text-caption text-amber-700 dark:text-amber-400 font-bold uppercase">Is Extra Kaam ka Total</p>
+                  <p className="text-title-lg font-bold text-amber-700 dark:text-amber-400">{formatCurrency(extraComputedAmount(extraForm))}</p>
+                </div>
+              )}
+
+              <div>
+                <label className="text-caption font-bold text-text-subdued uppercase block mb-1.5">Date</label>
+                <input type="date" value={extraForm.date}
+                  onChange={e => setExtraForm(f => f ? { ...f, date: e.target.value } : f)}
+                  className="w-full p-3.5 bg-surface-subdued text-text-primary rounded-2xl border-none focus:ring-2 focus:ring-brand dark:[color-scheme:dark]" />
+              </div>
+
+              <div className="flex gap-3 pt-1">
+                <button onClick={closeExtraForm} className="flex-1 py-3.5 bg-surface-subdued text-text-secondary rounded-2xl font-bold text-body-sm hover:bg-border-default transition-colors">Cancel</button>
+                <button
+                  onClick={saveExtra}
+                  disabled={!extraForm.description.trim() || extraComputedAmount(extraForm) <= 0}
+                  className="flex-1 py-3.5 bg-text-primary text-surface rounded-2xl font-bold text-body-sm disabled:opacity-40 shadow-sm hover:opacity-90 transition-opacity"
+                >
+                  {extraForm.extraId ? 'Update Karein' : 'Save Karo'}
                 </button>
               </div>
             </div>

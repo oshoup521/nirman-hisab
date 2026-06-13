@@ -71,12 +71,23 @@ export interface ThekaPayment {
   note: string;
 }
 
+export interface ThekaExtra {
+  id: string;
+  description: string;
+  mode: 'sqft' | 'lumpsum';
+  area?: number;    // sqft
+  rate?: number;    // ₹/sqft
+  amount: number;   // area × rate for sqft, direct entry for lumpsum
+  date: string;
+}
+
 export interface Theka {
   id: string;
   name: string;
   workType: 'Civil' | 'Electrical' | 'Plumbing' | 'Painting' | 'Flooring' | 'Other';
   totalAmount: number;
   payments: ThekaPayment[];
+  extras: ThekaExtra[];
   startDate: string;
   notes: string;
   ratePerSqFt?: number;

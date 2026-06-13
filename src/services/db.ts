@@ -86,13 +86,15 @@ function thekaToRow(t: Theka, userId: string) {
     id: t.id, user_id: userId, name: t.name, work_type: t.workType,
     total_amount: t.totalAmount, start_date: t.startDate, notes: t.notes,
     rate_per_sq_ft: t.ratePerSqFt ?? null, area_sq_ft: t.areaSqFt ?? null,
+    extras: t.extras ?? [],
     updated_at: new Date().toISOString(),
   };
 }
 function rowToTheka(r: any, payments: ThekaPayment[]): Theka {
   return {
     id: r.id, name: r.name, workType: r.work_type, totalAmount: r.total_amount,
-    payments, startDate: r.start_date, notes: r.notes,
+    payments, extras: r.extras ?? [],
+    startDate: r.start_date, notes: r.notes,
     ratePerSqFt: r.rate_per_sq_ft ?? undefined, areaSqFt: r.area_sq_ft ?? undefined,
   };
 }

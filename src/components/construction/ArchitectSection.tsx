@@ -377,8 +377,8 @@ export default function ArchitectSection() {
           )}
         </div>
       ) : (
-        <div className="space-y-4 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-4">
-          {architects.map(arch => {
+        <div className={cn('space-y-4', architects.length > 1 && 'md:space-y-0 md:grid md:grid-cols-2 md:gap-4')}>
+          {[...architects].sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()).map(arch => {
             const totalPaid = arch.payments.reduce((s, p) => s + p.amount, 0);
             const billableVisits = arch.visits.filter(v => v.billable).length;
             const includedVisits = arch.visits.length - billableVisits;
@@ -420,8 +420,13 @@ export default function ArchitectSection() {
                       <p className="text-title-lg font-bold text-text-primary leading-tight mt-0.5">
                         {arch.feeType === 'per-visit'
                           ? formatCurrency(arch.ratePerVisit || 0)
-                          : formatCurrency(arch.totalFee)}
+                          : formatCurrency(totalPayable)}
                       </p>
+                      {extraCharges > 0 && arch.feeType !== 'per-visit' && (
+                        <p className="text-caption text-text-subdued leading-none mt-0.5">
+                          {formatCurrency(arch.totalFee)} + {formatCurrency(extraCharges)}
+                        </p>
+                      )}
                     </div>
                     {!isViewer && (
                       <>
@@ -481,7 +486,7 @@ export default function ArchitectSection() {
                 {arch.payments.length > 0 && (
                   <div className="border-t border-border-default px-4 py-2.5">
                     <p className="text-caption font-bold text-text-subdued uppercase mb-2">Payments</p>
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto">
                       {[...arch.payments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(payment => (
                         <div key={payment.id} className="flex justify-between items-center text-body-sm">
                           <div>

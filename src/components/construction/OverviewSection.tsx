@@ -159,7 +159,7 @@ export default function OverviewSection() {
             <h4 className="font-heading text-title font-bold text-text-primary mb-6">Financial Overview</h4>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-body-sm text-text-secondary font-medium">Materials & Labour</span>
+                <span className="text-body-sm text-text-secondary font-medium">Nirmaan Kharcha</span>
                 <span className="text-body font-bold text-text-primary">{formatCurrency(totalSpent)}</span>
               </div>
               <div className="flex justify-between items-center">
@@ -283,8 +283,9 @@ export default function OverviewSection() {
         <h4 className="font-heading text-title font-bold text-text-primary">Kharcha</h4>
         <div className="space-y-2">
           {[
-            { label: 'Samaan + Mazdoor', value: totalSpent },
+            { label: 'Nirmaan Kharcha', value: totalSpent },
             { label: 'Miscellaneous', value: totalMisc },
+            ...(totalElecPaid > 0 ? [{ label: 'Bijli Bill', value: totalElecPaid }] : []),
           ].map(row => (
             <div key={row.label} className="flex justify-between items-center text-body-sm">
               <span className="text-text-secondary">{row.label}</span>
@@ -293,7 +294,7 @@ export default function OverviewSection() {
           ))}
           <div className="flex justify-between items-center text-body-sm pt-2 border-t border-border-default">
             <span className="font-bold text-text-primary">Total</span>
-            <span className="font-mono font-bold text-red-600 dark:text-red-400">{formatCurrency(totalSpent + totalMisc)}</span>
+            <span className="font-mono font-bold text-red-600 dark:text-red-400">{formatCurrency(totalSpent + totalMisc + totalElecPaid)}</span>
           </div>
         </div>
         <button onClick={() => setSubTab('expenses')} className="w-full text-body-sm font-bold text-brand pt-2 border-t border-border-subdued hover:opacity-80 transition-opacity uppercase tracking-widest">Detail dekho →</button>

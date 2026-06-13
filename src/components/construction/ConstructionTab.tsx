@@ -48,7 +48,7 @@ export default function ConstructionTab() {
         onMouseLeave={drag.onMouseLeave}
         className={cn(
           'flex gap-2 overflow-x-auto pb-2 no-scrollbar cursor-grab',
-          '-mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible md:cursor-default'
+          '-mx-4 px-4 md:mx-0 md:px-0 md:cursor-default'
         )}
       >
         {tabs.map(({ id, label, Icon }) => (
